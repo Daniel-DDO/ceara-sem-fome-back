@@ -52,7 +52,7 @@ Os fluxos de navegação garantem uma experiência de usuário eficiente:
 
 | Camada | Tecnologia | Propósito |
 | :--- | :--- | :--- |
-| **Frontend** | **React** | Biblioteca TypeScript para a construção da interface de usuário. |
-| **Estilização** | **Tailwind CSS** | Framework CSS *utility-first* para garantir agilidade e design responsivo. |
+| **Backend** | **Spring Boot (Java)** | Framework Java que facilita a criação de aplicações robustas, escaláveis e com configuração simplificada.|
+| **API REST** | **Spring Web**| Módulo do Spring Boot para criação e exposição de endpoints RESTful.|
 
 
