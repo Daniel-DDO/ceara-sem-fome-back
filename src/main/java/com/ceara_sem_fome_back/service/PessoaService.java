@@ -53,7 +53,8 @@ public class PessoaService {
             if (!verificarCpf(cpf)) {
                 throw new Exception("Insira um CPF válido.");
             }
-
+            
+            //sobre a duplicidade, precisa do BD pra fazer, mas é bem imediato
             //aqui é pra criar o objeto Pessoa, pela subclasse.
 
         }
