@@ -1,4 +1,4 @@
-package com.ceara_sem_fome_back.projeto;
+package com.ceara_sem_fome_back.view;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
