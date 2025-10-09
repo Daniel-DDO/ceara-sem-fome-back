@@ -1,6 +1,5 @@
-package com.ceara_sem_fome_back.view;
+package com.ceara_sem_fome_back.application;
 
-import com.ceara_sem_fome_back.service.PessoaService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
