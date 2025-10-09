@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ComercianteRepository extends JpaRepository <Comerciante, String> {
-    Comerciante findByLogin(String login);
+    Comerciante findByEmail(String email);
 }

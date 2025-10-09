@@ -12,13 +12,17 @@ public class ComercianteService {
     @Autowired
     private ComercianteRepository comercianteRepository;
 
-    public Comerciante logarComerciante(String login, String senha) {
-        Comerciante comerciante = comercianteRepository.findByLogin(login);
+    public Comerciante logarComerciante(String email, String senha) {
+        Comerciante comerciante = comercianteRepository.findByEmail(email);
 
         if (comerciante != null && comerciante.getSenha().equals(senha)) {
             return comerciante;
         }
 
-        throw new ContaNaoExisteException(login);
+        throw new ContaNaoExisteException(email);
+    }
+
+    public boolean verificarCpf(String cpf) {
+        return PessoaUtils.verificarCpf(cpf);
     }
 }

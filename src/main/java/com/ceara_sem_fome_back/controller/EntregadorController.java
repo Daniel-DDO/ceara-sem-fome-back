@@ -16,7 +16,7 @@ public class EntregadorController {
 
     @PostMapping("/login")
     public ResponseEntity<Entregador> logarEntregador(@RequestBody LoginDTO loginDTO) {
-        Entregador entregador = entregadorService.logarEntregador(loginDTO.getLogin(), loginDTO.getSenha());
+        Entregador entregador = entregadorService.logarEntregador(loginDTO.getEmail(), loginDTO.getSenha());
 
         if (entregador != null) {
             return ResponseEntity.ok(entregador);

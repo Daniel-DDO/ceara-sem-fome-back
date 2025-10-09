@@ -12,13 +12,17 @@ public class BeneficiarioService {
     @Autowired
     private BeneficiarioRepository beneficiarioRepository;
 
-    public Beneficiario logarBeneficiario(String login, String senha) {
-        Beneficiario beneficiario = beneficiarioRepository.findByLogin(login);
+    public Beneficiario logarBeneficiario(String email, String senha) {
+        Beneficiario beneficiario = beneficiarioRepository.findByEmail(email);
 
         if (beneficiario != null && beneficiario.getSenha().equals(senha)) {
             return beneficiario;
         }
 
-        throw new ContaNaoExisteException(login);
+        throw new ContaNaoExisteException(email);
+    }
+
+    public boolean verificarCpf(String cpf) {
+        return PessoaUtils.verificarCpf(cpf);
     }
 }

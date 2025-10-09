@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BeneficiarioRepository extends JpaRepository <Beneficiario, String> {
-    Beneficiario findByLogin(String login);
+    Beneficiario findByEmail(String email);
 }

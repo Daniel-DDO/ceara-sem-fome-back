@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface EntregadorRepository extends JpaRepository <Entregador, String> {
-    Entregador findByLogin(String login);
+    Entregador findByEmail(String email);
 }

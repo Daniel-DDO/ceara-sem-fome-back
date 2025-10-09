@@ -12,13 +12,17 @@ public class EntregadorService {
     @Autowired
     private EntregadorRepository entregadorRepository;
 
-    public Entregador logarEntregador(String login, String senha) {
-        Entregador entregador = entregadorRepository.findByLogin(login);
+    public Entregador logarEntregador(String email, String senha) {
+        Entregador entregador = entregadorRepository.findByEmail(email);
 
         if (entregador != null && entregador.getSenha().equals(senha)) {
             return entregador;
         }
 
-        throw new ContaNaoExisteException(login);
+        throw new ContaNaoExisteException(email);
+    }
+
+    public boolean verificarCpf(String cpf) {
+        return PessoaUtils.verificarCpf(cpf);
     }
 }

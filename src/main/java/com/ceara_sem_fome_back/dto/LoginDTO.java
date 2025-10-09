@@ -8,7 +8,7 @@ import lombok.Setter;
 @Setter
 @Data
 public class LoginDTO {
-    private String login;
+    private String email;
     private String senha;
 
     //essa classe é pra passar apenas o que precisa, ao invés de passar tudo, passa só o necessário

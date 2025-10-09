@@ -19,7 +19,7 @@ public class BeneficiarioController {
 
     @PostMapping("/login")
     public ResponseEntity<Beneficiario> logarBeneficiario(@RequestBody LoginDTO loginDTO) {
-        Beneficiario beneficiario = beneficiarioService.logarBeneficiario(loginDTO.getLogin(), loginDTO.getSenha());
+        Beneficiario beneficiario = beneficiarioService.logarBeneficiario(loginDTO.getEmail(), loginDTO.getSenha());
 
         if (beneficiario != null) {
             return ResponseEntity.ok(beneficiario);

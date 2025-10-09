@@ -16,7 +16,7 @@ public class AdministradorController {
 
     @PostMapping("/login")
     public ResponseEntity<Administrador> logarAdm(@RequestBody LoginDTO loginDTO) {
-        Administrador administrador = administradorService.logarAdm(loginDTO.getLogin(), loginDTO.getSenha());
+        Administrador administrador = administradorService.logarAdm(loginDTO.getEmail(), loginDTO.getSenha());
 
         if (administrador != null) {
             return ResponseEntity.ok(administrador);

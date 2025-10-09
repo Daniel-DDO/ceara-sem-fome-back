@@ -12,13 +12,17 @@ public class AdministradorService {
     @Autowired
     private AdministradorRepository administradorRepository;
 
-    public Administrador logarAdm(String login, String senha) {
-        Administrador administrador = administradorRepository.findByLogin(login);
+    public Administrador logarAdm(String email, String senha) {
+        Administrador administrador = administradorRepository.findByEmail(email);
 
         if (administrador != null && administrador.getSenha().equals(senha)) {
             return administrador;
         }
 
-        throw new ContaNaoExisteException(login);
+        throw new ContaNaoExisteException(email);
+    }
+
+    public boolean verificarCpf(String cpf) {
+        return PessoaUtils.verificarCpf(cpf);
     }
 }

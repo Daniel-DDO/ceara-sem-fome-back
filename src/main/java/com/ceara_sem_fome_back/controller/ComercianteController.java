@@ -16,7 +16,7 @@ public class ComercianteController {
 
     @PostMapping("/login")
     public ResponseEntity<Comerciante> logarComerciante(@RequestBody LoginDTO loginDTO) {
-        Comerciante comerciante = comercianteService.logarComerciante(loginDTO.getLogin(), loginDTO.getSenha());
+        Comerciante comerciante = comercianteService.logarComerciante(loginDTO.getEmail(), loginDTO.getSenha());
 
         if (comerciante != null) {
             return ResponseEntity.ok(comerciante);

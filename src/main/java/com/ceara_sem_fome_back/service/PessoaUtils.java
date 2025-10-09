@@ -1,33 +1,11 @@
 package com.ceara_sem_fome_back.service;
 
-import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.model.Pessoa;
-import com.ceara_sem_fome_back.repository.PessoaRepository;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
 
-@Service
-public class PessoaService {
-    //por enquanto, usando de maneira generalizada a superclasse Pessoa
+public class PessoaUtils {
 
-    private final PessoaRepository pessoaRepository;
-
-    public PessoaService(PessoaRepository pessoaRepository) {
-        this.pessoaRepository = pessoaRepository;
-    }
-
-    public Pessoa logar(String email, String senha) {
-        //a fazer
-        return null;
-    }
+    private PessoaUtils() {}
 
     public Pessoa cadastrar(String nome, String cpf, String email, String senha, LocalDate dataNascimento, String telefone, String genero) throws Exception {
         if (nome == null || nome.isEmpty()) {
@@ -49,11 +27,12 @@ public class PessoaService {
 
             //precisa de separação e verificação
             //se é cadastro de beneficiário, comerciante, adm...
+            //ent esse metodo vai pra cada classe service, conforme oq formos fazendo
 
             if (!verificarCpf(cpf)) {
                 throw new Exception("Insira um CPF válido.");
             }
-            
+
             //sobre a duplicidade, precisa do BD pra fazer, mas é bem imediato
             //aqui é pra criar o objeto Pessoa, pela subclasse.
 
@@ -61,7 +40,7 @@ public class PessoaService {
         return null;
     }
 
-    public boolean verificarCpf(String cpf) {
+    public static boolean verificarCpf(String cpf) {
         cpf = cpf.replaceAll("\\D", "");
 
         if (cpf.length() != 11) {
@@ -89,5 +68,4 @@ public class PessoaService {
 
         return numeros[9] == digito1 && numeros[10] == digito2;
     }
-
 }
