@@ -25,4 +25,16 @@ public class EntregadorService {
     public boolean verificarCpf(String cpf) {
         return PessoaUtils.verificarCpf(cpf);
     }
+
+    public Entregador salvarEntregador(Entregador entregador) {
+
+        if (entregadorRepository.existsById(entregador.getCpf())) {
+            throw new IllegalArgumentException("CPF já cadastrado.");
+        }
+
+        if (entregadorRepository.findByEmail(entregador.getEmail()) != null) {
+            throw new IllegalArgumentException("Email já cadastrado.");
+        }
+        return entregadorRepository.save(entregador);
+    }
 }

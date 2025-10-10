@@ -41,4 +41,16 @@ public class AdministradorService implements UserDetailsService {
         return new AdministradorData(Optional.of(administrador));
     }
 
+    public Administrador salvarAdm(Administrador administrador) {
+        if (!verificarCpf(administrador.getCpf())) {
+            throw new IllegalArgumentException("CPF inválido.");
+        }
+
+        if (administradorRepository.findByEmail(administrador.getEmail()) != null) {
+            throw new IllegalArgumentException("Email já cadastrado.");
+        }
+
+        return administradorRepository.save(administrador);
+    }
+
 }

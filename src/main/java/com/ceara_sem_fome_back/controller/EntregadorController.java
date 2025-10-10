@@ -1,8 +1,11 @@
 package com.ceara_sem_fome_back.controller;
 
+import com.ceara_sem_fome_back.data.dto.ErrorDTO;
 import com.ceara_sem_fome_back.data.dto.LoginDTO;
+import com.ceara_sem_fome_back.dto.EntregadorRequest;
 import com.ceara_sem_fome_back.model.Entregador;
 import com.ceara_sem_fome_back.service.EntregadorService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +25,34 @@ public class EntregadorController {
             return ResponseEntity.ok(entregador);
         } else {
             return ResponseEntity.status(401).body(null);
+        }
+    }
+
+    @PostMapping
+    public ResponseEntity<Object> cadastrarEntregador(@RequestBody @Valid EntregadorRequest request) {
+        try {
+            Entregador novoEntregador = new Entregador(
+                    request.getNome(),
+                    request.getCpf(),
+                    request.getEmail(),
+                    request.getSenha(),
+                    request.getDataNascimento(),
+                    request.getTelefone(),
+                    request.getGenero()
+            );
+
+            Entregador entregadorSalvo = entregadorService.salvarEntregador(novoEntregador);
+
+            return ResponseEntity.status(201).body(entregadorSalvo);
+
+        } catch (IllegalArgumentException e) {
+            // Erros de regra de negócio (ex: CPF/Email duplicado)
+            ErrorDTO errorDTO = new ErrorDTO(e.getMessage(), 400);
+            return ResponseEntity.badRequest().body(errorDTO);
+
+        } catch (Exception e) {
+            ErrorDTO errorDTO = new ErrorDTO("Erro interno ao tentar cadastrar entregador.", 500);
+            return ResponseEntity.status(500).body(errorDTO);
         }
     }
 }
