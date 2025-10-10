@@ -33,20 +33,42 @@ public class TestController {
     @GetMapping("/verify-token")
     public ResponseEntity<String> verifyToken(@RequestParam String token) {
         boolean isValid = tokenService.validateVerificationToken(token);
+        
+        // URLs diretas para as imagens das logos
+        String logoCearaSemFome = "https://www.ceara.gov.br/wp-content/uploads/2024/01/logo-cesf-e-cegov-e1704803051849-600x239.png";
+        String logoGovernoCeara = "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Bras%C3%A3o_do_Cear%C3%A1.svg/500px-Bras%C3%A3o_do_Cear%C3%A1.svg.png";
 
         if (isValid) {
-            // Retorna uma página HTML de sucesso com a meta tag de UTF-8 corrigida
-            String htmlSuccess = "<html><head><meta charset=\"UTF-8\"></head><body style=\"font-family: Arial, sans-serif; text-align: center; margin-top: 50px;\">"
-                               + "<h1 style=\"color: #28a745;\">✅ E-mail Verificado com Sucesso!</h1>"
-                               + "<p style=\"font-size: 18px; color: #555;\">Sua conta foi verificada com sucesso. Você já pode fechar esta aba e continuar o processo.</p>"
-                               + "</body></html>";
+            String htmlSuccess = 
+                "<html>"
+                + "<head><meta charset=\"UTF-8\"><title>Verificação Concluída</title></head>"
+                + "<body style=\"font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 0; background: linear-gradient(to bottom, #E8F5E9, #F5F5F5);\">"
+                + "<div style=\"padding: 20px;\">"
+                + "<div style=\"max-width: 600px; margin: 20px auto; padding: 30px; background-color: #fff; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);\">"
+                + "<div style=\"text-align: left; padding-bottom: 20px; border-bottom: 1px solid #eee;\">"
+                + "<img src=\"" + logoCearaSemFome + "\" alt=\"Ceará sem Fome\" style=\"height: 40px; margin-right: 20px;\">"
+                + "<img src=\"" + logoGovernoCeara + "\" alt=\"Governo do Estado do Ceará\" style=\"height: 40px;\">"
+                + "</div>"
+                + "<h1 style=\"color: #333; font-size: 28px; margin-top: 30px;\">Verificação Concluída</h1>"
+                + "<h2 style=\"color: #28a745; font-size: 22px; font-weight: bold; margin: 15px 0;\">Sua conta foi verificada com sucesso.</h2>"
+                + "<p style=\"font-size: 16px; color: #555;\">Você j&aacute; pode fechar esta aba e continuar o processo.</p>"
+                + "</div></div></body></html>";
             return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(htmlSuccess);
         } else {
-            // Retorna uma página HTML de erro com a meta tag de UTF-8 corrigida
-            String htmlError = "<html><head><meta charset=\"UTF-8\"></head><body style=\"font-family: Arial, sans-serif; text-align: center; margin-top: 50px;\">"
-                             + "<h1 style=\"color: #dc3545;\">❌ Token Inválido ou Expirado</h1>"
-                             + "<p style=\"font-size: 18px; color: #555;\">O link de verificação não é mais válido. Por favor, solicite um novo link no aplicativo.</p>"
-                             + "</body></html>";
+            String htmlError = 
+                "<html>"
+                + "<head><meta charset=\"UTF-8\"><title>Erro na Verificação</title></head>"
+                + "<body style=\"font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 0; background: linear-gradient(to bottom, #fde8e8, #F5F5F5);\">"
+                + "<div style=\"padding: 20px;\">"
+                + "<div style=\"max-width: 600px; margin: 20px auto; padding: 30px; background-color: #fff; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);\">"
+                + "<div style=\"text-align: left; padding-bottom: 20px; border-bottom: 1px solid #eee;\">"
+                + "<img src=\"" + logoCearaSemFome + "\" alt=\"Ceará sem Fome\" style=\"height: 40px; margin-right: 20px;\">"
+                + "<img src=\"" + logoGovernoCeara + "\" alt=\"Governo do Estado do Ceará\" style=\"height: 40px;\">"
+                + "</div>"
+                + "<h1 style=\"color: #dc3545; font-size: 28px; margin-top: 30px;\">Erro na Verificação</h1>"
+                + "<h2 style=\"font-size: 22px; font-weight: bold; color: #555;\">Token Inv&aacute;lido ou Expirado.</h2>"
+                + "<p style=\"font-size: 16px; color: #555;\">O link de verifica&ccedil;&atilde;o n&atilde;o &eacute; mais v&aacute;lido. Por favor, solicite um novo link no aplicativo.</p>"
+                + "</div></div></body></html>";
             return ResponseEntity.badRequest().contentType(MediaType.TEXT_HTML).body(htmlError);
         }
     }
