@@ -1,6 +1,6 @@
 package com.ceara_sem_fome_back.controller;
 
-import com.ceara_sem_fome_back.dto.LoginDTO;
+import com.ceara_sem_fome_back.data.dto.LoginDTO;
 import com.ceara_sem_fome_back.model.Administrador;
 import com.ceara_sem_fome_back.service.AdministradorService;
 import org.springframework.beans.factory.annotation.Autowired;
