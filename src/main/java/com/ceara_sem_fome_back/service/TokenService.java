@@ -1,5 +1,7 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.dto.RecuperacaoSenhaDTO;
+import com.ceara_sem_fome_back.dto.RedefinirSenhaFinalDTO;
 import com.ceara_sem_fome_back.model.VerificationToken;
 import com.ceara_sem_fome_back.repository.VerificationTokenRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -9,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @Slf4j
@@ -18,61 +19,86 @@ public class TokenService {
     @Autowired
     private VerificationTokenRepository tokenRepository;
 
-    /**
-     * Gera e salva um novo token de recuperação de senha com validade de 5 minutos.
-     * @param userEmail O email do usuário que solicitou a recuperação.
-     * @return O token gerado.
-     */
-    @Transactional
-    public String createPasswordRecoveryToken(String userEmail) {
-        // Gera um token único
-        String token = UUID.randomUUID().toString();
-        
-        // **OPCIONAL:** Remove tokens antigos/pendentes do mesmo usuário (boa prática)
-        // Isso garante que apenas o token mais recente seja válido
-        tokenRepository.deleteByUserEmail(userEmail); 
-        
-        // Define a validade de 5 minutos
-        VerificationToken verificationToken = new VerificationToken();
-        verificationToken.setToken(token);
-        verificationToken.setUserEmail(userEmail);
-        verificationToken.setExpiryDate(LocalDateTime.now().plusMinutes(5));
-        
-        tokenRepository.save(verificationToken);
-        log.info("Token de recuperação de senha criado para {}. Expira em: {}", userEmail, verificationToken.getExpiryDate());
-        
-        return token;
-    }
+    @Autowired
+    private EmailService emailService;
+    
+    // FUTURO: Injete o repositório de usuários
+    // @Autowired
+    // private UsuarioRepository usuarioRepository; 
+
 
     /**
-     * Valida se um token existe e se ainda está dentro do prazo de validade (5 minutos).
-     * Se válido, o token é DELETADO imediatamente.
-     * @param token O token recebido do link de e-mail.
-     * @return True se o token for válido; False caso contrário.
+     * Etapa 1: Valida se CPF e Email batem (lógica de teste) e envia o e-mail.
+     */
+    public boolean validateAndSendRecoveryEmail(RecuperacaoSenhaDTO recuperacaoDTO) {
+        final String TEST_EMAIL = "pedrorossiter@gmail.com";
+        final String TEST_CPF = "12345678900"; 
+
+        boolean credenciaisValidas = recuperacaoDTO.getEmail().equals(TEST_EMAIL) &&
+                                     recuperacaoDTO.getCpf().equals(TEST_CPF);
+
+        if (credenciaisValidas) {
+            try {
+                emailService.sendVerificationEmail(recuperacaoDTO.getEmail());
+                return true;
+            } catch (RuntimeException e) {
+                log.error("Falha ao enviar e-mail após validação de CPF/Email: {}", e.getMessage());
+                return false;
+            }
+        } else {
+            log.warn("Tentativa de recuperação de senha falhou: CPF/Email incorretos para {}", recuperacaoDTO.getEmail());
+            return false;
+        }
+    }
+
+
+    /**
+     * Etapa 2: Valida o token recebido no link. Não o consome aqui.
      */
     @Transactional
     public boolean validateVerificationToken(String token) {
         Optional<VerificationToken> optionalToken = tokenRepository.findByToken(token);
         
         if (optionalToken.isEmpty()) {
-            log.warn("Tentativa de uso de token inexistente: {}", token);
-            return false; // Token não encontrado
-        }
-
-        VerificationToken verificationToken = optionalToken.get();
-        
-        // 1. **VERIFICAÇÃO DE EXPIRAÇÃO CORRIGIDA:** // Checa se a data de expiração é ANTES do momento atual.
-        if (verificationToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-            // Token expirou. Removemos do banco.
-            tokenRepository.delete(verificationToken);
-            log.warn("Token expirado deletado: {}", token);
+             log.warn("Tentativa de uso de token inexistente: {}", token);
+             return false;
+         }
+         VerificationToken verificationToken = optionalToken.get();
+         if (verificationToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+             tokenRepository.delete(verificationToken);
+             log.warn("Token expirado deletado: {}", token);
+             return false;
+         }
+         log.info("Token validado com sucesso (mas NÃO CONSUMIDO): {}", verificationToken.getUserEmail());
+         return true;
+    }
+    
+    /**
+     * Etapa 3: Recebe o token e a senha, valida e consome o token.
+     */
+    @Transactional
+    public boolean resetUserPassword(RedefinirSenhaFinalDTO redefinirDTO) {
+        // 1. **VERIFICAÇÃO DE UX:** As senhas devem coincidir.
+        if (!redefinirDTO.getNovaSenha().equals(redefinirDTO.getConfirmaNovaSenha())) {
+            log.warn("Falha na redefinição de senha: As senhas não coincidem para o token {}", redefinirDTO.getToken());
             return false;
         }
 
-        // 2. Se a data de expiração não passou (token é válido), consumimos e deletamos.
-        tokenRepository.delete(verificationToken);
-        log.info("Token validado e consumido com sucesso para email: {}", verificationToken.getUserEmail());
+        // 2. **SEGURANÇA:** O token é a prova de identidade. Verifica se ele existe.
+        Optional<VerificationToken> optionalToken = tokenRepository.findByToken(redefinirDTO.getToken());
+        if (optionalToken.isEmpty()) {
+            log.warn("Tentativa de redefinição de senha com token inválido: {}", redefinirDTO.getToken());
+            return false;
+        }
+
+        // 3. Obtém o e-mail do usuário a partir do token (chave para o banco de dados).
+        String userEmail = optionalToken.get().getUserEmail(); 
         
-        return true;
+        // 4. Lógica de Consumo do Token.
+        tokenRepository.delete(optionalToken.get());
+        
+        log.info("SIMULANDO: Senha redefinida com sucesso para o email {}. Token utilizado: {}", userEmail, redefinirDTO.getToken());
+        
+        return true; 
     }
 }
