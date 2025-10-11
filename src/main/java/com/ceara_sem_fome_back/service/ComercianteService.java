@@ -25,4 +25,17 @@ public class ComercianteService {
     public boolean verificarCpf(String cpf) {
         return PessoaUtils.verificarCpf(cpf);
     }
+
+    public Comerciante salvarComerciante(Comerciante comerciante) {
+
+        if (comercianteRepository.existsById(comerciante.getCpf())) {
+            throw new IllegalArgumentException("CPF já cadastrado.");
+        }
+
+        if (comercianteRepository.findByEmail(comerciante.getEmail()) != null) {
+            throw new IllegalArgumentException("Email já cadastrado.");
+        }
+
+        return comercianteRepository.save(comerciante);
+    }
 }

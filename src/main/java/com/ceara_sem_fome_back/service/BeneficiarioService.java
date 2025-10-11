@@ -25,4 +25,16 @@ public class BeneficiarioService {
     public boolean verificarCpf(String cpf) {
         return PessoaUtils.verificarCpf(cpf);
     }
+
+    public Beneficiario salvarBeneficiario(Beneficiario beneficiario) {
+        if (beneficiarioRepository.existsById(beneficiario.getCpf())) {
+            throw new IllegalArgumentException("CPF já cadastrado.");
+        }
+
+        if (beneficiarioRepository.findByEmail(beneficiario.getEmail()) != null) {
+            throw new IllegalArgumentException("Email já cadastrado.");
+        }
+
+        return beneficiarioRepository.save(beneficiario);
+    }
 }
