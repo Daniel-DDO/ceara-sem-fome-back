@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
@@ -17,28 +19,23 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                
-                // LIBERA POST: Rota para iniciar a recuperação (CPF/Email check)
-                .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/auth/recuperar")).permitAll() 
-                
-                // LIBERA POST: Rota FINAL para redefinir a senha
-                .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/auth/resetar-senha-final")).permitAll() 
-                
-                // Permite GET para o link de validação do token (pedágio)
+                .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/auth/recuperar")).permitAll()
+                .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.POST, "/auth/resetar-senha-final")).permitAll()
                 .requestMatchers(AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/auth/reset-password")).permitAll()
-
-                // Permite TODAS as rotas de teste (GET/POST)
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/test/**")).permitAll()
-                
-                // Rotas essenciais do projeto
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
                 .requestMatchers(AntPathRequestMatcher.antMatcher("/adm/login")).permitAll()
-                
-                // Bloqueia todas as outras rotas (exige autenticação)
                 .anyRequest().authenticated()
             )
             .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
 
         return http.build();
+    }
+
+    // NOVO: Este método cria e configura o PasswordEncoder.
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        // BCrypt é um algoritmo de hash de senha seguro e recomendado
+        return new BCryptPasswordEncoder();
     }
 }

@@ -2,10 +2,13 @@ package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.dto.RecuperacaoSenhaDTO;
 import com.ceara_sem_fome_back.dto.RedefinirSenhaFinalDTO;
+import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.model.VerificationToken;
+import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
 import com.ceara_sem_fome_back.repository.VerificationTokenRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder; // NOVO: Importe o PasswordEncoder
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,20 +25,22 @@ public class TokenService {
     @Autowired
     private EmailService emailService;
     
-    // FUTURO: Injete o repositório de usuários
-    // @Autowired
-    // private UsuarioRepository usuarioRepository; 
+    @Autowired
+    private BeneficiarioRepository beneficiarioRepository; 
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder; // NOVO: Injete o PasswordEncoder
 
 
     /**
-     * Etapa 1: Valida se CPF e Email batem (lógica de teste) e envia o e-mail.
+     * Etapa 1: Valida se CPF e Email batem no banco de dados e envia o e-mail.
      */
     public boolean validateAndSendRecoveryEmail(RecuperacaoSenhaDTO recuperacaoDTO) {
-        final String TEST_EMAIL = "pedrorossiter@gmail.com";
-        final String TEST_CPF = "12345678900"; 
+        
+        Optional<Beneficiario> beneficiario = beneficiarioRepository
+            .findByCpfAndEmail(recuperacaoDTO.getCpf(), recuperacaoDTO.getEmail());
 
-        boolean credenciaisValidas = recuperacaoDTO.getEmail().equals(TEST_EMAIL) &&
-                                     recuperacaoDTO.getCpf().equals(TEST_CPF);
+        boolean credenciaisValidas = beneficiario.isPresent();
 
         if (credenciaisValidas) {
             try {
@@ -53,7 +58,7 @@ public class TokenService {
 
 
     /**
-     * Etapa 2: Valida o token recebido no link. Não o consome aqui.
+     * Etapa 2: Valida o token recebido no link.
      */
     @Transactional
     public boolean validateVerificationToken(String token) {
@@ -74,31 +79,43 @@ public class TokenService {
     }
     
     /**
-     * Etapa 3: Recebe o token e a senha, valida e consome o token.
+     * Etapa 3: Recebe o token e a senha, valida e, FINALMENTE, ATUALIZA a senha no banco de dados.
      */
     @Transactional
     public boolean resetUserPassword(RedefinirSenhaFinalDTO redefinirDTO) {
-        // 1. **VERIFICAÇÃO DE UX:** As senhas devem coincidir.
+        // 1. As senhas devem coincidir.
         if (!redefinirDTO.getNovaSenha().equals(redefinirDTO.getConfirmaNovaSenha())) {
             log.warn("Falha na redefinição de senha: As senhas não coincidem para o token {}", redefinirDTO.getToken());
             return false;
         }
 
-        // 2. **SEGURANÇA:** O token é a prova de identidade. Verifica se ele existe.
+        // 2. O token é a prova de identidade. Verifica se ele existe.
         Optional<VerificationToken> optionalToken = tokenRepository.findByToken(redefinirDTO.getToken());
         if (optionalToken.isEmpty()) {
             log.warn("Tentativa de redefinição de senha com token inválido: {}", redefinirDTO.getToken());
             return false;
         }
 
-        // 3. Obtém o e-mail do usuário a partir do token (chave para o banco de dados).
+        // 3. Obtém o e-mail do usuário a partir do token.
         String userEmail = optionalToken.get().getUserEmail(); 
         
         // 4. Lógica de Consumo do Token.
         tokenRepository.delete(optionalToken.get());
         
-        log.info("SIMULANDO: Senha redefinida com sucesso para o email {}. Token utilizado: {}", userEmail, redefinirDTO.getToken());
+        // AQUI ESTÁ A LÓGICA DE ATUALIZAÇÃO FINAL
+        Optional<Beneficiario> optionalBeneficiario = beneficiarioRepository.findByEmail(userEmail);
         
-        return true; 
+        if (optionalBeneficiario.isPresent()) {
+            Beneficiario beneficiario = optionalBeneficiario.get();
+            // Criptografa a nova senha antes de salvar
+            String senhaCriptografada = passwordEncoder.encode(redefinirDTO.getNovaSenha());
+            beneficiario.setSenha(senhaCriptografada);
+            beneficiarioRepository.save(beneficiario);
+            log.info("SUCESSO: Senha redefinida para o email {}.", userEmail);
+            return true;
+        } else {
+            log.error("Erro grave: Usuário não encontrado para o email do token: {}", userEmail);
+            return false;
+        }
     }
 }
