@@ -7,8 +7,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -17,20 +17,17 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
-@EnableWebSecurity
 public class JWTConfiguracao {
 
     private final AdministradorService administradorService;
-    private final PasswordEncoder passwordEncoder;
 
-    public JWTConfiguracao(AdministradorService administradorService, PasswordEncoder passwordEncoder) {
+    public JWTConfiguracao(AdministradorService administradorService) {
         this.administradorService = administradorService;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
@@ -42,7 +39,7 @@ public class JWTConfiguracao {
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(administradorService);
-        provider.setPasswordEncoder(passwordEncoder);
+        provider.setPasswordEncoder(passwordEncoder());
         return provider;
     }
 
@@ -50,17 +47,16 @@ public class JWTConfiguracao {
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    AuthenticationManager authManager) throws Exception {
 
-        AntPathRequestMatcher h2ConsoleMatcher = new AntPathRequestMatcher("/h2-console/**");
-        AntPathRequestMatcher admLoginMatcher = new AntPathRequestMatcher("/adm/login");
-        AntPathRequestMatcher loginPostMatcher = new AntPathRequestMatcher("/login", "POST");
-
         http
                 .csrf(csrf -> csrf.disable())
-                .headers(headers -> headers.frameOptions(frame -> frame.disable())) // necessário pro H2
+                .headers(headers -> headers.frameOptions(frame -> frame.disable())) //necessário pro H2
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(h2ConsoleMatcher).permitAll()
-                        .requestMatchers(admLoginMatcher).permitAll()
-                        .requestMatchers(loginPostMatcher).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
+                        //endpoints públicos
+                        .requestMatchers(new AntPathRequestMatcher("/health")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/version")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/adm/login")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/login", "POST")).permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilter(new JWTAutenticarFilter(authManager))
@@ -71,15 +67,13 @@ public class JWTConfiguracao {
     }
 
     @Bean
-    CorsConfigurationSource corsConfiguration() {
-        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-
-        CorsConfiguration corsConfiguration = new CorsConfiguration().applyPermitDefaultValues();
-        corsConfiguration.addAllowedMethod("*");
-        corsConfiguration.addAllowedHeader("*");
-        corsConfiguration.addAllowedOriginPattern("*");
-
-        source.registerCorsConfiguration("/**", corsConfiguration);
+    public CorsConfigurationSource corsConfiguration() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration cors = new CorsConfiguration().applyPermitDefaultValues();
+        cors.addAllowedMethod("*");
+        cors.addAllowedHeader("*");
+        cors.addAllowedOriginPattern("*");
+        source.registerCorsConfiguration("/**", cors);
         return source;
     }
 }
