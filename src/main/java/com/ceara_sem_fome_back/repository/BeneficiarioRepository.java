@@ -8,7 +8,6 @@ import java.util.Optional;
 
 @Repository
 public interface BeneficiarioRepository extends JpaRepository<Beneficiario, String> {
-
     // Método que a Etapa 1 usará para buscar o beneficiário por CPF e email
     Optional<Beneficiario> findByCpfAndEmail(String cpf, String email);
 
