@@ -5,12 +5,10 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.ceara_sem_fome_back.data.AdministradorData;
 import com.ceara_sem_fome_back.model.Administrador;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.PostConstruct;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -23,27 +21,14 @@ import java.util.Date;
 
 public class JWTAutenticarFilter extends UsernamePasswordAuthenticationFilter {
 
-    //por enquanto tá em testes (fazendo só o de adm)
-
-    public static final int TOKEN_EXPIRACAO = 600_000; //10 minutos
-    private static String TOKEN_SENHA;
-
-    @Value("${api.guid.token.senha}")
-    private String tokenSenhaInstance;
-
-    @PostConstruct
-    public void init() {
-        TOKEN_SENHA = tokenSenhaInstance;
-    }
-
-    public static String getTokenSenha() {
-        return TOKEN_SENHA;
-    }
-
+    public static final int TOKEN_EXPIRACAO = 600_000; // 10 minutos
+    private final String tokenSenha; // agora é final
     private final AuthenticationManager authenticationManager;
 
-    public JWTAutenticarFilter(AuthenticationManager authenticationManager) {
+    // construtor recebe AuthenticationManager e a senha do token
+    public JWTAutenticarFilter(AuthenticationManager authenticationManager, String tokenSenha) {
         this.authenticationManager = authenticationManager;
+        this.tokenSenha = tokenSenha;
     }
 
     @Override
@@ -67,7 +52,7 @@ public class JWTAutenticarFilter extends UsernamePasswordAuthenticationFilter {
         String token = JWT.create()
                 .withSubject(administradorData.getUsername())
                 .withExpiresAt(new Date(System.currentTimeMillis() + TOKEN_EXPIRACAO))
-                .sign(Algorithm.HMAC512(TOKEN_SENHA));
+                .sign(Algorithm.HMAC512(tokenSenha)); // usa a senha recebida no construtor
 
         response.getWriter().write(token);
         response.getWriter().flush();

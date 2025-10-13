@@ -2,8 +2,10 @@ package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.dto.ErrorDTO;
 import com.ceara_sem_fome_back.data.dto.LoginDTO;
+import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
 import com.ceara_sem_fome_back.dto.BeneficiarioRequest;
 import com.ceara_sem_fome_back.model.Beneficiario;
+import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.BeneficiarioService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,12 +22,24 @@ public class BeneficiarioController {
     @Autowired
     private BeneficiarioService beneficiarioService;
 
+    @Autowired
+    private JWTUtil jwtUtil;
+
     @PostMapping("/login")
-    public ResponseEntity<Beneficiario> logarBeneficiario(@RequestBody LoginDTO loginDTO) {
+    public ResponseEntity<PessoaRespostaDTO> logarBeneficiario(@RequestBody LoginDTO loginDTO) {
         Beneficiario beneficiario = beneficiarioService.logarBeneficiario(loginDTO.getEmail(), loginDTO.getSenha());
 
         if (beneficiario != null) {
-            return ResponseEntity.ok(beneficiario);
+            String token = jwtUtil.gerarToken(beneficiario.getEmail(), JWTUtil.TOKEN_EXPIRACAO);
+
+            PessoaRespostaDTO responseDTO = new PessoaRespostaDTO(
+                    beneficiario.getId(),
+                    beneficiario.getNome(),
+                    beneficiario.getEmail(),
+                    token
+            );
+
+            return ResponseEntity.ok(responseDTO);
         } else {
             return ResponseEntity.status(401).body(null);
         }

@@ -1,6 +1,7 @@
 package com.ceara_sem_fome_back.security;
 
 import com.ceara_sem_fome_back.service.AdministradorService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -46,11 +47,12 @@ public class JWTConfiguracao {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   AuthenticationManager authManager) throws Exception {
+                                                   AuthenticationManager authManager,
+                                                   @Value("${api.guid.token.senha}") String tokenSenha) throws Exception {
 
         http
                 .csrf(csrf -> csrf.disable())
-                .headers(headers -> headers.frameOptions(frame -> frame.disable())) //necessário para H2
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .authorizeHttpRequests(auth -> auth
                         //libera H2 console
                         .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
@@ -59,11 +61,11 @@ public class JWTConfiguracao {
                         .requestMatchers(new AntPathRequestMatcher("/version")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/adm/login", "POST")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/login", "POST")).permitAll()
-                        //libera tudo (temporário, remove se quiser autenticação)
+                        //libera tudo (é pra ser temporário, dps remover se quiser autenticação)
                         .anyRequest().permitAll()
                 )
-                .addFilter(new JWTAutenticarFilter(authManager))
-                .addFilter(new JWTValidarFilter(authManager))
+                .addFilter(new JWTAutenticarFilter(authManager, tokenSenha)) //autenticação
+                .addFilter(new JWTValidarFilter(authManager, tokenSenha)) //validação
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();

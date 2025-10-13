@@ -19,21 +19,20 @@ public class JWTValidarFilter extends BasicAuthenticationFilter {
     public static final String HEADER_ATRIBUTO = "Authorization";
     public static final String ATRIBUTO_PREFIXO = "Bearer ";
 
-    public JWTValidarFilter(AuthenticationManager authenticationManager) {
+    private final String tokenSenha; //senha recebida no construtor
+
+    public JWTValidarFilter(AuthenticationManager authenticationManager, String tokenSenha) {
         super(authenticationManager);
+        this.tokenSenha = tokenSenha;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
         String atributo = request.getHeader(HEADER_ATRIBUTO);
 
-        if (atributo == null) {
+        if (atributo == null || !atributo.startsWith(ATRIBUTO_PREFIXO)) {
             chain.doFilter(request, response);
             return;
-        }
-
-        if (!atributo.startsWith(ATRIBUTO_PREFIXO)) {
-            chain.doFilter(request, response);
         }
 
         String token = atributo.replace(ATRIBUTO_PREFIXO, "");
@@ -44,7 +43,10 @@ public class JWTValidarFilter extends BasicAuthenticationFilter {
     }
 
     private UsernamePasswordAuthenticationToken getAuthenticationToken(String token) {
-        String usuario = JWT.require(Algorithm.HMAC512(JWTAutenticarFilter.getTokenSenha())).build().verify(token).getSubject();
+        String usuario = JWT.require(Algorithm.HMAC512(tokenSenha)) //usa a senha do construtor
+                .build()
+                .verify(token)
+                .getSubject();
 
         if (usuario == null) {
             return null;
