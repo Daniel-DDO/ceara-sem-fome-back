@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.ceara_sem_fome_back.data.AdministradorData;
 import com.ceara_sem_fome_back.model.Administrador;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,8 +26,19 @@ public class JWTAutenticarFilter extends UsernamePasswordAuthenticationFilter {
     //por enquanto tá em testes (fazendo só o de adm)
 
     public static final int TOKEN_EXPIRACAO = 600_000; //10 minutos
+    private static String TOKEN_SENHA;
+
     @Value("${api.guid.token.senha}")
-    public String TOKEN_SENHA;
+    private String tokenSenhaInstance;
+
+    @PostConstruct
+    public void init() {
+        TOKEN_SENHA = tokenSenhaInstance;
+    }
+
+    public static String getTokenSenha() {
+        return TOKEN_SENHA;
+    }
 
     private final AuthenticationManager authenticationManager;
 
