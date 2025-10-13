@@ -3,6 +3,7 @@ package com.ceara_sem_fome_back.security;
 import com.ceara_sem_fome_back.service.AdministradorService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -49,15 +50,17 @@ public class JWTConfiguracao {
 
         http
                 .csrf(csrf -> csrf.disable())
-                .headers(headers -> headers.frameOptions(frame -> frame.disable())) //necessário pro H2
+                .headers(headers -> headers.frameOptions(frame -> frame.disable())) //necessário para H2
                 .authorizeHttpRequests(auth -> auth
+                        //libera H2 console
                         .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
-                        //endpoints públicos
+                        //libera endpoints públicos
                         .requestMatchers(new AntPathRequestMatcher("/health")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/version")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/adm/login")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/adm/login", "POST")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/login", "POST")).permitAll()
-                        .anyRequest().authenticated()
+                        //libera tudo (temporário, remove se quiser autenticação)
+                        .anyRequest().permitAll()
                 )
                 .addFilter(new JWTAutenticarFilter(authManager))
                 .addFilter(new JWTValidarFilter(authManager))
