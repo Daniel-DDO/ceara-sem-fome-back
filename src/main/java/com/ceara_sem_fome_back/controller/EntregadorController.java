@@ -4,11 +4,13 @@ import com.ceara_sem_fome_back.data.dto.ErrorDTO;
 import com.ceara_sem_fome_back.data.dto.LoginDTO;
 import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
 import com.ceara_sem_fome_back.dto.EntregadorRequest;
+import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.model.Entregador;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.EntregadorService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -68,5 +70,16 @@ public class EntregadorController {
             ErrorDTO errorDTO = new ErrorDTO("Erro interno ao tentar cadastrar entregador.", 500);
             return ResponseEntity.status(500).body(errorDTO);
         }
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<Page<Entregador>> listarTodos(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction
+    ) {
+        Page<Entregador> pagina = entregadorService.listarTodos(page, size, sortBy, direction);
+        return ResponseEntity.ok(pagina);
     }
 }

@@ -4,7 +4,10 @@ import com.ceara_sem_fome_back.model.Comerciante;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface ComercianteRepository extends JpaRepository <Comerciante, String> {
-    Comerciante findByEmail(String email);
+    Optional<Comerciante> findByCpfAndEmail(String cpf, String email);
+    Optional<Comerciante> findByEmail(String email);
 }
