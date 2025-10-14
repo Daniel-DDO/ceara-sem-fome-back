@@ -1,9 +1,9 @@
 package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.data.AdministradorData;
+import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
 import com.ceara_sem_fome_back.model.Administrador;
-import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.repository.AdministradorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -58,12 +58,21 @@ public class AdministradorService implements UserDetailsService {
         return administradorRepository.save(administrador);
     }
 
-    public Page<Administrador> listarTodos(int page, int size, String sortBy, String direction) {
+    public PaginacaoDTO<Administrador> listarTodos(int page, int size, String sortBy, String direction) {
         Sort sort = direction.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() :
                 Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        return administradorRepository.findAll(pageable);
+        Page<Administrador> pagina = administradorRepository.findAll(pageable);
+
+        return new PaginacaoDTO<>(
+                pagina.getContent(),
+                pagina.getNumber(),
+                pagina.getTotalPages(),
+                pagina.getTotalElements(),
+                pagina.getSize(),
+                pagina.isLast()
+        );
     }
 }

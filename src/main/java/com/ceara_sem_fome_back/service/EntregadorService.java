@@ -1,10 +1,8 @@
 package com.ceara_sem_fome_back.service;
 
-import com.ceara_sem_fome_back.data.AdministradorData;
 import com.ceara_sem_fome_back.data.EntregadorData;
+import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
-import com.ceara_sem_fome_back.model.Administrador;
-import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.model.Entregador;
 import com.ceara_sem_fome_back.repository.EntregadorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,12 +58,21 @@ public class EntregadorService implements UserDetailsService {
         return entregadorRepository.save(entregador);
     }
 
-    public Page<Entregador> listarTodos(int page, int size, String sortBy, String direction) {
+    public PaginacaoDTO<Entregador> listarTodos(int page, int size, String sortBy, String direction) {
         Sort sort = direction.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() :
                 Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        return entregadorRepository.findAll(pageable);
+        Page<Entregador> pagina = entregadorRepository.findAll(pageable);
+
+        return new PaginacaoDTO<>(
+                pagina.getContent(),
+                pagina.getNumber(),
+                pagina.getTotalPages(),
+                pagina.getTotalElements(),
+                pagina.getSize(),
+                pagina.isLast()
+        );
     }
 }

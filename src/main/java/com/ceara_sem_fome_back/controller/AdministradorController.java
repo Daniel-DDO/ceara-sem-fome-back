@@ -2,15 +2,14 @@ package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.dto.ErrorDTO;
 import com.ceara_sem_fome_back.data.dto.LoginDTO;
+import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
 import com.ceara_sem_fome_back.dto.AdministradorRequest;
 import com.ceara_sem_fome_back.model.Administrador;
-import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.AdministradorService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -67,13 +66,13 @@ public class AdministradorController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<Page<Administrador>> listarTodos(
+    public ResponseEntity<PaginacaoDTO<Administrador>> listarTodos(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String direction
     ) {
-        Page<Administrador> pagina = administradorService.listarTodos(page, size, sortBy, direction);
-        return ResponseEntity.ok(pagina);
+        PaginacaoDTO<Administrador> resposta = administradorService.listarTodos(page, size, sortBy, direction);
+        return ResponseEntity.ok(resposta);
     }
 }

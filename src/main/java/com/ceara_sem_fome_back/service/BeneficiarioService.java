@@ -1,9 +1,8 @@
 package com.ceara_sem_fome_back.service;
 
-import com.ceara_sem_fome_back.data.AdministradorData;
 import com.ceara_sem_fome_back.data.BeneficiarioData;
+import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
-import com.ceara_sem_fome_back.model.Administrador;
 import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,12 +59,21 @@ public class BeneficiarioService implements UserDetailsService {
     }
 
     //metodo pra listar em cada página
-    public Page<Beneficiario> listarTodos(int page, int size, String sortBy, String direction) {
+    public PaginacaoDTO<Beneficiario> listarTodos(int page, int size, String sortBy, String direction) {
         Sort sort = direction.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() :
                 Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        return beneficiarioRepository.findAll(pageable);
+        Page<Beneficiario> pagina = beneficiarioRepository.findAll(pageable);
+
+        return new PaginacaoDTO<>(
+                pagina.getContent(),
+                pagina.getNumber(),
+                pagina.getTotalPages(),
+                pagina.getTotalElements(),
+                pagina.getSize(),
+                pagina.isLast()
+        );
     }
 }

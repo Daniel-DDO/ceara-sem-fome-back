@@ -2,6 +2,7 @@ package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.dto.ErrorDTO;
 import com.ceara_sem_fome_back.data.dto.LoginDTO;
+import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
 import com.ceara_sem_fome_back.dto.ComercianteRequest;
 import com.ceara_sem_fome_back.model.Comerciante;
@@ -9,7 +10,6 @@ import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.ComercianteService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -72,13 +72,13 @@ public class ComercianteController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<Page<Comerciante>> listarTodos(
+    public ResponseEntity<PaginacaoDTO<Comerciante>> listarTodos(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String direction
     ) {
-        Page<Comerciante> pagina = comercianteService.listarTodos(page, size, sortBy, direction);
+        PaginacaoDTO<Comerciante> pagina = comercianteService.listarTodos(page, size, sortBy, direction);
         return ResponseEntity.ok(pagina);
     }
 }
