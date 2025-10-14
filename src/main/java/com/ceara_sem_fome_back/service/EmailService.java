@@ -74,18 +74,41 @@ public class EmailService {
 
         String verificationLink = "http://localhost:8080/test/verify-token?token=" + token;
 
-        String emailBody = "<div style=\"font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;\">"
-            + "<table style=\"width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
-            + "<tr><td style=\"padding: 20px; text-align: center;\">"
-            + "<h1 style=\"color: #007bff;\">Confirmação de Acesso</h1>"
-            + "<p style=\"color: #555555; font-size: 16px;\">Olá!</p>"
-            + "<p style=\"color: #555555; font-size: 16px;\">Recebemos uma solicitação para verificar seu e-mail.</p>"
-            + "<p style=\"color: #555555; font-size: 16px;\">Por favor, clique no botão abaixo para confirmar seu acesso.</p>"
-            + "<p style=\"text-align: center; margin-top: 20px;\">"
-            + "<a href=\"" + verificationLink + "\" style=\"display: inline-block; padding: 12px 24px; font-size: 16px; color: #ffffff; background-color: #007bff; text-decoration: none; border-radius: 5px;\">Verificar meu E-mail</a>"
+        String logoCearaSemFome = "https://www.ceara.gov.br/wp-content/uploads/2024/01/logo-cesf-e-cegov-e1704803051849-600x239.png";
+        String logoGovernoCeara = "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Bras%C3%A3o_do_Cear%C3%A1.svg/500px-Bras%C3%A3o_do_Cear%C3%A1.svg.png";
+
+        String emailBody = 
+            "<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 30px; margin: 0; line-height: 1.6;\">"
+            + "<table role=\"presentation\" style=\"width: 100%; max-width: 600px; margin: 20px auto; border-spacing: 0; background-color: #ffffff; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); overflow: hidden;\">"
+            
+            // Header com Logos
+            + "<tr><td style=\"background-color: #ffffff; padding: 25px 30px; text-align: left; border-bottom: 1px solid #e0e0e0;\">"
+            + "<img src=\"" + logoCearaSemFome + "\" alt=\"Ceará sem Fome\" style=\"max-height: 45px; vertical-align: middle; margin-right: 20px;\">"
+            + "<img src=\"" + logoGovernoCeara + "\" alt=\"Governo do Estado do Ceará\" style=\"max-height: 45px; vertical-align: middle;\">"
+            + "</td></tr>"
+            
+            // Conteúdo principal
+            + "<tr><td style=\"padding: 30px; text-align: center;\">"
+            + "<h1 style=\"color: #333333; font-size: 28px; margin-bottom: 20px;\">Verificação de E-mail</h1>"
+            + "<p style=\"color: #555555; font-size: 17px; margin-bottom: 25px;\">Olá!</p>"
+            + "<p style=\"color: #555555; font-size: 17px; margin-bottom: 30px;\">Recebemos uma solicitação para verificar seu e-mail. Para continuar, por favor, clique no botão abaixo:</p>"
+            
+            // Botão
+            + "<p style=\"text-align: center; margin-top: 20px; margin-bottom: 30px;\">"
+            + "<a href=\"" + verificationLink + "\" style=\"display: inline-block; padding: 15px 30px; font-size: 18px; color: #ffffff; background-color: #1D9669; text-decoration: none; border-radius: 8px; font-weight: bold;\">Verificar meu E-mail</a>"
             + "</p>"
-            + "<p style=\"color: #999999; font-size: 14px; margin-top: 20px;\">Se você não solicitou esta verificação, por favor, ignore este e-mail.</p>"
-            + "</td></tr></table></div>";
+            
+            + "<p style=\"color: #777777; font-size: 15px; margin-top: 30px;\">Este link é válido por 5 minutos.</p>"
+            + "</td></tr>"
+            
+            // Rodapé
+            + "<tr><td style=\"background-color: #f8f8f8; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;\">"
+            + "<p style=\"color: #aaaaaa; font-size: 13px; margin: 0;\">Se você não solicitou esta verificação, por favor, ignore este e-mail ou entre em contato com o suporte.</p>"
+            + "<p style=\"color: #aaaaaa; font-size: 13px; margin: 5px 0 0;\">&copy; " + LocalDateTime.now().getYear() + " Ceará Sem Fome. Todos os direitos reservados.</p>"
+            + "</td></tr>"
+            
+            + "</table>"
+            + "</div>";
 
         this.sendHtmlMail(userEmail, "Verificação de E-mail", emailBody);
 
