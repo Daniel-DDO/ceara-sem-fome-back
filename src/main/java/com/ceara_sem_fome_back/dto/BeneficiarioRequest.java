@@ -3,7 +3,8 @@ package com.ceara_sem_fome_back.dto;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.validator.constraints.br.CPF;
+// A anotação @CPF foi removida daqui
+// import org.hibernate.validator.constraints.br.CPF; // Remova esta importação também
 
 import java.time.LocalDate;
 
@@ -14,7 +15,7 @@ public class BeneficiarioRequest {
     @NotBlank(message = "O nome é obrigatório.")
     private String nome;
 
-    @CPF(message = "CPF inválido.")
+    @Size(min = 11, max = 11, message = "O CPF deve ter 11 dígitos.")
     @NotBlank(message = "O CPF é obrigatório.")
     private String cpf;
 
@@ -35,5 +36,4 @@ public class BeneficiarioRequest {
 
     @NotBlank(message = "O gênero é obrigatório.")
     private String genero;
-
 }

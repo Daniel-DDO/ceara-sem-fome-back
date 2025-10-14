@@ -3,7 +3,7 @@ package com.ceara_sem_fome_back.controller;
 import com.ceara_sem_fome_back.data.dto.ErrorDTO;
 import com.ceara_sem_fome_back.dto.EstabelecimentoRequest;
 import com.ceara_sem_fome_back.model.Estabelecimento;
-import com.ceara_sem_fome_back.repository.EstabelecimentoRepository;
+// import com.ceara_sem_fome_back.repository.EstabelecimentoRepository;
 import com.ceara_sem_fome_back.service.EstabelecimentoService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestBody;
