@@ -42,7 +42,7 @@ public class AdministradorController {
         }
     }
 
-    @PostMapping
+    @PostMapping("/cadastrar")
     public ResponseEntity<Object> cadastrarAdm(@RequestBody @Valid AdministradorRequest request) {
         try {
             Administrador administradorParaSalvar = new Administrador();

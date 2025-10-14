@@ -43,7 +43,7 @@ public class EntregadorController {
         }
     }
 
-    @PostMapping
+    @PostMapping("/cadastrar")
     public ResponseEntity<Object> cadastrarEntregador(@RequestBody @Valid EntregadorRequest request) {
         try {
             Entregador novoEntregador = new Entregador(

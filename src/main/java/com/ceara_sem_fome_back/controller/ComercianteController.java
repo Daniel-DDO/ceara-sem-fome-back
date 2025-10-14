@@ -43,7 +43,7 @@ public class ComercianteController {
         }
     }
 
-    @PostMapping
+    @PostMapping("/cadastrar")
     public ResponseEntity<Object> cadastrarComerciante(@RequestBody @Valid ComercianteRequest request) {
         try {
             Comerciante novoComerciante = new Comerciante(

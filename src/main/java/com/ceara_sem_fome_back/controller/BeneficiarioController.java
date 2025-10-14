@@ -45,7 +45,7 @@ public class BeneficiarioController {
         }
     }
 
-    @PostMapping
+    @PostMapping("/cadastrar")
     public ResponseEntity<Object> cadastrarBeneficiario(@RequestBody @Valid BeneficiarioRequest request) {
         try {
             Beneficiario novoBeneficiario = new Beneficiario(

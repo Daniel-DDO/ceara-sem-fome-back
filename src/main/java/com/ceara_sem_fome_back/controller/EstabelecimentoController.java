@@ -19,7 +19,7 @@ public class EstabelecimentoController {
     @Autowired
     private EstabelecimentoService estabelecimentoService;
 
-    @PostMapping
+@PostMapping("/cadastrar")
     public ResponseEntity<Object> cadastrarEstabelecimento(@RequestBody @Valid EstabelecimentoRequest request) {
         try {
             Estabelecimento novoEstabelecimento = new Estabelecimento();
