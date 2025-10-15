@@ -1,10 +1,15 @@
 package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.data.AdministradorData;
+import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
 import com.ceara_sem_fome_back.model.Administrador;
 import com.ceara_sem_fome_back.repository.AdministradorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -19,10 +24,10 @@ public class AdministradorService implements UserDetailsService {
     private AdministradorRepository administradorRepository;
 
     public Administrador logarAdm(String email, String senha) {
-        Administrador administrador = administradorRepository.findByEmail(email);
+        Optional<Administrador> administrador = administradorRepository.findByEmail(email);
 
-        if (administrador != null && administrador.getSenha().equals(senha)) {
-            return administrador;
+        if (administrador.isPresent() && administrador.get().getSenha().equals(senha)) {
+            return administrador.get();
         }
 
         throw new ContaNaoExisteException(email);
@@ -34,11 +39,11 @@ public class AdministradorService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Administrador administrador = administradorRepository.findByEmail(email);
-        if (administrador == null) {
+        Optional<Administrador> administrador = administradorRepository.findByEmail(email);
+        if (administrador.isEmpty()) {
             throw new UsernameNotFoundException("Usuário com email "+email+" não encontrado.");
         }
-        return new AdministradorData(Optional.of(administrador));
+        return new AdministradorData(administrador);
     }
 
     public Administrador salvarAdm(Administrador administrador) {
@@ -53,4 +58,21 @@ public class AdministradorService implements UserDetailsService {
         return administradorRepository.save(administrador);
     }
 
+    public PaginacaoDTO<Administrador> listarTodos(int page, int size, String sortBy, String direction) {
+        Sort sort = direction.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Administrador> pagina = administradorRepository.findAll(pageable);
+
+        return new PaginacaoDTO<>(
+                pagina.getContent(),
+                pagina.getNumber(),
+                pagina.getTotalPages(),
+                pagina.getTotalElements(),
+                pagina.getSize(),
+                pagina.isLast()
+        );
+    }
 }

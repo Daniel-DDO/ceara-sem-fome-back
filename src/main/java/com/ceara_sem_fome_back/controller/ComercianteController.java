@@ -2,6 +2,7 @@ package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.dto.ErrorDTO;
 import com.ceara_sem_fome_back.data.dto.LoginDTO;
+import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
 import com.ceara_sem_fome_back.dto.ComercianteRequest;
 import com.ceara_sem_fome_back.model.Comerciante;
@@ -42,7 +43,7 @@ public class ComercianteController {
         }
     }
 
-    @PostMapping
+    @PostMapping("/cadastrar")
     public ResponseEntity<Object> cadastrarComerciante(@RequestBody @Valid ComercianteRequest request) {
         try {
             Comerciante novoComerciante = new Comerciante(
@@ -68,5 +69,16 @@ public class ComercianteController {
             ErrorDTO errorDTO = new ErrorDTO("Erro interno ao tentar cadastrar comerciante.", 500);
             return ResponseEntity.status(500).body(errorDTO);
         }
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<PaginacaoDTO<Comerciante>> listarTodos(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction
+    ) {
+        PaginacaoDTO<Comerciante> pagina = comercianteService.listarTodos(page, size, sortBy, direction);
+        return ResponseEntity.ok(pagina);
     }
 }

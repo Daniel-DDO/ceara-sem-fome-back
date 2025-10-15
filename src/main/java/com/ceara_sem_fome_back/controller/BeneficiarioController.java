@@ -2,6 +2,7 @@ package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.dto.ErrorDTO;
 import com.ceara_sem_fome_back.data.dto.LoginDTO;
+import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
 import com.ceara_sem_fome_back.dto.BeneficiarioRequest;
 import com.ceara_sem_fome_back.model.Beneficiario;
@@ -10,10 +11,7 @@ import com.ceara_sem_fome_back.service.BeneficiarioService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/beneficiario")
@@ -28,18 +26,18 @@ public class BeneficiarioController {
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarBeneficiario(@RequestBody LoginDTO loginDTO) {
         Beneficiario beneficiario = beneficiarioService.logarBeneficiario(
-            loginDTO.getEmail(),
-            loginDTO.getSenha()
+                loginDTO.getEmail(),
+                loginDTO.getSenha()
         );
 
-        // A verificação de nulo é desnecessária aqui se o serviço lança exceção
+        //A verificação de nulo é desnecessária aqui se o serviço lança exceção
         String token = jwtUtil.gerarToken(beneficiario.getEmail(), JWTUtil.TOKEN_EXPIRACAO);
 
         PessoaRespostaDTO responseDTO = new PessoaRespostaDTO(
-            beneficiario.getId(),
-            beneficiario.getNome(),
-            beneficiario.getEmail(),
-            token
+                beneficiario.getId(),
+                beneficiario.getNome(),
+                beneficiario.getEmail(),
+                token
         );
 
         return ResponseEntity.ok(responseDTO);
@@ -63,5 +61,16 @@ public class BeneficiarioController {
             ErrorDTO errorDTO = new ErrorDTO("Erro interno ao tentar iniciar o cadastro.", 500);
             return ResponseEntity.status(500).body(errorDTO);
         }
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<PaginacaoDTO<Beneficiario>> listarTodos(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction
+    ) {
+        PaginacaoDTO<Beneficiario> pagina = beneficiarioService.listarTodos(page, size, sortBy, direction);
+        return ResponseEntity.ok(pagina);
     }
 }

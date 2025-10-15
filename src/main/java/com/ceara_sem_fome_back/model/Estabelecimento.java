@@ -2,6 +2,7 @@ package com.ceara_sem_fome_back.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,6 +12,7 @@ import lombok.Setter;
 public class Estabelecimento {
     @Id
     private String id;
+    @NotBlank
     private String nome;
 
     public Estabelecimento() {}

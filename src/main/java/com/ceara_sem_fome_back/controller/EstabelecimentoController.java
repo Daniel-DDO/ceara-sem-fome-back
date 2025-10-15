@@ -2,16 +2,15 @@ package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.dto.ErrorDTO;
 import com.ceara_sem_fome_back.dto.EstabelecimentoRequest;
+import com.ceara_sem_fome_back.model.Entregador;
 import com.ceara_sem_fome_back.model.Estabelecimento;
 // import com.ceara_sem_fome_back.repository.EstabelecimentoRepository;
 import com.ceara_sem_fome_back.service.EstabelecimentoService;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.data.domain.Page;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping({"/estabelecimento"})
@@ -20,7 +19,7 @@ public class EstabelecimentoController {
     @Autowired
     private EstabelecimentoService estabelecimentoService;
 
-    @PostMapping
+@PostMapping("/cadastrar")
     public ResponseEntity<Object> cadastrarEstabelecimento(@RequestBody @Valid EstabelecimentoRequest request) {
         try {
             Estabelecimento novoEstabelecimento = new Estabelecimento();
@@ -40,5 +39,16 @@ public class EstabelecimentoController {
             ErrorDTO errorDTO = new ErrorDTO("Erro interno ao tentar cadastrar o estabelecimento.", 500);
             return ResponseEntity.status(500).body(errorDTO);
         }
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<Page<Estabelecimento>> listarTodos(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction
+    ) {
+        Page<Estabelecimento> pagina = estabelecimentoService.listarTodos(page, size, sortBy, direction);
+        return ResponseEntity.ok(pagina);
     }
 }

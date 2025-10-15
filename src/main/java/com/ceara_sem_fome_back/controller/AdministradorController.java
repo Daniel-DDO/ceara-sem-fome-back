@@ -2,6 +2,7 @@ package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.dto.ErrorDTO;
 import com.ceara_sem_fome_back.data.dto.LoginDTO;
+import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
 import com.ceara_sem_fome_back.dto.AdministradorRequest;
 import com.ceara_sem_fome_back.model.Administrador;
@@ -41,7 +42,7 @@ public class AdministradorController {
         }
     }
 
-    @PostMapping
+    @PostMapping("/cadastrar")
     public ResponseEntity<Object> cadastrarAdm(@RequestBody @Valid AdministradorRequest request) {
         try {
             Administrador administradorParaSalvar = new Administrador();
@@ -62,5 +63,16 @@ public class AdministradorController {
             ErrorDTO errorDTO = new ErrorDTO("Erro interno ao tentar cadastrar administrador.", 500);
             return ResponseEntity.status(500).body(errorDTO);
         }
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<PaginacaoDTO<Administrador>> listarTodos(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction
+    ) {
+        PaginacaoDTO<Administrador> resposta = administradorService.listarTodos(page, size, sortBy, direction);
+        return ResponseEntity.ok(resposta);
     }
 }
