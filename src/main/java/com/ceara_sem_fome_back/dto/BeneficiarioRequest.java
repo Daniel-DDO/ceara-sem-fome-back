@@ -3,8 +3,7 @@ package com.ceara_sem_fome_back.dto;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
-// A anotação @CPF foi removida daqui
-// import org.hibernate.validator.constraints.br.CPF; // Remova esta importação também
+
 
 import java.time.LocalDate;
 
@@ -36,4 +35,9 @@ public class BeneficiarioRequest {
 
     @NotBlank(message = "O gênero é obrigatório.")
     private String genero;
+    
+    // [NOVO] Adicionamos o campo de consentimento da LGPD
+    @NotNull(message = "É preciso confirmar os termos da LGPD.")
+    @AssertTrue(message = "É preciso aceitar os termos da LGPD para continuar.")
+    private Boolean lgpdAccepted;
 }
