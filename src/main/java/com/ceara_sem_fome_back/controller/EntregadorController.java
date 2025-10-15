@@ -45,7 +45,6 @@ public class EntregadorController {
 
     @PostMapping("/cadastrar")
     public ResponseEntity<Object> cadastrarEntregador(@RequestBody @Valid EntregadorRequest request) {
-        try {
             Entregador novoEntregador = new Entregador(
                     request.getNome(),
                     request.getCpf(),
@@ -59,16 +58,6 @@ public class EntregadorController {
             Entregador entregadorSalvo = entregadorService.salvarEntregador(novoEntregador);
 
             return ResponseEntity.status(201).body(entregadorSalvo);
-
-        } catch (IllegalArgumentException e) {
-            // Erros de regra de negócio (ex: CPF/Email duplicado)
-            ErrorDTO errorDTO = new ErrorDTO(e.getMessage(), 400);
-            return ResponseEntity.badRequest().body(errorDTO);
-
-        } catch (Exception e) {
-            ErrorDTO errorDTO = new ErrorDTO("Erro interno ao tentar cadastrar entregador.", 500);
-            return ResponseEntity.status(500).body(errorDTO);
-        }
     }
 
     @GetMapping("/all")

@@ -21,7 +21,6 @@ public class EstabelecimentoController {
 
 @PostMapping("/cadastrar")
     public ResponseEntity<Object> cadastrarEstabelecimento(@RequestBody @Valid EstabelecimentoRequest request) {
-        try {
             Estabelecimento novoEstabelecimento = new Estabelecimento();
             novoEstabelecimento.setId(request.getId());
             novoEstabelecimento.setNome(request.getNome());
@@ -29,16 +28,6 @@ public class EstabelecimentoController {
             Estabelecimento estabelecimentoSalvo = estabelecimentoService.salvarEstabelecimento(novoEstabelecimento);
 
             return ResponseEntity.status(201).body(estabelecimentoSalvo);
-
-        } catch (IllegalArgumentException e) {
-            // Erros de regra de negócio (ex: ID duplicado)
-            ErrorDTO errorDTO = new ErrorDTO(e.getMessage(), 400);
-            return ResponseEntity.badRequest().body(errorDTO);
-
-        } catch (Exception e) {
-            ErrorDTO errorDTO = new ErrorDTO("Erro interno ao tentar cadastrar o estabelecimento.", 500);
-            return ResponseEntity.status(500).body(errorDTO);
-        }
     }
 
     @GetMapping("/all")

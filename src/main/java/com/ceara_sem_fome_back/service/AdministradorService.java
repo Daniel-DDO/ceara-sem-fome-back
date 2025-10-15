@@ -3,6 +3,8 @@ package com.ceara_sem_fome_back.service;
 import com.ceara_sem_fome_back.data.AdministradorData;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
+import com.ceara_sem_fome_back.exception.CpfInvalidoException;
+import com.ceara_sem_fome_back.exception.EmailJaCadastradoException;
 import com.ceara_sem_fome_back.model.Administrador;
 import com.ceara_sem_fome_back.repository.AdministradorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,11 +50,11 @@ public class AdministradorService implements UserDetailsService {
 
     public Administrador salvarAdm(Administrador administrador) {
         if (!verificarCpf(administrador.getCpf())) {
-            throw new IllegalArgumentException("CPF inválido.");
+            throw new CpfInvalidoException(administrador.getCpf());
         }
 
         if (administradorRepository.findByEmail(administrador.getEmail()) != null) {
-            throw new IllegalArgumentException("Email já cadastrado.");
+            throw new EmailJaCadastradoException(administrador.getEmail());
         }
 
         return administradorRepository.save(administrador);

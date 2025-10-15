@@ -45,7 +45,6 @@ public class ComercianteController {
 
     @PostMapping("/cadastrar")
     public ResponseEntity<Object> cadastrarComerciante(@RequestBody @Valid ComercianteRequest request) {
-        try {
             Comerciante novoComerciante = new Comerciante(
                     request.getNome(),
                     request.getCpf(),
@@ -59,16 +58,6 @@ public class ComercianteController {
             Comerciante comercianteSalvo = comercianteService.salvarComerciante(novoComerciante);
 
             return ResponseEntity.status(201).body(comercianteSalvo);
-
-        } catch (IllegalArgumentException e) {
-            // Erros de regra de negócio (ex: CPF/Email duplicado)
-            ErrorDTO errorDTO = new ErrorDTO(e.getMessage(), 400);
-            return ResponseEntity.badRequest().body(errorDTO);
-
-        } catch (Exception e) {
-            ErrorDTO errorDTO = new ErrorDTO("Erro interno ao tentar cadastrar comerciante.", 500);
-            return ResponseEntity.status(500).body(errorDTO);
-        }
     }
 
     @GetMapping("/all")

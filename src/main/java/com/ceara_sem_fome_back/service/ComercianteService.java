@@ -3,6 +3,8 @@ package com.ceara_sem_fome_back.service;
 import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
+import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
+import com.ceara_sem_fome_back.exception.EmailJaCadastradoException;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.repository.ComercianteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,11 +51,11 @@ public class ComercianteService implements UserDetailsService {
     public Comerciante salvarComerciante(Comerciante comerciante) {
 
         if (comercianteRepository.existsById(comerciante.getCpf())) {
-            throw new IllegalArgumentException("CPF já cadastrado.");
+            throw new CpfJaCadastradoException(comerciante.getCpf());
         }
 
         if (comercianteRepository.findByEmail(comerciante.getEmail()) != null) {
-            throw new IllegalArgumentException("Email já cadastrado.");
+            throw new EmailJaCadastradoException(comerciante.getEmail());
         }
 
         return comercianteRepository.save(comerciante);

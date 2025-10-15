@@ -44,7 +44,6 @@ public class AdministradorController {
 
     @PostMapping("/cadastrar")
     public ResponseEntity<Object> cadastrarAdm(@RequestBody @Valid AdministradorRequest request) {
-        try {
             Administrador administradorParaSalvar = new Administrador();
             administradorParaSalvar.setNome(request.getNome());
             administradorParaSalvar.setEmail(request.getEmail());
@@ -53,16 +52,6 @@ public class AdministradorController {
             Administrador novoAdministrador = administradorService.salvarAdm(administradorParaSalvar);
 
             return ResponseEntity.status(201).body(novoAdministrador);
-
-        } catch (IllegalArgumentException e) {
-            // Erros de regra de negócio (ex: email/CPF duplicado)
-            ErrorDTO errorDTO = new ErrorDTO(e.getMessage(), 400);
-            return ResponseEntity.badRequest().body(errorDTO);
-
-        } catch (Exception e) {
-            ErrorDTO errorDTO = new ErrorDTO("Erro interno ao tentar cadastrar administrador.", 500);
-            return ResponseEntity.status(500).body(errorDTO);
-        }
     }
 
     @GetMapping("/all")
