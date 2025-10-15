@@ -4,6 +4,8 @@ import com.ceara_sem_fome_back.data.BeneficiarioData;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.BeneficiarioRequest;
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
+import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
+import com.ceara_sem_fome_back.exception.EmailJaCadastradoException;
 import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,10 +56,10 @@ public class BeneficiarioService implements UserDetailsService {
 
     private void checkIfUserExists(String cpf, String email) {
         if (beneficiarioRepository.findByEmail(email).isPresent()) {
-            throw new IllegalArgumentException("O e-mail informado já está cadastrado.");
+            throw new EmailJaCadastradoException(email);
         }
         if (beneficiarioRepository.findByCpf(cpf).isPresent()) {
-            throw new IllegalArgumentException("O CPF informado já está cadastrado.");
+            throw new CpfJaCadastradoException(cpf);
         }
     }
 
@@ -72,10 +74,10 @@ public class BeneficiarioService implements UserDetailsService {
 
     public Beneficiario salvarBeneficiario(Beneficiario beneficiario) {
         if (beneficiarioRepository.existsById(beneficiario.getCpf())) {
-            throw new IllegalArgumentException("CPF já cadastrado.");
+            throw new CpfJaCadastradoException(beneficiario.getCpf());
         }
         if (beneficiarioRepository.findByCpf(beneficiario.getCpf()).isPresent()) {
-            throw new IllegalArgumentException("O CPF informado já está cadastrado.");
+            throw new CpfJaCadastradoException(beneficiario.getCpf());
         }
         return beneficiario;
     }

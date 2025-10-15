@@ -73,4 +73,5 @@ public class BeneficiarioController {
         PaginacaoDTO<Beneficiario> pagina = beneficiarioService.listarTodos(page, size, sortBy, direction);
         return ResponseEntity.ok(pagina);
     }
+
 }
