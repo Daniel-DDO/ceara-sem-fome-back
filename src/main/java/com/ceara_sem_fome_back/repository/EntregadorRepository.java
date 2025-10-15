@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface EntregadorRepository extends JpaRepository <Entregador, String> {
     Optional<Entregador> findByCpfAndEmail(String cpf, String email);
     Optional<Entregador> findByEmail(String email);
+    Optional<Entregador> findByCpf(String cpf);
 }

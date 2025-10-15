@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface ComercianteRepository extends JpaRepository <Comerciante, String> {
     Optional<Comerciante> findByCpfAndEmail(String cpf, String email);
     Optional<Comerciante> findByEmail(String email);
+    Optional<Comerciante> findByCpf(String cpf);
 }
