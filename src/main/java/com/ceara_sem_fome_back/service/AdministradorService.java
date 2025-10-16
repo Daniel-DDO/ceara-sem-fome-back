@@ -2,8 +2,11 @@ package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.data.AdministradorData;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
+import com.ceara_sem_fome_back.dto.AdministradorRequest;
+import com.ceara_sem_fome_back.dto.BeneficiarioRequest;
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
 import com.ceara_sem_fome_back.exception.CpfInvalidoException;
+import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
 import com.ceara_sem_fome_back.exception.EmailJaCadastradoException;
 import com.ceara_sem_fome_back.model.Administrador;
 import com.ceara_sem_fome_back.repository.AdministradorRepository;
@@ -15,7 +18,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -24,6 +29,12 @@ public class AdministradorService implements UserDetailsService {
 
     @Autowired
     private AdministradorRepository administradorRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private CadastroService cadastroService;
 
     public Administrador logarAdm(String email, String senha) {
         Optional<Administrador> administrador = administradorRepository.findByEmail(email);
@@ -37,6 +48,21 @@ public class AdministradorService implements UserDetailsService {
 
     public boolean verificarCpf(String cpf) {
         return PessoaUtils.verificarCpf(cpf);
+    }
+
+    @Transactional
+    public void iniciarCadastro(AdministradorRequest request) {
+        checkIfUserExists(request.getCpf(), request.getEmail());
+        //cadastroService.criarTokenDeCadastroEVenviarEmail(request); //tem que fazer pra admin
+    }
+
+    private void checkIfUserExists(String cpf, String email) {
+        if (administradorRepository.findByEmail(email).isPresent()) {
+            throw new EmailJaCadastradoException(email);
+        }
+        if (administradorRepository.findByCpf(cpf).isPresent()) {
+            throw new CpfJaCadastradoException(cpf);
+        }
     }
 
     @Override

@@ -73,6 +73,20 @@ public class AdministradorController {
             return ResponseEntity.status(201).body(novoAdministrador);
     }
 
+    @PostMapping("/iniciar-cadastro")
+    public ResponseEntity<Object> iniciarCadastroAdministrador(@RequestBody @Valid AdministradorRequest request) {
+        try {
+            administradorService.iniciarCadastro(request);
+            return ResponseEntity.status(202).body("Verifique seu e-mail para continuar o cadastro.");
+        } catch (IllegalArgumentException e) {
+            ErrorDTO errorDTO = new ErrorDTO(e.getMessage(), 400);
+            return ResponseEntity.badRequest().body(errorDTO);
+        } catch (Exception e) {
+            ErrorDTO errorDTO = new ErrorDTO("Erro interno ao tentar iniciar o cadastro.", 500);
+            return ResponseEntity.status(500).body(errorDTO);
+        }
+    }
+
     @GetMapping("/all")
     public ResponseEntity<PaginacaoDTO<Administrador>> listarTodos(
             @RequestParam(defaultValue = "0") int page,
