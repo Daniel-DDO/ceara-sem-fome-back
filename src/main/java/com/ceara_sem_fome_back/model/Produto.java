@@ -14,6 +14,10 @@ public class Produto {
     private String id;
     @NotBlank
     private String nome;
+    private String lote;
+    private String descricao;
+    private double preco;
+    private int quantidadeEstoque;
 
     public Produto() {}
 }
