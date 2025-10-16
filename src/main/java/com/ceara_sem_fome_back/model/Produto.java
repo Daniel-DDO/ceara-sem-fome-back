@@ -12,6 +12,10 @@ public class Produto {
     @Id
     private String id;
     private String nome;
+    private String lote;
+    private String descricao;
+    private double preco;
+    private int quantidadeEstoque;
 
     public Produto() {}
 }
