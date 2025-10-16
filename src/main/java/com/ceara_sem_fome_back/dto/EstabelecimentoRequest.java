@@ -14,4 +14,7 @@ public class EstabelecimentoRequest {
     @NotBlank(message = "O nome do estabelecimento é obrigatório.")
     private String nome;
 
+    @NotBlank(message = "O CPF do Comerciante é obrigatório.")
+    private String comercianteCpf;
+
 }

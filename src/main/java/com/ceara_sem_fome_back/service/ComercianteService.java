@@ -3,6 +3,7 @@ package com.ceara_sem_fome_back.service;
 import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
+import com.ceara_sem_fome_back.exception.CpfInvalidoException;
 import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
 import com.ceara_sem_fome_back.exception.EmailJaCadastradoException;
 import com.ceara_sem_fome_back.model.Comerciante;
@@ -77,5 +78,9 @@ public class ComercianteService implements UserDetailsService {
                 pagina.getSize(),
                 pagina.isLast()
         );
+    }
+
+    public Comerciante buscarComerciantePorCpf(String cpf) {
+        return comercianteRepository.findById(cpf).orElseThrow(() -> new CpfInvalidoException(cpf));
     }
 }
