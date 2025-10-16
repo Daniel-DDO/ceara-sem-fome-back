@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class CearaSemFomeBackApplication {
 
 	public static void main(String[] args) {
+		System.out.println("Ceará sem Fome");
 		SpringApplication.run(CearaSemFomeBackApplication.class, args);
 	}
 

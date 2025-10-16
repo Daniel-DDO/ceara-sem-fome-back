@@ -1,6 +1,7 @@
 package com.ceara_sem_fome_back.controller;
 
 //import com.ceara_sem_fome_back.data.dto.ErrorDTO;
+import com.ceara_sem_fome_back.data.dto.ErrorDTO;
 import com.ceara_sem_fome_back.data.dto.LoginDTO;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
@@ -24,21 +25,39 @@ public class AdministradorController {
     private JWTUtil jwtUtil;
 
     @PostMapping("/login")
-    public ResponseEntity<PessoaRespostaDTO> logarAdm(@RequestBody LoginDTO loginDTO) {
-        Administrador administrador = administradorService.logarAdm(loginDTO.getEmail(), loginDTO.getSenha());
+    public ResponseEntity<PessoaRespostaDTO> logarAdm(@Valid @RequestBody LoginDTO loginDTO) {
+        try {
+            if (loginDTO.getEmail() == null || loginDTO.getEmail().isBlank() ||
+                    loginDTO.getSenha() == null || loginDTO.getSenha().isBlank()) {
+                throw new IllegalArgumentException("Email e senha são obrigatórios.");
+            }
 
-        if (administrador != null) {
+            Administrador administrador = administradorService.logarAdm(
+                    loginDTO.getEmail(),
+                    loginDTO.getSenha()
+            );
+
+            if (administrador == null) {
+                throw new RuntimeException("Email ou senha inválidos.");
+            }
+
             String token = jwtUtil.gerarToken(administrador.getEmail(), JWTUtil.TOKEN_EXPIRACAO);
 
-            PessoaRespostaDTO responseDTO = new PessoaRespostaDTO(
+            return ResponseEntity.ok(new PessoaRespostaDTO(
                     administrador.getId(),
                     administrador.getNome(),
                     administrador.getEmail(),
                     token
-            );
-            return ResponseEntity.ok(responseDTO);
-        } else {
-            return ResponseEntity.status(401).body(null);
+            ));
+
+        } catch (IllegalArgumentException e) {
+            throw e;
+
+        } catch (RuntimeException e) {
+            throw e;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erro interno do servidor.");
         }
     }
 

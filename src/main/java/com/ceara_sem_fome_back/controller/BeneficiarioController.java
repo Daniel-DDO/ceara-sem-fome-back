@@ -10,6 +10,7 @@ import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.BeneficiarioService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,23 +25,36 @@ public class BeneficiarioController {
     private JWTUtil jwtUtil;
 
     @PostMapping("/login")
-    public ResponseEntity<PessoaRespostaDTO> logarBeneficiario(@RequestBody LoginDTO loginDTO) {
-        Beneficiario beneficiario = beneficiarioService.logarBeneficiario(
-                loginDTO.getEmail(),
-                loginDTO.getSenha()
-        );
+    public ResponseEntity<PessoaRespostaDTO> logarBeneficiario(@Valid @RequestBody LoginDTO loginDTO) {
+        try {
+            if (loginDTO.getEmail() == null || loginDTO.getEmail().isBlank() ||
+                    loginDTO.getSenha() == null || loginDTO.getSenha().isBlank()) {
+                throw new IllegalArgumentException("Email e senha são obrigatórios.");
+            }
 
-        //A verificação de nulo é desnecessária aqui se o serviço lança exceção
-        String token = jwtUtil.gerarToken(beneficiario.getEmail(), JWTUtil.TOKEN_EXPIRACAO);
+            Beneficiario beneficiario = beneficiarioService.logarBeneficiario(
+                    loginDTO.getEmail(),
+                    loginDTO.getSenha()
+            );
 
-        PessoaRespostaDTO responseDTO = new PessoaRespostaDTO(
-                beneficiario.getId(),
-                beneficiario.getNome(),
-                beneficiario.getEmail(),
-                token
-        );
+            String token = jwtUtil.gerarToken(beneficiario.getEmail(), JWTUtil.TOKEN_EXPIRACAO);
 
-        return ResponseEntity.ok(responseDTO);
+            return ResponseEntity.ok(new PessoaRespostaDTO(
+                    beneficiario.getId(),
+                    beneficiario.getNome(),
+                    beneficiario.getEmail(),
+                    token
+            ));
+
+        } catch (IllegalArgumentException e) {
+            throw e;
+
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Email ou senha inválidos.");
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erro interno do servidor.");
+        }
     }
 
     /**

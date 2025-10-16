@@ -1,6 +1,7 @@
 package com.ceara_sem_fome_back.controller;
 
 //import com.ceara_sem_fome_back.data.dto.ErrorDTO;
+import com.ceara_sem_fome_back.data.dto.ErrorDTO;
 import com.ceara_sem_fome_back.data.dto.LoginDTO;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
@@ -24,22 +25,39 @@ public class ComercianteController {
     private JWTUtil jwtUtil;
 
     @PostMapping("/login")
-    public ResponseEntity<PessoaRespostaDTO> logarComerciante(@RequestBody LoginDTO loginDTO) {
-        Comerciante comerciante = comercianteService.logarComerciante(loginDTO.getEmail(), loginDTO.getSenha());
+    public ResponseEntity<PessoaRespostaDTO> logarComerciante(@Valid @RequestBody LoginDTO loginDTO) {
+        try {
+            if (loginDTO.getEmail() == null || loginDTO.getEmail().isBlank() ||
+                    loginDTO.getSenha() == null || loginDTO.getSenha().isBlank()) {
+                throw new IllegalArgumentException("Email e senha são obrigatórios.");
+            }
 
-        if (comerciante != null) {
+            Comerciante comerciante = comercianteService.logarComerciante(
+                    loginDTO.getEmail(),
+                    loginDTO.getSenha()
+            );
+
+            if (comerciante == null) {
+                throw new RuntimeException("Email ou senha inválidos.");
+            }
+
             String token = jwtUtil.gerarToken(comerciante.getEmail(), JWTUtil.TOKEN_EXPIRACAO);
 
-            PessoaRespostaDTO responseDTO = new PessoaRespostaDTO(
+            return ResponseEntity.ok(new PessoaRespostaDTO(
                     comerciante.getId(),
                     comerciante.getNome(),
                     comerciante.getEmail(),
                     token
-            );
+            ));
 
-            return ResponseEntity.ok(responseDTO);
-        } else {
-            return ResponseEntity.status(401).body(null);
+        } catch (IllegalArgumentException e) {
+            throw e;
+
+        } catch (RuntimeException e) {
+            throw e;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erro interno do servidor.");
         }
     }
 

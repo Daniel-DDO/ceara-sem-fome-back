@@ -8,12 +8,10 @@ import java.util.Optional;
 
 @Repository
 public interface BeneficiarioRepository extends JpaRepository<Beneficiario, String> {
-
     Optional<Beneficiario> findByEmail(String email);
-
-    // NOVO: Método para verificar se um CPF já está cadastrado
+    // NOVO: Metodo para verificar se um CPF já está cadastrado
     Optional<Beneficiario> findByCpf(String cpf);
-
     // Usado na redefinição de senha
     Optional<Beneficiario> findByCpfAndEmail(String cpf, String email);
+
 }

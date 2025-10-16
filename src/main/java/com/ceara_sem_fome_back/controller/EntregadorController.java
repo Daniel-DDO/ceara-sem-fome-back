@@ -24,22 +24,39 @@ public class EntregadorController {
     private JWTUtil jwtUtil;
 
     @PostMapping("/login")
-    public ResponseEntity<PessoaRespostaDTO> logarEntregador(@RequestBody LoginDTO loginDTO) {
-        Entregador entregador = entregadorService.logarEntregador(loginDTO.getEmail(), loginDTO.getSenha());
+    public ResponseEntity<PessoaRespostaDTO> logarEntregador(@Valid @RequestBody LoginDTO loginDTO) {
+        try {
+            if (loginDTO.getEmail() == null || loginDTO.getEmail().isBlank() ||
+                    loginDTO.getSenha() == null || loginDTO.getSenha().isBlank()) {
+                throw new IllegalArgumentException("Email e senha são obrigatórios.");
+            }
 
-        if (entregador != null) {
+            Entregador entregador = entregadorService.logarEntregador(
+                    loginDTO.getEmail(),
+                    loginDTO.getSenha()
+            );
+
+            if (entregador == null) {
+                throw new RuntimeException("Email ou senha inválidos.");
+            }
+
             String token = jwtUtil.gerarToken(entregador.getEmail(), JWTUtil.TOKEN_EXPIRACAO);
 
-            PessoaRespostaDTO responseDTO = new PessoaRespostaDTO(
+            return ResponseEntity.ok(new PessoaRespostaDTO(
                     entregador.getId(),
                     entregador.getNome(),
                     entregador.getEmail(),
                     token
-            );
+            ));
 
-            return ResponseEntity.ok(responseDTO);
-        } else {
-            return ResponseEntity.status(401).body(null);
+        } catch (IllegalArgumentException e) {
+            throw e;
+
+        } catch (RuntimeException e) {
+            throw e;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erro interno do servidor.");
         }
     }
 
