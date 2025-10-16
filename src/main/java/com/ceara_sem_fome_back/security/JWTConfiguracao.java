@@ -45,16 +45,14 @@ public class JWTConfiguracao {
                 .addFilter(new JWTValidarFilter(authManager, tokenSenha))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                new AntPathRequestMatcher("/beneficiario/iniciar-cadastro"),
-                                new AntPathRequestMatcher("/beneficiario/login"),
-                                new AntPathRequestMatcher("/adm/login"),
+                                new AntPathRequestMatcher("/*/iniciar-cadastro"),
+                                new AntPathRequestMatcher("/*/login"),
                                 new AntPathRequestMatcher("/token/confirmar-cadastro"),
                                 new AntPathRequestMatcher("/auth/**")
                         ).permitAll()
                         .anyRequest().authenticated()
                         //não remover esse comentário!
                         //.anyRequest().permitAll() //aqui é para testar qualquer página, permitindo tudo.
-
                 );
 
         return http.build();

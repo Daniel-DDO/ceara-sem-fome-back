@@ -1,6 +1,7 @@
 package com.ceara_sem_fome_back.controller;
 
 //import com.ceara_sem_fome_back.data.dto.ErrorDTO;
+import com.ceara_sem_fome_back.data.dto.ErrorDTO;
 import com.ceara_sem_fome_back.data.dto.LoginDTO;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
@@ -57,6 +58,20 @@ public class EntregadorController {
 
         } catch (Exception e) {
             throw new RuntimeException("Erro interno do servidor.");
+        }
+    }
+
+    @PostMapping("/iniciar-cadastro")
+    public ResponseEntity<Object> iniciarCadastroEntregador(@RequestBody @Valid EntregadorRequest request) {
+        try {
+            entregadorService.iniciarCadastro(request);
+            return ResponseEntity.status(202).body("Verifique seu e-mail para continuar o cadastro.");
+        } catch (IllegalArgumentException e) {
+            ErrorDTO errorDTO = new ErrorDTO(e.getMessage(), 400);
+            return ResponseEntity.badRequest().body(errorDTO);
+        } catch (Exception e) {
+            ErrorDTO errorDTO = new ErrorDTO("Erro interno ao tentar iniciar o cadastro.", 500);
+            return ResponseEntity.status(500).body(errorDTO);
         }
     }
 

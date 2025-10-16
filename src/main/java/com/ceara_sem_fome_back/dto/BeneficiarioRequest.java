@@ -9,7 +9,7 @@ import java.time.LocalDate;
 
 @Getter
 @Setter
-public class BeneficiarioRequest {
+public class BeneficiarioRequest implements CadastroRequest {
 
     @NotBlank(message = "O nome é obrigatório.")
     private String nome;

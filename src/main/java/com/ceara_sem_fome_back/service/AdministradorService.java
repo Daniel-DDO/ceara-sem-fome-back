@@ -3,7 +3,6 @@ package com.ceara_sem_fome_back.service;
 import com.ceara_sem_fome_back.data.AdministradorData;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.AdministradorRequest;
-import com.ceara_sem_fome_back.dto.BeneficiarioRequest;
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
 import com.ceara_sem_fome_back.exception.CpfInvalidoException;
 import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
@@ -53,7 +52,7 @@ public class AdministradorService implements UserDetailsService {
     @Transactional
     public void iniciarCadastro(AdministradorRequest request) {
         checkIfUserExists(request.getCpf(), request.getEmail());
-        //cadastroService.criarTokenDeCadastroEVenviarEmail(request); //tem que fazer pra admin
+        cadastroService.criarTokenDeCadastroEVenviarEmailAdm(request);
     }
 
     private void checkIfUserExists(String cpf, String email) {

@@ -44,12 +44,15 @@ public class VerificationToken {
     @Column(name = "genero")
     private String genero;
 
+    @Enumerated(EnumType.STRING)
+    private TipoPessoa tipoPessoa;
+
     /**
      * Construtor para criar um "token rico" com todos os dados do cadastro.
      * Este é o construtor que estava faltando.
      */
     public VerificationToken(String token, String nome, String cpf, String userEmail, String senhaCriptografada,
-                             LocalDate dataNascimento, String telefone, String genero) {
+                             LocalDate dataNascimento, String telefone, String genero, TipoPessoa tipoPessoa) {
         this.token = token;
         this.nome = nome;
         this.cpf = cpf;
@@ -59,6 +62,7 @@ public class VerificationToken {
         this.telefone = telefone;
         this.genero = genero;
         this.expiryDate = LocalDateTime.now().plusMinutes(15); // Define a expiração padrão para cadastro
+        this.tipoPessoa = tipoPessoa;
     }
 }
 

@@ -51,7 +51,7 @@ public class BeneficiarioService implements UserDetailsService {
     @Transactional
     public void iniciarCadastro(BeneficiarioRequest request) {
         checkIfUserExists(request.getCpf(), request.getEmail());
-        cadastroService.criarTokenDeCadastroEVenviarEmail(request);
+        cadastroService.criarTokenDeCadastroEVenviarEmailBenef(request);
     }
 
     private void checkIfUserExists(String cpf, String email) {

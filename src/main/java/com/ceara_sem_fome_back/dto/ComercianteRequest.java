@@ -9,12 +9,12 @@ import java.time.LocalDate;
 
 @Getter
 @Setter
-public class ComercianteRequest {
+public class ComercianteRequest implements CadastroRequest{
 
     @NotBlank(message = "O nome é obrigatório.")
     private String nome;
 
-    @CPF(message = "CPF inválido.")
+    @Size(min = 11, max = 11, message = "O CPF deve ter 11 dígitos.")
     @NotBlank(message = "O CPF é obrigatório.")
     private String cpf;
 
@@ -35,4 +35,9 @@ public class ComercianteRequest {
 
     @NotBlank(message = "O gênero é obrigatório.")
     private String genero;
+
+    // [NOVO] Adicionamos o campo de consentimento da LGPD
+    @NotNull(message = "É preciso confirmar os termos da LGPD.")
+    @AssertTrue(message = "É preciso aceitar os termos da LGPD para continuar.")
+    private Boolean lgpdAccepted;
 }

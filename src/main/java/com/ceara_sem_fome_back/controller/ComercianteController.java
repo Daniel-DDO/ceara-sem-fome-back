@@ -61,6 +61,20 @@ public class ComercianteController {
         }
     }
 
+    @PostMapping("/iniciar-cadastro")
+    public ResponseEntity<Object> iniciarCadastroComerciante(@RequestBody @Valid ComercianteRequest request) {
+        try {
+            comercianteService.iniciarCadastro(request);
+            return ResponseEntity.status(202).body("Verifique seu e-mail para continuar o cadastro.");
+        } catch (IllegalArgumentException e) {
+            ErrorDTO errorDTO = new ErrorDTO(e.getMessage(), 400);
+            return ResponseEntity.badRequest().body(errorDTO);
+        } catch (Exception e) {
+            ErrorDTO errorDTO = new ErrorDTO("Erro interno ao tentar iniciar o cadastro.", 500);
+            return ResponseEntity.status(500).body(errorDTO);
+        }
+    }
+
     @PostMapping("/cadastrar")
     public ResponseEntity<Object> cadastrarComerciante(@RequestBody @Valid ComercianteRequest request) {
             Comerciante novoComerciante = new Comerciante(

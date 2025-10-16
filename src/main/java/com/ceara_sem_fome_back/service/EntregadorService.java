@@ -2,6 +2,8 @@ package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.data.EntregadorData;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
+import com.ceara_sem_fome_back.dto.ComercianteRequest;
+import com.ceara_sem_fome_back.dto.EntregadorRequest;
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
 import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
 import com.ceara_sem_fome_back.exception.EmailJaCadastradoException;
@@ -15,7 +17,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -24,6 +28,12 @@ public class EntregadorService implements UserDetailsService {
 
     @Autowired
     private EntregadorRepository entregadorRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private CadastroService cadastroService;
 
     public Entregador logarEntregador(String email, String senha) {
         Optional<Entregador> entregador = entregadorRepository.findByEmail(email);
@@ -37,6 +47,21 @@ public class EntregadorService implements UserDetailsService {
 
     public boolean verificarCpf(String cpf) {
         return PessoaUtils.verificarCpf(cpf);
+    }
+
+    @Transactional
+    public void iniciarCadastro(EntregadorRequest request) {
+        checkIfUserExists(request.getCpf(), request.getEmail());
+        cadastroService.criarTokenDeCadastroEVenviarEmailEntreg(request);
+    }
+
+    private void checkIfUserExists(String cpf, String email) {
+        if (entregadorRepository.findByEmail(email).isPresent()) {
+            throw new EmailJaCadastradoException(email);
+        }
+        if (entregadorRepository.findByCpf(cpf).isPresent()) {
+            throw new CpfJaCadastradoException(cpf);
+        }
     }
 
     @Override

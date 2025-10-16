@@ -1,10 +1,8 @@
 package com.ceara_sem_fome_back.service;
 
-import com.ceara_sem_fome_back.dto.BeneficiarioRequest;
-import com.ceara_sem_fome_back.model.Beneficiario;
-import com.ceara_sem_fome_back.model.VerificationToken;
-import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
-import com.ceara_sem_fome_back.repository.VerificationTokenRepository;
+import com.ceara_sem_fome_back.dto.*;
+import com.ceara_sem_fome_back.model.*;
+import com.ceara_sem_fome_back.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,6 +24,15 @@ public class CadastroService {
     private BeneficiarioRepository beneficiarioRepository;
 
     @Autowired
+    private AdministradorRepository administradorRepository;
+
+    @Autowired
+    private ComercianteRepository comercianteRepository;
+
+    @Autowired
+    private EntregadorRepository entregadorRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -37,9 +44,9 @@ public class CadastroService {
      * @param request Os dados do beneficiário para o pré-cadastro.
      */
     @Transactional
-    public void criarTokenDeCadastroEVenviarEmail(BeneficiarioRequest request) {
+    public void criarTokenDeCadastroEVenviarEmail(CadastroRequest request, TipoPessoa tipoPessoa) {
         String tokenString = UUID.randomUUID().toString();
-        // Limpa tokens antigos do mesmo e-mail para evitar lixo no banco
+        //Limpa tokens antigos do mesmo e-mail para evitar lixo no banco
         tokenRepository.deleteByUserEmail(request.getEmail());
 
         VerificationToken verificationToken = new VerificationToken(
@@ -50,12 +57,33 @@ public class CadastroService {
                 passwordEncoder.encode(request.getSenha()),
                 request.getDataNascimento(),
                 request.getTelefone(),
-                request.getGenero()
+                request.getGenero(),
+                tipoPessoa
         );
 
         tokenRepository.save(verificationToken);
         emailService.sendVerificationEmail(request.getEmail(), tokenString);
         log.info("Token de cadastro criado e e-mail enviado para {}", request.getEmail());
+    }
+
+    @Transactional
+    public void criarTokenDeCadastroEVenviarEmailAdm(AdministradorRequest request) {
+        criarTokenDeCadastroEVenviarEmail(request, TipoPessoa.ADMINISTRADOR);
+    }
+
+    @Transactional
+    public void criarTokenDeCadastroEVenviarEmailBenef(BeneficiarioRequest request) {
+        criarTokenDeCadastroEVenviarEmail(request, TipoPessoa.BENEFICIARIO);
+    }
+
+    @Transactional
+    public void criarTokenDeCadastroEVenviarEmailComerc(ComercianteRequest request) {
+        criarTokenDeCadastroEVenviarEmail(request, TipoPessoa.COMERCIANTE);
+    }
+
+    @Transactional
+    public void criarTokenDeCadastroEVenviarEmailEntreg(EntregadorRequest request) {
+        criarTokenDeCadastroEVenviarEmail(request, TipoPessoa.ENTREGADOR);
     }
 
     /**
@@ -80,21 +108,73 @@ public class CadastroService {
             return false;
         }
 
-        Beneficiario novoBeneficiario = new Beneficiario(
-                verificationToken.getNome(),
-                verificationToken.getCpf(),
-                verificationToken.getUserEmail(),
-                verificationToken.getSenhaCriptografada(),
-                verificationToken.getDataNascimento(),
-                verificationToken.getTelefone(),
-                verificationToken.getGenero()
-        );
-        beneficiarioRepository.save(novoBeneficiario);
-        // Deleta o token após o uso bem-sucedido
-        tokenRepository.delete(verificationToken);
+        switch (verificationToken.getTipoPessoa()) {
+            case ADMINISTRADOR -> {
+                Administrador novoAdministrador = new Administrador(
+                        verificationToken.getNome(),
+                        verificationToken.getCpf(),
+                        verificationToken.getUserEmail(),
+                        verificationToken.getSenhaCriptografada(),
+                        verificationToken.getDataNascimento(),
+                        verificationToken.getTelefone(),
+                        verificationToken.getGenero()
+                );
+                administradorRepository.save(novoAdministrador);
+                tokenRepository.delete(verificationToken);
 
-        log.info("SUCESSO: Beneficiário salvo após validação de e-mail: {}", novoBeneficiario.getEmail());
-        return true;
+                log.info("SUCESSO: Administrador salvo após validação de e-mail: {}", novoAdministrador.getEmail());
+                return true;
+            }
+            case BENEFICIARIO -> {
+                Beneficiario novoBeneficiario = new Beneficiario(
+                        verificationToken.getNome(),
+                        verificationToken.getCpf(),
+                        verificationToken.getUserEmail(),
+                        verificationToken.getSenhaCriptografada(),
+                        verificationToken.getDataNascimento(),
+                        verificationToken.getTelefone(),
+                        verificationToken.getGenero()
+                );
+                beneficiarioRepository.save(novoBeneficiario);
+                tokenRepository.delete(verificationToken);
+
+                log.info("SUCESSO: Beneficiário salvo após validação de e-mail: {}", novoBeneficiario.getEmail());
+                return true;
+            }
+            case COMERCIANTE -> {
+                Comerciante novoComerciante = new Comerciante(
+                        verificationToken.getNome(),
+                        verificationToken.getCpf(),
+                        verificationToken.getUserEmail(),
+                        verificationToken.getSenhaCriptografada(),
+                        verificationToken.getDataNascimento(),
+                        verificationToken.getTelefone(),
+                        verificationToken.getGenero()
+                );
+                comercianteRepository.save(novoComerciante);
+                tokenRepository.delete(verificationToken);
+
+                log.info("SUCESSO: Comerciante salvo após validação de e-mail: {}", novoComerciante.getEmail());
+                return true;
+            }
+            case ENTREGADOR -> {
+                Entregador novoEntregador = new Entregador(
+                        verificationToken.getNome(),
+                        verificationToken.getCpf(),
+                        verificationToken.getUserEmail(),
+                        verificationToken.getSenhaCriptografada(),
+                        verificationToken.getDataNascimento(),
+                        verificationToken.getTelefone(),
+                        verificationToken.getGenero()
+                );
+                entregadorRepository.save(novoEntregador);
+                tokenRepository.delete(verificationToken);
+
+                log.info("SUCESSO: Entregador salvo após validação de e-mail: {}", novoEntregador.getEmail());
+                return true;
+            }
+        }
+        return false;
     }
 }
 
