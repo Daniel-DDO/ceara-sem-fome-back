@@ -1,6 +1,9 @@
 package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.dto.*;
+// IMPORTS NOVOS DAS SUAS EXCEÇÕES
+import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
+import com.ceara_sem_fome_back.exception.EmailJaCadastradoException;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.*;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +41,44 @@ public class CadastroService {
     @Autowired
     private EmailService emailService;
 
+    // =========================================================================
+    // MÉTODOS DE VALIDAÇÃO NOVOS (USANDO SUAS EXCEÇÕES)
+    // =========================================================================
+
+    /**
+     * Verifica se o CPF está disponível em TODAS as tabelas de usuários.
+     * Lança uma CpfJaCadastradoException se o CPF já estiver em uso.
+     */
+    private void validarCpfDisponivelEmTodosOsPerfis(String cpf) {
+        if (beneficiarioRepository.existsByCpf(cpf) ||
+            administradorRepository.existsByCpf(cpf) ||
+            comercianteRepository.existsByCpf(cpf) ||
+            entregadorRepository.existsByCpf(cpf)) {
+            
+            // Lança sua exceção customizada
+            throw new CpfJaCadastradoException(cpf);
+        }
+    }
+
+    /**
+     * Verifica se o Email está disponível em TODAS as tabelas de usuários.
+     * Lança uma EmailJaCadastradoException se o Email já estiver em uso.
+     */
+    private void validarEmailDisponivelEmTodosOsPerfis(String email) {
+        if (beneficiarioRepository.existsByEmail(email) ||
+            administradorRepository.existsByEmail(email) ||
+            comercianteRepository.existsByEmail(email) ||
+            entregadorRepository.existsByEmail(email)) {
+
+            // Lança sua exceção customizada
+            throw new EmailJaCadastradoException(email);
+        }
+    }
+
+    // =========================================================================
+    // FIM DOS MÉTODOS DE VALIDAÇÃO
+    // =========================================================================
+
     /**
      * Cria um token "rico" contendo todos os dados do pré-cadastro,
      * salva no banco e envia o e-mail de verificação.
@@ -45,6 +86,12 @@ public class CadastroService {
      */
     @Transactional
     public void criarTokenDeCadastroEVenviarEmail(CadastroRequest request, TipoPessoa tipoPessoa) {
+        
+        // 🛡️ PASSO DE VALIDAÇÃO ADICIONADO AQUI 🛡️
+        // Verifica ANTES de criar o token se os dados já existem
+        validarCpfDisponivelEmTodosOsPerfis(request.getCpf());
+        validarEmailDisponivelEmTodosOsPerfis(request.getEmail());
+
         String tokenString = UUID.randomUUID().toString();
         //Limpa tokens antigos do mesmo e-mail para evitar lixo no banco
         tokenRepository.deleteByUserEmail(request.getEmail());
@@ -66,6 +113,8 @@ public class CadastroService {
         log.info("Token de cadastro criado e e-mail enviado para {}", request.getEmail());
     }
 
+    // ... (Seus métodos criarTokenDeCadastroEVenviarEmailAdm, Benef, Comerc, Entreg) ...
+    // ELES NÃO MUDAM
     @Transactional
     public void criarTokenDeCadastroEVenviarEmailAdm(AdministradorRequest request) {
         criarTokenDeCadastroEVenviarEmail(request, TipoPessoa.ADMINISTRADOR);
@@ -85,7 +134,7 @@ public class CadastroService {
     public void criarTokenDeCadastroEVenviarEmailEntreg(EntregadorRequest request) {
         criarTokenDeCadastroEVenviarEmail(request, TipoPessoa.ENTREGADOR);
     }
-
+    
     /**
      * Valida o token recebido do e-mail, cria o beneficiário no banco de dados
      * e apaga o token para que não seja reutilizado.
@@ -108,6 +157,18 @@ public class CadastroService {
             return false;
         }
 
+        // 🛡️ VALIDAÇÃO BÔNUS (Evita Race Condition) 🛡️
+        // Verifica de novo ANTES de salvar, caso alguém tenha se cadastrado
+        // com o mesmo CPF/Email enquanto este token estava ativo.
+        try {
+            validarCpfDisponivelEmTodosOsPerfis(verificationToken.getCpf());
+            validarEmailDisponivelEmTodosOsPerfis(verificationToken.getUserEmail());
+        } catch (CpfJaCadastradoException | EmailJaCadastradoException e) {
+            log.warn("Cadastro bloqueado na finalização (race condition): {}", e.getMessage());
+            tokenRepository.delete(verificationToken); // Limpa o token inválido
+            return false; // Falha na verificação, segue o padrão do método
+        }
+
         switch (verificationToken.getTipoPessoa()) {
             case ADMINISTRADOR -> {
                 Administrador novoAdministrador = new Administrador(
@@ -120,10 +181,6 @@ public class CadastroService {
                         verificationToken.getGenero()
                 );
                 administradorRepository.save(novoAdministrador);
-                tokenRepository.delete(verificationToken);
-
-                log.info("SUCESSO: Administrador salvo após validação de e-mail: {}", novoAdministrador.getEmail());
-                return true;
             }
             case BENEFICIARIO -> {
                 Beneficiario novoBeneficiario = new Beneficiario(
@@ -136,10 +193,6 @@ public class CadastroService {
                         verificationToken.getGenero()
                 );
                 beneficiarioRepository.save(novoBeneficiario);
-                tokenRepository.delete(verificationToken);
-
-                log.info("SUCESSO: Beneficiário salvo após validação de e-mail: {}", novoBeneficiario.getEmail());
-                return true;
             }
             case COMERCIANTE -> {
                 Comerciante novoComerciante = new Comerciante(
@@ -152,10 +205,6 @@ public class CadastroService {
                         verificationToken.getGenero()
                 );
                 comercianteRepository.save(novoComerciante);
-                tokenRepository.delete(verificationToken);
-
-                log.info("SUCESSO: Comerciante salvo após validação de e-mail: {}", novoComerciante.getEmail());
-                return true;
             }
             case ENTREGADOR -> {
                 Entregador novoEntregador = new Entregador(
@@ -168,13 +217,18 @@ public class CadastroService {
                         verificationToken.getGenero()
                 );
                 entregadorRepository.save(novoEntregador);
+            }
+            default -> {
+                log.error("Tipo de pessoa desconhecido no token: {}", verificationToken.getTipoPessoa());
                 tokenRepository.delete(verificationToken);
-
-                log.info("SUCESSO: Entregador salvo após validação de e-mail: {}", novoEntregador.getEmail());
-                return true;
+                return false;
             }
         }
-        return false;
+        
+        // Se chegou até aqui, o usuário foi salvo com sucesso.
+        // Apagamos o token e retornamos true.
+        tokenRepository.delete(verificationToken);
+        log.info("SUCESSO: {} salvo após validação de e-mail: {}", verificationToken.getTipoPessoa(), verificationToken.getUserEmail());
+        return true;
     }
 }
-

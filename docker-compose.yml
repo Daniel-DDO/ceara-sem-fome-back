@@ -1,21 +1,27 @@
+version: "3.9"
+
 services:
   db:
     image: postgres:15
     container_name: postgres_db
+    restart: always
     environment:
       POSTGRES_DB: ceara_sem_fome
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"
     volumes:
       - ./pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - backend
 
   api:
     build: .
     container_name: ceara_sem_fome_api
+    restart: always
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/ceara_sem_fome
       SPRING_DATASOURCE_USERNAME: postgres
