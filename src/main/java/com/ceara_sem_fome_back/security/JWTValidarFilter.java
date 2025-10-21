@@ -6,6 +6,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j; 
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@Slf4j 
 public class JWTValidarFilter extends BasicAuthenticationFilter {
 
     public static final String HEADER_ATRIBUTO = "Authorization";
@@ -25,7 +27,7 @@ public class JWTValidarFilter extends BasicAuthenticationFilter {
 
     private final String tokenSenha;
     
-    // [A CORREÇÃO] Lista de rotas públicas que o filtro deve IGNORAR
+    // Lista de rotas públicas que o filtro deve IGNORAR
     private static final List<String> ROTAS_PUBLICAS = Arrays.asList(
         "/beneficiario/iniciar-cadastro",
         "/beneficiario/login",
@@ -39,16 +41,11 @@ public class JWTValidarFilter extends BasicAuthenticationFilter {
         this.tokenSenha = tokenSenha;
     }
 
-    /**
-     * Este método é executado ANTES de cada requisição.
-     * Se a rota for pública, ele retorna 'true' e o filtro é ignorado.
-     */
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) throws ServletException {
+        // ... (código sem alteração)
         AntPathMatcher pathMatcher = new AntPathMatcher();
         String requestURI = request.getRequestURI();
-        
-        // Verifica se a URI da requisição corresponde a alguma das nossas rotas públicas
         return ROTAS_PUBLICAS.stream().anyMatch(rota -> pathMatcher.match(rota, requestURI));
     }
 
@@ -65,13 +62,21 @@ public class JWTValidarFilter extends BasicAuthenticationFilter {
         }
 
         String token = atributo.replace(ATRIBUTO_PREFIXO, "");
+        String ipAddress = request.getRemoteAddr(); // ⬅️ Capturar IP
         
         try {
             UsernamePasswordAuthenticationToken authenticationToken = getAuthenticationToken(token);
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         } catch (Exception e) {
-            // Se o token for inválido, limpa o contexto e continua,
-            // deixando a decisão final para as regras de autorização.
+            
+            // ⬇️ ADICIONAR LOG DE FALHA DE VALIDAÇÃO DE TOKEN ⬇️
+            log.warn(
+                "FALHA TOKEN: Tentativa de validação de token falhou. Motivo: {}. IP: {}. Token: {}",
+                e.getMessage(), // Ex: "The Token has expired"
+                ipAddress,
+                token
+            );
+            
             SecurityContextHolder.clearContext();
         }
         
@@ -79,6 +84,7 @@ public class JWTValidarFilter extends BasicAuthenticationFilter {
     }
 
     private UsernamePasswordAuthenticationToken getAuthenticationToken(String token) {
+        // ... (código sem alteração)
         String usuario = JWT.require(Algorithm.HMAC512(tokenSenha))
                 .build()
                 .verify(token)
@@ -91,4 +97,3 @@ public class JWTValidarFilter extends BasicAuthenticationFilter {
         return new UsernamePasswordAuthenticationToken(usuario, null, new ArrayList<>());
     }
 }
-

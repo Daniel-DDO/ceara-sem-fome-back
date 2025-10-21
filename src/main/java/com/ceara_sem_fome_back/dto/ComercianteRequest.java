@@ -3,7 +3,7 @@ package com.ceara_sem_fome_back.dto;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.validator.constraints.br.CPF;
+//import org.hibernate.validator.constraints.br.CPF;
 
 import java.time.LocalDate;
 

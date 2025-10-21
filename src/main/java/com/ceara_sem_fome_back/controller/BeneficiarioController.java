@@ -5,14 +5,17 @@ import com.ceara_sem_fome_back.data.dto.LoginDTO;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
 import com.ceara_sem_fome_back.dto.BeneficiarioRequest;
+import com.ceara_sem_fome_back.dto.PessoaUpdateDto; // ⬅️ NOVO IMPORT
 import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.BeneficiarioService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
+//import org.springframework.dao.DataAccessException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal; // ⬅️ NOVO IMPORT
 
 @RestController
 @RequestMapping("/beneficiario")
@@ -26,6 +29,7 @@ public class BeneficiarioController {
 
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarBeneficiario(@Valid @RequestBody LoginDTO loginDTO) {
+        // ... (seu método de login existente, sem alteração)
         try {
             if (loginDTO.getEmail() == null || loginDTO.getEmail().isBlank() ||
                     loginDTO.getSenha() == null || loginDTO.getSenha().isBlank()) {
@@ -63,6 +67,7 @@ public class BeneficiarioController {
      */
     @PostMapping("/iniciar-cadastro") // Endpoint renomeado para maior clareza
     public ResponseEntity<Object> iniciarCadastroBeneficiario(@RequestBody @Valid BeneficiarioRequest request) {
+        // ... (seu método de cadastro existente, sem alteração)
         try {
             // Este método agora só envia o e-mail
             beneficiarioService.iniciarCadastro(request);
@@ -84,8 +89,33 @@ public class BeneficiarioController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String direction
     ) {
+        // ... (seu método de listagem existente, sem alteração)
         PaginacaoDTO<Beneficiario> pagina = beneficiarioService.listarTodos(page, size, sortBy, direction);
         return ResponseEntity.ok(pagina);
     }
 
+    //  NOVO ENDPOINT DE ATUALIZAÇÃO DE PERFIL 
+    /**
+     * Endpoint para o usuário autenticado (Beneficiário) atualizar seus próprios dados.
+     * O usuário é identificado pelo token JWT.
+     */
+    @PutMapping("/meu-perfil")
+    public ResponseEntity<Beneficiario> atualizarPerfil(
+            @Valid @RequestBody PessoaUpdateDto dto,
+            Principal principal) { // ⬅️ Pega o usuário autenticado via token
+
+        // 1. O 'Principal' injetado pelo Spring Security contém o usuário.
+        //    No seu caso (JWT), principal.getName() retorna o E-MAIL do token.
+        String userEmail = principal.getName(); 
+        
+        // 2. Chama o serviço que você criou
+        Beneficiario beneficiarioAtualizado = beneficiarioService.atualizarBeneficiario(userEmail, dto);
+        
+        // 3. 🛡️ IMPORTANTE 🛡️
+        //    Nunca retorne a senha no JSON.
+        beneficiarioAtualizado.setSenha(null); 
+
+        // 4. Retorna o objeto atualizado com status 200 OK
+        return ResponseEntity.ok(beneficiarioAtualizado);
+    }
 }

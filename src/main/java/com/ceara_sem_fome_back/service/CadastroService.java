@@ -41,15 +41,13 @@ public class CadastroService {
     @Autowired
     private EmailService emailService;
 
-    // =========================================================================
     // MÉTODOS DE VALIDAÇÃO NOVOS (USANDO SUAS EXCEÇÕES)
-    // =========================================================================
 
     /**
      * Verifica se o CPF está disponível em TODAS as tabelas de usuários.
      * Lança uma CpfJaCadastradoException se o CPF já estiver em uso.
      */
-    private void validarCpfDisponivelEmTodosOsPerfis(String cpf) {
+    public void validarCpfDisponivelEmTodosOsPerfis(String cpf) {
         if (beneficiarioRepository.existsByCpf(cpf) ||
             administradorRepository.existsByCpf(cpf) ||
             comercianteRepository.existsByCpf(cpf) ||
@@ -64,7 +62,7 @@ public class CadastroService {
      * Verifica se o Email está disponível em TODAS as tabelas de usuários.
      * Lança uma EmailJaCadastradoException se o Email já estiver em uso.
      */
-    private void validarEmailDisponivelEmTodosOsPerfis(String email) {
+    public void validarEmailDisponivelEmTodosOsPerfis(String email) {
         if (beneficiarioRepository.existsByEmail(email) ||
             administradorRepository.existsByEmail(email) ||
             comercianteRepository.existsByEmail(email) ||
@@ -75,9 +73,7 @@ public class CadastroService {
         }
     }
 
-    // =========================================================================
     // FIM DOS MÉTODOS DE VALIDAÇÃO
-    // =========================================================================
 
     /**
      * Cria um token "rico" contendo todos os dados do pré-cadastro,

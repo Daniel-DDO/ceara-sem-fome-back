@@ -5,7 +5,7 @@ import java.time.LocalDate;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.validator.constraints.br.CPF;
+//import org.hibernate.validator.constraints.br.CPF;
 
 @Getter
 @Setter

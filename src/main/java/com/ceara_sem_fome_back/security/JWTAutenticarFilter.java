@@ -7,6 +7,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORTAR SLF4J
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,6 +23,7 @@ import java.util.Date;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 
+@Slf4j // ⬅️ ADICIONAR ANOTAÇÃO DE LOG
 public class JWTAutenticarFilter extends UsernamePasswordAuthenticationFilter {
 
     public static final int TOKEN_EXPIRACAO = 600_000; //10 minutos
@@ -36,10 +38,14 @@ public class JWTAutenticarFilter extends UsernamePasswordAuthenticationFilter {
 
     @Override
     public Authentication attemptAuthentication(@NonNull HttpServletRequest request,
-                                                HttpServletResponse response) throws AuthenticationException {
+                                                @NonNull HttpServletResponse response) throws AuthenticationException {
+        
+        LoginDTO login = null; // ⬅️ Declarar fora do try para usar no catch
+        String ipAddress = request.getRemoteAddr(); // ⬅️ Capturar IP
+
         try {
-            // Lê como LoginDTO (existe no projeto) — é compatível com { "email": "...", "senha": "..." }
-            LoginDTO login = objectMapper.readValue(request.getInputStream(), LoginDTO.class);
+            // Lê como LoginDTO
+            login = objectMapper.readValue(request.getInputStream(), LoginDTO.class);
 
             String email = login.getEmail();
             String senha = login.getSenha();
@@ -48,6 +54,18 @@ public class JWTAutenticarFilter extends UsernamePasswordAuthenticationFilter {
                     new UsernamePasswordAuthenticationToken(email, senha, new ArrayList<>());
 
             return authenticationManager.authenticate(authToken);
+
+        } catch (AuthenticationException e) { // ⬅️ ADICIONAR ESTE CATCH
+            // LOG DE FALHA DE LOGIN (Ex: Senha incorreta)
+            String username = (login != null) ? login.getEmail() : "N/A";
+            log.warn(
+                "FALHA LOGIN: Tentativa falhou para o usuário [{}]. Motivo: {}. IP: {}",
+                username,
+                e.getMessage(),
+                ipAddress
+            );
+            throw e; // Re-lança a exceção para o Spring tratar como falha
+
         } catch (IOException e) {
             throw new RuntimeException("Falha ao ler dados de autenticação do request", e);
         }
@@ -59,15 +77,23 @@ public class JWTAutenticarFilter extends UsernamePasswordAuthenticationFilter {
                                             @NonNull FilterChain chain,
                                             Authentication authResult) throws IOException, ServletException {
 
-        //Usa UserDetails para obter username — funciona para qualquer UserDetailsService
+        //Usa UserDetails para obter username
         Object principal = authResult.getPrincipal();
         String username;
         if (principal instanceof UserDetails) {
             username = ((UserDetails) principal).getUsername();
         } else {
-            //fallback: tenta usar toString()
             username = principal != null ? principal.toString() : null;
         }
+
+        String ipAddress = request.getRemoteAddr(); // ⬅️ Capturar IP
+
+        // ⬇️ ADICIONAR LOG DE SUCESSO DE LOGIN ⬇️
+        log.info(
+            "SUCESSO LOGIN: Usuário [{}] logou com sucesso. IP: {}",
+            username,
+            ipAddress
+        );
 
         String token = JWT.create()
                 .withSubject(username)

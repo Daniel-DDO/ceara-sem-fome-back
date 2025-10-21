@@ -2,11 +2,9 @@ package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
-import com.ceara_sem_fome_back.dto.AdministradorRequest;
 import com.ceara_sem_fome_back.dto.ComercianteRequest;
-import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
-import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
-import com.ceara_sem_fome_back.exception.EmailJaCadastradoException;
+import com.ceara_sem_fome_back.dto.PessoaUpdateDto; // ⬅️ NOVO IMPORT
+import com.ceara_sem_fome_back.exception.*; // ⬅️ MUDANÇA (Importa todos)
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.repository.ComercianteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects; // ⬅️ NOVO IMPORT
 import java.util.Optional;
 
 @Service
@@ -33,12 +32,14 @@ public class ComercianteService implements UserDetailsService {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private CadastroService cadastroService;
+    private CadastroService cadastroService; // <-- Perfeito, já está aqui
 
+    // [MÉTODO CORRIGIDO]
     public Comerciante logarComerciante(String email, String senha) {
         Optional<Comerciante> comerciante = comercianteRepository.findByEmail(email);
 
-        if (comerciante.isPresent() && comerciante.get().getSenha().equals(senha)) {
+        // 1. Usa passwordEncoder.matches() para comparar a senha criptografada
+        if (comerciante.isPresent() && passwordEncoder.matches(senha, comerciante.get().getSenha())) {
             return comerciante.get();
         }
 
@@ -49,20 +50,21 @@ public class ComercianteService implements UserDetailsService {
         return PessoaUtils.verificarCpf(cpf);
     }
 
+    // [MÉTODO CORRIGIDO]
     @Transactional
     public void iniciarCadastro(ComercianteRequest request) {
-        checkIfUserExists(request.getCpf(), request.getEmail());
+        // 2. Chama a validação CORRETA (cruzada)
+        cadastroService.validarCpfDisponivelEmTodosOsPerfis(request.getCpf());
+        cadastroService.validarEmailDisponivelEmTodosOsPerfis(request.getEmail());
+        
+        // 3. Delega a criação do token
         cadastroService.criarTokenDeCadastroEVenviarEmailComerc(request);
     }
 
-    private void checkIfUserExists(String cpf, String email) {
-        if (comercianteRepository.findByEmail(email).isPresent()) {
-            throw new EmailJaCadastradoException(email);
-        }
-        if (comercianteRepository.findByCpf(cpf).isPresent()) {
-            throw new CpfJaCadastradoException(cpf);
-        }
-    }
+    // [MÉTODO REMOVIDO]
+    // O 'checkIfUserExists' não é mais necessário
+    // private void checkIfUserExists(String cpf, String email) { ... }
+
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -74,7 +76,7 @@ public class ComercianteService implements UserDetailsService {
     }
 
     public Comerciante salvarComerciante(Comerciante comerciante) {
-
+        // ... (seu método existente, sem alteração)
         if (comercianteRepository.existsById(comerciante.getCpf())) {
             throw new CpfJaCadastradoException(comerciante.getCpf());
         }
@@ -87,6 +89,7 @@ public class ComercianteService implements UserDetailsService {
     }
 
     public PaginacaoDTO<Comerciante> listarTodos(int page, int size, String sortBy, String direction) {
+        // ... (seu método existente, sem alteração)
         Sort sort = direction.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() :
                 Sort.by(sortBy).ascending();
@@ -102,5 +105,38 @@ public class ComercianteService implements UserDetailsService {
                 pagina.getSize(),
                 pagina.isLast()
         );
+    }
+
+
+    /**s
+     * Atualiza os dados de um comerciante com base no seu e-mail (usuário)
+     * pego da autenticação.
+     *
+     * @param userEmail E-mail do usuário autenticado (vem do token JWT).
+     * @param dto Os novos dados para atualizar (PessoaUpdateDto).
+     * @return O comerciante com os dados atualizados.
+     */
+    @Transactional
+    public Comerciante atualizarComerciante(String userEmail, PessoaUpdateDto dto) {
+        
+        // 1. Encontra o comerciante pelo e-mail do token
+        Comerciante comercianteExistente = comercianteRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Comerciante não encontrado com o e-mail: " + userEmail));
+
+        // 2. Verifica se o e-mail está sendo alterado
+        if (!Objects.equals(comercianteExistente.getEmail(), dto.getEmail())) {
+            // Se mudou, valida se o NOVO email já está em uso por QUALQUER pessoa
+            cadastroService.validarEmailDisponivelEmTodosOsPerfis(dto.getEmail());
+            comercianteExistente.setEmail(dto.getEmail());
+        }
+
+        // 3. Atualiza os outros campos
+        comercianteExistente.setNome(dto.getNome());
+        comercianteExistente.setTelefone(dto.getTelefone());
+        comercianteExistente.setDataNascimento(dto.getDataNascimento());
+        comercianteExistente.setGenero(dto.getGenero());
+
+        // 4. Salva as alterações
+        return comercianteRepository.save(comercianteExistente);
     }
 }

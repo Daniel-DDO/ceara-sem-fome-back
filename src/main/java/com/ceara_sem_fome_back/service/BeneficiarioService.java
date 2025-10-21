@@ -3,9 +3,11 @@ package com.ceara_sem_fome_back.service;
 import com.ceara_sem_fome_back.data.BeneficiarioData;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.BeneficiarioRequest;
+import com.ceara_sem_fome_back.dto.PessoaUpdateDto; // ⬅️ NOVO IMPORT
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
 import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
 import com.ceara_sem_fome_back.exception.EmailJaCadastradoException;
+import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException; // ⬅️ NOVO IMPORT
 import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects; // ⬅️ NOVO IMPORT
 import java.util.Optional;
 
 @Service
@@ -31,9 +34,8 @@ public class BeneficiarioService implements UserDetailsService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // [MODIFICADO] Agora injeta o CadastroService para delegar a criação da conta
     @Autowired
-    private CadastroService cadastroService;
+    private CadastroService cadastroService; // <-- Ótimo, já está aqui!
 
     public Beneficiario logarBeneficiario(String email, String senha) {
         Optional<Beneficiario> optionalBeneficiario = beneficiarioRepository.findByEmail(email);
@@ -47,21 +49,20 @@ public class BeneficiarioService implements UserDetailsService {
         throw new ContaNaoExisteException(email);
     }
 
-    // [MODIFICADO] A lógica complexa foi movida. Este método agora apenas valida e delega.
+    // [MÉTODO CORRIGIDO]
     @Transactional
     public void iniciarCadastro(BeneficiarioRequest request) {
-        checkIfUserExists(request.getCpf(), request.getEmail());
+        // 1. CHAMA A VALIDAÇÃO CORRETA (pública, que checa todos os perfis)
+        cadastroService.validarCpfDisponivelEmTodosOsPerfis(request.getCpf());
+        cadastroService.validarEmailDisponivelEmTodosOsPerfis(request.getEmail());
+
+        // 2. Delega a criação do token
         cadastroService.criarTokenDeCadastroEVenviarEmailBenef(request);
     }
 
-    private void checkIfUserExists(String cpf, String email) {
-        if (beneficiarioRepository.findByEmail(email).isPresent()) {
-            throw new EmailJaCadastradoException(email);
-        }
-        if (beneficiarioRepository.findByCpf(cpf).isPresent()) {
-            throw new CpfJaCadastradoException(cpf);
-        }
-    }
+    // [MÉTODO ANTIGO REMOVIDO]
+    // O método 'checkIfUserExists' não é mais necessário,
+    // pois a validação agora é centralizada no 'CadastroService'.
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -73,6 +74,7 @@ public class BeneficiarioService implements UserDetailsService {
     }
 
     public Beneficiario salvarBeneficiario(Beneficiario beneficiario) {
+        // ... (seu método existente)
         if (beneficiarioRepository.existsById(beneficiario.getCpf())) {
             throw new CpfJaCadastradoException(beneficiario.getCpf());
         }
@@ -82,8 +84,8 @@ public class BeneficiarioService implements UserDetailsService {
         return beneficiario;
     }
 
-    //metodo pra listar em cada página
     public PaginacaoDTO<Beneficiario> listarTodos(int page, int size, String sortBy, String direction) {
+        // ... (seu método existente)
         Sort sort = direction.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() :
                 Sort.by(sortBy).ascending();
@@ -99,5 +101,41 @@ public class BeneficiarioService implements UserDetailsService {
                 pagina.getSize(),
                 pagina.isLast()
         );
+    }
+
+
+
+    /**
+     * Atualiza os dados de um beneficiário com base no seu e-mail (usuário)
+     * pego da autenticação.
+     *
+     * @param userEmail E-mail do usuário autenticado (vem do token JWT).
+     * @param dto Os novos dados para atualizar.
+     * @return O beneficiário com os dados atualizados.
+     */
+    @Transactional
+    public Beneficiario atualizarBeneficiario(String userEmail, PessoaUpdateDto dto) {
+        
+        // 1. Encontra o beneficiário pelo e-mail do token
+        Beneficiario beneficiarioExistente = beneficiarioRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Beneficiário não encontrado com o e-mail: " + userEmail));
+
+        // 2. Verifica se o e-mail está sendo alterado
+        if (!Objects.equals(beneficiarioExistente.getEmail(), dto.getEmail())) {
+            // Se o email mudou, validamos se o NOVO email já está em uso por QUALQUER pessoa
+            cadastroService.validarEmailDisponivelEmTodosOsPerfis(dto.getEmail());
+            
+            // Se a validação passar, podemos setar o novo email
+            beneficiarioExistente.setEmail(dto.getEmail());
+        }
+
+        // 3. Atualiza os outros campos
+        beneficiarioExistente.setNome(dto.getNome());
+        beneficiarioExistente.setTelefone(dto.getTelefone());
+        beneficiarioExistente.setDataNascimento(dto.getDataNascimento());
+        beneficiarioExistente.setGenero(dto.getGenero()); // Como String
+
+        // 4. Salva as alterações no banco
+        return beneficiarioRepository.save(beneficiarioExistente);
     }
 }
