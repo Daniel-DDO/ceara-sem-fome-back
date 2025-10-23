@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+import com.ceara_sem_fome_back.model.Produto;
 
 @Service
 public class ProdutoService {
@@ -65,4 +66,24 @@ public class ProdutoService {
         List<ProdutoEstabelecimento> produtos = produtoEstabelecimentoRepository.findByEstabelecimento_Id(estabelecimentoId);
         return produtos;
     }
+
+    //apenas o começo, vai mudar
+
+    public void aprovarProduto(Produto produto) {
+
+    }
+
+    public void recusarProduto(Produto produto) {
+
+    }
+
+    public void editarProduto(Produto produto) {
+
+    }
+
+    public void removerProduto(Produto produto) {
+
+    }
+
 }
+
