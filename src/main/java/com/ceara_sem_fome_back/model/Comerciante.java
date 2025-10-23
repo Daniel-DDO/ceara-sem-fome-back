@@ -5,7 +5,7 @@ import lombok.*;
 import java.time.LocalDate;
 import java.util.List;
 
-import jakarta.persistence.Entity;;
+import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import lombok.Getter;
 import lombok.Setter;
