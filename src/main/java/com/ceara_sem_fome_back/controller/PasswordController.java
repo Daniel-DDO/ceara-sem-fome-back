@@ -21,10 +21,7 @@ public class PasswordController {
 
     @PostMapping("/iniciar-recuperacao")
     public ResponseEntity<String> iniciarRecuperacao(@RequestBody RecuperacaoSenhaDTO recuperacaoDTO) {
-        if (recuperacaoDTO.getTipoPessoa() == null) {
-            return ResponseEntity.badRequest().body("Tipo de pessoa é obrigatório");
-        }
-        recuperacaoSenhaService.iniciarRecuperacaoSenha(recuperacaoDTO, recuperacaoDTO.getTipoPessoa());
+        recuperacaoSenhaService.iniciarRecuperacaoSenha(recuperacaoDTO);
         return ResponseEntity.ok("Se os dados estiverem corretos, um e-mail de recuperação foi enviado. Copie o token do link recebido.");
     }
 

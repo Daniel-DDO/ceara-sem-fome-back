@@ -10,5 +10,4 @@ public class RecuperacaoSenhaDTO {
     // Campos necessários para a verificação cruzada
     private String cpf;
     private String email;
-    private TipoPessoa tipoPessoa;
 }
