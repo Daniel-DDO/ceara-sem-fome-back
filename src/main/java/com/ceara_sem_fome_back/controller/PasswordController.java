@@ -18,10 +18,13 @@ public class PasswordController {
 
     @Autowired
     private TokenService tokenService;
-    
+
     @PostMapping("/iniciar-recuperacao")
     public ResponseEntity<String> iniciarRecuperacao(@RequestBody RecuperacaoSenhaDTO recuperacaoDTO) {
-        recuperacaoSenhaService.iniciarRecuperacaoSenha(recuperacaoDTO);
+        if (recuperacaoDTO.getTipoPessoa() == null) {
+            return ResponseEntity.badRequest().body("Tipo de pessoa é obrigatório");
+        }
+        recuperacaoSenhaService.iniciarRecuperacaoSenha(recuperacaoDTO, recuperacaoDTO.getTipoPessoa());
         return ResponseEntity.ok("Se os dados estiverem corretos, um e-mail de recuperação foi enviado. Copie o token do link recebido.");
     }
 

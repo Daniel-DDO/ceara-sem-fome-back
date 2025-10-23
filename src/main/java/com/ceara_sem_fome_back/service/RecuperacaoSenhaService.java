@@ -1,11 +1,10 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.dto.CadastroRequest;
 import com.ceara_sem_fome_back.dto.RecuperacaoSenhaDTO;
 import com.ceara_sem_fome_back.dto.RedefinirSenhaFinalDTO;
-import com.ceara_sem_fome_back.model.Beneficiario;
-import com.ceara_sem_fome_back.model.VerificationToken;
-import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
-import com.ceara_sem_fome_back.repository.VerificationTokenRepository;
+import com.ceara_sem_fome_back.model.*;
+import com.ceara_sem_fome_back.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +22,12 @@ public class RecuperacaoSenhaService {
     @Autowired
     private BeneficiarioRepository beneficiarioRepository;
     @Autowired
+    private AdministradorRepository administradorRepository;
+    @Autowired
+    private ComercianteRepository comercianteRepository;
+    @Autowired
+    private EntregadorRepository entregadorRepository;
+    @Autowired
     private VerificationTokenRepository tokenRepository;
     @Autowired
     private EmailService emailService;
@@ -32,6 +37,7 @@ public class RecuperacaoSenhaService {
     /**
      * Passo 1 do Fluxo: Recebe CPF e Email, valida se pertencem ao mesmo usuário e envia o e-mail.
      */
+    /*
     @Transactional
     public void iniciarRecuperacaoSenha(RecuperacaoSenhaDTO recuperacaoDTO) {
         log.info("Iniciando verificação de credenciais para {}", recuperacaoDTO.getEmail());
@@ -49,6 +55,52 @@ public class RecuperacaoSenhaService {
 
             tokenRepository.save(verificationToken);
             
+            emailService.sendPasswordResetEmail(userEmail, token);
+            log.info("Verificação bem-sucedida. E-mail de recuperação enviado para {}", userEmail);
+        } else {
+            log.warn("Verificação falhou: CPF e/ou Email não correspondem a um usuário válido.");
+        }
+    }
+
+     */
+    @Transactional
+    public void iniciarRecuperacaoSenha(RecuperacaoSenhaDTO recuperacaoDTO, TipoPessoa tipoPessoa) {
+        log.info("Iniciando verificação de credenciais para {}", recuperacaoDTO.getEmail());
+
+        if (tipoPessoa.equals(TipoPessoa.BENEFICIARIO)) {
+            Optional<Beneficiario> beneficiario = beneficiarioRepository
+                .findByCpfAndEmail(recuperacaoDTO.getCpf(), recuperacaoDTO.getEmail());
+            recuperacaoSenha(beneficiario, recuperacaoDTO);
+        }
+        else if (tipoPessoa.equals(TipoPessoa.ADMINISTRADOR)) {
+            Optional<Administrador> administrador = administradorRepository
+                    .findByCpfAndEmail(recuperacaoDTO.getCpf(), recuperacaoDTO.getEmail());
+            recuperacaoSenha(administrador, recuperacaoDTO);
+        }
+        else if (tipoPessoa.equals(TipoPessoa.COMERCIANTE)) {
+            Optional<Comerciante> comerciante = comercianteRepository
+                    .findByCpfAndEmail(recuperacaoDTO.getCpf(), recuperacaoDTO.getEmail());
+            recuperacaoSenha(comerciante, recuperacaoDTO);
+        }
+        else if (tipoPessoa.equals(TipoPessoa.ENTREGADOR)) {
+            Optional<Entregador> entregador = entregadorRepository
+                    .findByCpfAndEmail(recuperacaoDTO.getCpf(), recuperacaoDTO.getEmail());
+            recuperacaoSenha(entregador, recuperacaoDTO);
+        }
+    }
+
+    public <T extends Pessoa> void recuperacaoSenha(Optional<T> optional , RecuperacaoSenhaDTO recuperacaoDTO) {
+        if (optional.isPresent()) {
+            String userEmail = optional.get().getEmail();
+            String token = UUID.randomUUID().toString();
+
+            VerificationToken verificationToken = new VerificationToken();
+            verificationToken.setUserEmail(userEmail);
+            verificationToken.setToken(token);
+            verificationToken.setExpiryDate(LocalDateTime.now().plusMinutes(10)); // Validade de 10 minutos
+
+            tokenRepository.save(verificationToken);
+
             emailService.sendPasswordResetEmail(userEmail, token);
             log.info("Verificação bem-sucedida. E-mail de recuperação enviado para {}", userEmail);
         } else {
