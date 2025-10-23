@@ -18,7 +18,7 @@ public class PasswordController {
 
     @Autowired
     private TokenService tokenService;
-    
+
     @PostMapping("/iniciar-recuperacao")
     public ResponseEntity<String> iniciarRecuperacao(@RequestBody RecuperacaoSenhaDTO recuperacaoDTO) {
         recuperacaoSenhaService.iniciarRecuperacaoSenha(recuperacaoDTO);

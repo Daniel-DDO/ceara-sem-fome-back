@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.dto;
 
+import com.ceara_sem_fome_back.model.TipoPessoa;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
