@@ -19,6 +19,10 @@ public class ComercianteData implements UserDetails {
         this.comerciante = comerciante;
     }
 
+    public Comerciante getComerciante() {
+        return comerciante.get();
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return new ArrayList<>();

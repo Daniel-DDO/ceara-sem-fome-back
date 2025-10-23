@@ -5,6 +5,10 @@ import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.ComercianteRequest;
 import com.ceara_sem_fome_back.dto.PessoaUpdateDto; // ⬅️ NOVO IMPORT
 import com.ceara_sem_fome_back.exception.*; // ⬅️ MUDANÇA (Importa todos)
+import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
+import com.ceara_sem_fome_back.exception.CpfInvalidoException;
+import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
+import com.ceara_sem_fome_back.exception.EmailJaCadastradoException;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.repository.ComercianteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +60,7 @@ public class ComercianteService implements UserDetailsService {
         // 2. Chama a validação CORRETA (cruzada)
         cadastroService.validarCpfDisponivelEmTodosOsPerfis(request.getCpf());
         cadastroService.validarEmailDisponivelEmTodosOsPerfis(request.getEmail());
-        
+
         // 3. Delega a criação do token
         cadastroService.criarTokenDeCadastroEVenviarEmailComerc(request);
     }
@@ -118,7 +122,7 @@ public class ComercianteService implements UserDetailsService {
      */
     @Transactional
     public Comerciante atualizarComerciante(String userEmail, PessoaUpdateDto dto) {
-        
+
         // 1. Encontra o comerciante pelo e-mail do token
         Comerciante comercianteExistente = comercianteRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Comerciante não encontrado com o e-mail: " + userEmail));
@@ -139,4 +143,12 @@ public class ComercianteService implements UserDetailsService {
         // 4. Salva as alterações
         return comercianteRepository.save(comercianteExistente);
     }
+
+    public Comerciante buscarComerciantePorCpf(String cpf) {
+        return comercianteRepository.findById(cpf).orElseThrow(() -> new CpfInvalidoException(cpf));
+    }
 }
+
+
+
+
