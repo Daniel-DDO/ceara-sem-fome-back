@@ -61,6 +61,7 @@ public class ProdutoService {
 
         return produtoEstabelecimentoRepository.save(associacao);
     }
+
     public List<ProdutoEstabelecimento> listarProdutosPorEstabelecimento(String estabelecimentoId) {
 
         List<ProdutoEstabelecimento> produtos = produtoEstabelecimentoRepository.findByEstabelecimento_Id(estabelecimentoId);
@@ -69,20 +70,35 @@ public class ProdutoService {
 
     //apenas o começo, vai mudar
 
-    public void aprovarProduto(Produto produto) {
+    public void gerenciarProduto(Produto produto) {
 
+    }
+
+    public void aprovarProduto(Produto produto) {
+        if (produtoRepository.existsProdutoById(produto.getId())) {
+            produto.setStatus(StatusProduto.AUTORIZADO);
+            produtoRepository.save(produto);
+        }
     }
 
     public void recusarProduto(Produto produto) {
-
+        if (produtoRepository.existsProdutoById(produto.getId())) {
+            produto.setStatus(StatusProduto.RECUSADO);
+            produtoRepository.save(produto);
+        }
     }
 
     public void editarProduto(Produto produto) {
-
+        if (produtoRepository.existsProdutoById(produto.getId())) {
+            produtoRepository.save(produto);
+        }
     }
 
     public void removerProduto(Produto produto) {
-
+        if (produtoRepository.existsProdutoById(produto.getId())) {
+            produto.setStatus(StatusProduto.DESATIVADO);
+            produtoRepository.save(produto);
+        }
     }
 
 }

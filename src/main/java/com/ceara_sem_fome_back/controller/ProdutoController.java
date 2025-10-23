@@ -2,6 +2,7 @@ package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.dto.ProdutoCadastroRequest;
+import com.ceara_sem_fome_back.dto.ProdutoDTO;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.ProdutoEstabelecimento;
 import com.ceara_sem_fome_back.service.ProdutoService;
@@ -47,23 +48,23 @@ public class ProdutoController {
     }
 
     @PostMapping("/aprovar")
-    public void aprovarProduto() {
-
+    public ResponseEntity<ProdutoDTO> aprovarProduto(@RequestBody ProdutoDTO produtoDTO) {
+        return null; //esses nulls são pq ainda irei implementar
     }
 
     @PostMapping("/recusar")
-    public void recusarProduto() {
-
+    public ResponseEntity<ProdutoDTO> recusarProduto(@RequestBody ProdutoDTO produtoDTO) {
+        return null;
     }
 
     @PostMapping("/editar")
-    public void editarProduto() {
-
+    public ResponseEntity<ProdutoDTO> editarProduto(@RequestBody ProdutoDTO produtoDTO) {
+        return null;
     }
 
     @PostMapping("/remover")
-    public void removerProduto() {
-
+    public ResponseEntity<ProdutoDTO> removerProduto(@RequestBody ProdutoDTO produtoDTO) {
+        return null;
     }
 
 }

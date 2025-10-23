@@ -20,6 +20,7 @@ public class Produto {
     private String descricao;
     private double preco;
     private int quantidadeEstoque;
+    private StatusProduto status;
 
     @OneToMany(mappedBy = "produto", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProdutoEstabelecimento> estabelecimentos = new HashSet<>();
@@ -30,4 +31,16 @@ public class Produto {
     private Comerciante criador;
 
     public Produto() {}
+
+    public Produto(String id, String nome, String lote, String descricao, double preco, int quantidadeEstoque, StatusProduto status, Set<ProdutoEstabelecimento> estabelecimentos, Comerciante criador) {
+        this.id = id;
+        this.nome = nome;
+        this.lote = lote;
+        this.descricao = descricao;
+        this.preco = preco;
+        this.quantidadeEstoque = quantidadeEstoque;
+        this.status = status;
+        this.estabelecimentos = estabelecimentos;
+        this.criador = criador;
+    }
 }
