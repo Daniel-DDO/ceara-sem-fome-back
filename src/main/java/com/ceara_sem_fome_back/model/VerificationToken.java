@@ -12,7 +12,6 @@ import java.time.ZoneOffset;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
 @Entity
 @Table(name = "verification_token")
 public class VerificationToken {

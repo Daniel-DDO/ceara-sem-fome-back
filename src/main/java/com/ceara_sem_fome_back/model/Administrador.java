@@ -9,7 +9,6 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @AllArgsConstructor
-@Data
 @Entity
 @EqualsAndHashCode(callSuper = true)
 public class Administrador extends Pessoa {

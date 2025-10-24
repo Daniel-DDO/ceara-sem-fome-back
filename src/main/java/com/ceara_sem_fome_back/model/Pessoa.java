@@ -15,7 +15,6 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
 @MappedSuperclass
 public abstract class Pessoa {
 
@@ -38,7 +37,7 @@ public abstract class Pessoa {
     protected String telefone;
     @NotBlank
     protected String genero;
-    @NotBlank
+    @NotNull
     @Enumerated(EnumType.STRING)
     protected StatusPessoa status;
 

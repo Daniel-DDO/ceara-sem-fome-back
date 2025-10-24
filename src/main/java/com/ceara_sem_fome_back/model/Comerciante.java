@@ -17,7 +17,6 @@ import java.util.ArrayList;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
 @Entity
 @EqualsAndHashCode(callSuper = true)
 public class Comerciante extends Pessoa {

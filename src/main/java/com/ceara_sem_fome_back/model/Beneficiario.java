@@ -9,7 +9,6 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
 @Entity
 @EqualsAndHashCode(callSuper = true)
 public class Beneficiario extends Pessoa {
