@@ -16,12 +16,12 @@ public class Beneficiario extends Pessoa {
 
     private String numeroCadastroSocial;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, optional = true)
     @JoinColumn(name = "carrinho_id")
     @JsonManagedReference
     private Carrinho carrinho;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, optional = true)
     @JoinColumn(name = "endereco_id")
     private Endereco endereco;
 

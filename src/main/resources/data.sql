@@ -16,10 +16,10 @@ INSERT INTO administrador (id, nome, cpf, email, senha, data_nascimento, telefon
 VALUES ('adm-1', 'João Almeida', '66230022001', 'joao.admin@csf.gov.br', '123456', '1980-05-10', '(85) 90000-0001', 'MASCULINO', 'ATIVO')
     ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO beneficiario (id, nome, cpf, email, senha, data_nascimento, telefone, genero, status, carrinho_id, endereco_id)
+INSERT INTO beneficiario (id, nome, cpf, email, senha, data_nascimento, telefone, genero, status, carrinho_id, endereco_id, lgpd_accepted)
 VALUES
-    ('ben-1', 'Maria Souza', '36782694000', 'maria.souza@gmail.com', '123456', '1995-07-21', '(85) 91111-1111', 'FEMININO', 'ATIVO', 'car-1', 'end-2'),
-    ('ben-2', 'Carlos Pereira', '11499696019', 'carlos.pereira@gmail.com', '123456', '1990-04-10', '(85) 92222-2222', 'MASCULINO', 'ATIVO', 'car-2', 'end-3')
+    ('ben-1', 'Maria Souza', '36782694000', 'maria.souza@gmail.com', '123456', '1995-07-21', '(85) 91111-1111', 'FEMININO', 'ATIVO', 'car-1', 'end-2', true),
+    ('ben-2', 'Carlos Pereira', '11499696019', 'carlos.pereira@gmail.com', '123456', '1990-04-10', '(85) 92222-2222', 'MASCULINO', 'ATIVO', 'car-2', 'end-3', true)
     ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO comerciante (id, nome, cpf, email, senha, data_nascimento, telefone, genero, status)

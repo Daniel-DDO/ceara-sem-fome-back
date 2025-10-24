@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -26,6 +27,6 @@ public class Carrinho {
 
     @OneToMany(mappedBy = "carrinho", cascade = CascadeType.ALL)
     @JsonManagedReference
-    private List<ProdutoCarrinho> produtos;
+    private List<ProdutoCarrinho> produtos = new ArrayList<>();
 
 }

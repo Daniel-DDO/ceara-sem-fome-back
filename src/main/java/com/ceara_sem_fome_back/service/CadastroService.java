@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -82,15 +83,15 @@ public class CadastroService {
      */
     @Transactional
     public void criarTokenDeCadastroEVenviarEmail(CadastroRequest request, TipoPessoa tipoPessoa) {
-        
-        // 🛡️ PASSO DE VALIDAÇÃO ADICIONADO AQUI 🛡️
-        // Verifica ANTES de criar o token se os dados já existem
+
+        //Verifica ANTES de criar o token se os dados já existem
         validarCpfDisponivelEmTodosOsPerfis(request.getCpf());
         validarEmailDisponivelEmTodosOsPerfis(request.getEmail());
 
-        String tokenString = UUID.randomUUID().toString();
         //Limpa tokens antigos do mesmo e-mail para evitar lixo no banco
         tokenRepository.deleteByUserEmail(request.getEmail());
+
+        String tokenString = UUID.randomUUID().toString();
 
         VerificationToken verificationToken = new VerificationToken(
                 tokenString,
@@ -104,16 +105,13 @@ public class CadastroService {
                 tipoPessoa
         );
 
-        tokenRepository.save(verificationToken);
-
         VerificationToken saved = tokenRepository.save(verificationToken);
+
         log.info("Token salvo no banco: {}", saved.getToken());
         emailService.sendVerificationEmail(request.getEmail(), tokenString);
-        log.info("Token de cadastro criado e e-mail enviado para {}", request.getEmail());
+        log.info("E-mail de verificação enviado para {}", request.getEmail());
     }
 
-    // ... (Seus métodos criarTokenDeCadastroEVenviarEmailAdm, Benef, Comerc, Entreg) ...
-    // ELES NÃO MUDAM
     @Transactional
     public void criarTokenDeCadastroEVenviarEmailAdm(AdministradorRequest request) {
         criarTokenDeCadastroEVenviarEmail(request, TipoPessoa.ADMINISTRADOR);
@@ -150,22 +148,23 @@ public class CadastroService {
         }
 
         VerificationToken verificationToken = optionalToken.get();
+
         if (verificationToken.getExpiryDate().isBefore(LocalDateTime.now())) {
             tokenRepository.delete(verificationToken);
             log.warn("Token de cadastro expirado e deletado: {}", token);
             return false;
         }
 
-        // 🛡️ VALIDAÇÃO BÔNUS (Evita Race Condition) 🛡️
-        // Verifica de novo ANTES de salvar, caso alguém tenha se cadastrado
-        // com o mesmo CPF/Email enquanto este token estava ativo.
+        //VALIDAÇÃO BÔNUS (Evita Race Condition)
+        //Verifica de novo ANTES de salvar, caso alguém tenha se cadastrado
+        //com o mesmo CPF/Email enquanto este token estava ativo.
         try {
             validarCpfDisponivelEmTodosOsPerfis(verificationToken.getCpf());
             validarEmailDisponivelEmTodosOsPerfis(verificationToken.getUserEmail());
         } catch (CpfJaCadastradoException | EmailJaCadastradoException e) {
             log.warn("Cadastro bloqueado na finalização (race condition): {}", e.getMessage());
             tokenRepository.delete(verificationToken); // Limpa o token inválido
-            return false; // Falha na verificação, segue o padrão do método
+            return false; // Falha na verificação, segue o padrão do metodo
         }
 
         switch (verificationToken.getTipoPessoa()) {
@@ -191,6 +190,7 @@ public class CadastroService {
                         verificationToken.getTelefone(),
                         verificationToken.getGenero()
                 );
+
                 beneficiarioRepository.save(novoBeneficiario);
             }
             case COMERCIANTE -> {
@@ -215,6 +215,9 @@ public class CadastroService {
                         verificationToken.getTelefone(),
                         verificationToken.getGenero()
                 );
+
+                novoEntregador.setEndereco(new Endereco());
+
                 entregadorRepository.save(novoEntregador);
             }
             default -> {

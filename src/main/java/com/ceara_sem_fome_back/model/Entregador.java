@@ -19,7 +19,7 @@ import java.time.LocalDate;
 public class Entregador extends Pessoa {
     //Essa classe é apenas um molde por agora. Só será utilizada quando formos fazer essa parte de entregas.
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, optional = true)
     @JoinColumn(name = "endereco_id")
     private Endereco endereco;
 
