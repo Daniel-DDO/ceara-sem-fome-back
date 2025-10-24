@@ -1,22 +1,30 @@
 package com.ceara_sem_fome_back.model;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import lombok.*;
 
 import java.time.LocalDate;
 
+
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
 @Entity
+@EqualsAndHashCode(callSuper = true)
 public class Entregador extends Pessoa {
     //Essa classe é apenas um molde por agora. Só será utilizada quando formos fazer essa parte de entregas.
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "endereco_id")
+    private Endereco endereco;
 
     public Entregador(String nome, String cpf, String email, String senha, LocalDate dataNascimento, String telefone, String genero) {
         super(nome, cpf, email, senha, dataNascimento, telefone, genero);
     }
 
-    public Entregador() {
-        super();
-    }
 }

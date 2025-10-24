@@ -1,18 +1,17 @@
 package com.ceara_sem_fome_back.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.*;
 
-import java.util.HashSet;
-import java.util.Set;
-
 @Getter
 @Setter
+@NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Data
 @Entity
 public class Estabelecimento {
 
@@ -22,15 +21,15 @@ public class Estabelecimento {
 
     @NotBlank
     private String nome;
-    private String endereco;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "endereco_id")
+    private Endereco endereco;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comerciante_id", nullable = false)
+    @JsonBackReference
     private Comerciante comerciante;
 
-    @OneToMany(mappedBy = "estabelecimento", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ProdutoEstabelecimento> produtos = new HashSet<>();
-
-    public Estabelecimento() {}
 }
 

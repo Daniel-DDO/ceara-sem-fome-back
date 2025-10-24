@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -12,17 +13,18 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Data
 @Entity
 @EqualsAndHashCode(callSuper = true)
 public class Comerciante extends Pessoa {
 
     @OneToMany(mappedBy = "comerciante", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
+    @JsonManagedReference
     private List<Estabelecimento> estabelecimentos = new ArrayList<>();
 
     public Comerciante(String nome, String cpf, String email, String senha,

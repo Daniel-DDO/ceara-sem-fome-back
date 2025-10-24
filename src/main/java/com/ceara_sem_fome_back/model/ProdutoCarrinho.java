@@ -1,11 +1,8 @@
 package com.ceara_sem_fome_back.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
-
-import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -13,18 +10,21 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Data
 @Entity
-@Table(name = "produto_estabelecimento")
-public class ProdutoEstabelecimento {
+@Table(name = "produto_carrinho")
+public class ProdutoCarrinho {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     @ManyToOne
+    @JoinColumn(name = "carrinho_id")
+    @JsonBackReference
+    private Carrinho carrinho;
+
+    @ManyToOne
     @JoinColumn(name = "produto_id")
     private Produto produto;
 
-    @ManyToOne
-    @JoinColumn(name = "estabelecimento_id")
-    private Estabelecimento estabelecimento;
+    private Integer quantidade;
 }

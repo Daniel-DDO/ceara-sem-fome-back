@@ -1,17 +1,11 @@
 package com.ceara_sem_fome_back.model;
 
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 //import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.validator.constraints.br.CPF;
 
 import java.time.LocalDate;
@@ -19,17 +13,21 @@ import java.util.UUID;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Data
 @MappedSuperclass
 public abstract class Pessoa {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     protected String id;
     @NotBlank
     protected String nome;
+    @Column(unique = true)
     @CPF
     protected String cpf;
+    @Column(unique = true)
     @Email
     protected String email;
     @NotBlank
@@ -38,9 +36,9 @@ public abstract class Pessoa {
     protected LocalDate dataNascimento;
     @NotBlank
     protected String telefone;
-    @NotNull
+    @NotBlank
     protected String genero;
-    @NotNull
+    @NotBlank
     @Enumerated(EnumType.STRING)
     protected StatusPessoa status;
 

@@ -1,18 +1,18 @@
 package com.ceara_sem_fome_back.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "verification_token")
 @Getter
 @Setter
-@NoArgsConstructor // Construtor sem argumentos (essencial para JPA)
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
+@Entity
+@Table(name = "verification_token")
 public class VerificationToken {
 
     @Id

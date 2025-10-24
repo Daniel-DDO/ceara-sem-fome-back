@@ -38,30 +38,22 @@ public class ProdutoService {
         Estabelecimento estabelecimento = estabelecimentoRepository.findById(request.getEstabelecimentoId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException(request.getEstabelecimentoId()));
 
-        //Validação de Propriedade
         if (!estabelecimento.getComerciante().getCpf().equals(comerciante.getCpf())) {
             throw new AcessoNaoAutorizadoException(comerciante.getCpf());
         }
 
-        //Cria e salva o Produto
         Produto novoProduto = new Produto();
         novoProduto.setId(UUID.randomUUID().toString());
         novoProduto.setNome(request.getNome());
-        novoProduto.setCriador(comerciante);
+        novoProduto.setPreco(request.getPrecoVenda().doubleValue());
+        novoProduto.setQuantidadeEstoque(request.getEstoque());
+        novoProduto.setComerciante(comerciante);
 
         Produto produtoSalvo = produtoRepository.save(novoProduto);
 
-
-        ProdutoEstabelecimentoId id = new ProdutoEstabelecimentoId(produtoSalvo.getId(), estabelecimento.getId());
         ProdutoEstabelecimento associacao = new ProdutoEstabelecimento();
-        associacao.setId(id);
         associacao.setProduto(produtoSalvo);
         associacao.setEstabelecimento(estabelecimento);
-        associacao.setPrecoVenda(request.getPrecoVenda());
-        associacao.setEstoque(request.getEstoque());
-
-        produtoSalvo.getEstabelecimentos().add(associacao);
-        estabelecimento.getProdutos().add(associacao);
 
         return produtoEstabelecimentoRepository.save(associacao);
     }

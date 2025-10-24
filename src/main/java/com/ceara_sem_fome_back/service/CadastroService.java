@@ -105,6 +105,9 @@ public class CadastroService {
         );
 
         tokenRepository.save(verificationToken);
+
+        VerificationToken saved = tokenRepository.save(verificationToken);
+        log.info("Token salvo no banco: {}", saved.getToken());
         emailService.sendVerificationEmail(request.getEmail(), tokenString);
         log.info("Token de cadastro criado e e-mail enviado para {}", request.getEmail());
     }

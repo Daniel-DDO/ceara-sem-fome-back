@@ -1,158 +1,134 @@
---isso aqui em cima é por causa da reformulação do banco
-DROP TABLE IF EXISTS produto_estabelecimento CASCADE;
-DROP TABLE IF EXISTS item_carrinho CASCADE;
-DROP TABLE IF EXISTS produto CASCADE;
-DROP TABLE IF EXISTS estabelecimento CASCADE;
-DROP TABLE IF EXISTS conta CASCADE;
-DROP TABLE IF EXISTS carrinho CASCADE;
-DROP TABLE IF EXISTS beneficiario CASCADE;
-DROP TABLE IF EXISTS administrador CASCADE;
-DROP TABLE IF EXISTS comerciante CASCADE;
-DROP TABLE IF EXISTS entregador CASCADE;
-DROP TABLE IF EXISTS verification_token CASCADE;
+/* CearaSemFome-3 (PostgreSQL fixado) */
 
-
--- ADMINISTRADOR
-
-CREATE TABLE administrador (
+CREATE TABLE IF NOT EXISTS endereco (
     id VARCHAR(255) PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    cpf VARCHAR(20) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    senha VARCHAR(255) NOT NULL,
-    data_nascimento DATE NOT NULL,
-    telefone VARCHAR(30),
-    genero VARCHAR(20),
-    status VARCHAR(50) NOT NULL
-);
+    cep VARCHAR(255),
+    logradouro VARCHAR(255),
+    numero VARCHAR(255),
+    bairro VARCHAR(255),
+    municipio VARCHAR(255)
+    );
 
-
--- BENEFICIARIO
-
-CREATE TABLE beneficiario (
+CREATE TABLE IF NOT EXISTS carrinho (
     id VARCHAR(255) PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    cpf VARCHAR(20) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    senha VARCHAR(255) NOT NULL,
-    data_nascimento DATE NOT NULL,
-    telefone VARCHAR(30),
-    genero VARCHAR(20),
-    status VARCHAR(50) NOT NULL,
-    numero_cadastro_social VARCHAR(100),
-    carrinho_id VARCHAR(255)
-);
+    status VARCHAR(255),
+    criacao DATE,
+    modificacao DATE
+    );
 
-
--- COMERCIANTE
-
-CREATE TABLE comerciante (
+CREATE TABLE IF NOT EXISTS administrador (
     id VARCHAR(255) PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    cpf VARCHAR(20) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    senha VARCHAR(255) NOT NULL,
-    data_nascimento DATE NOT NULL,
-    telefone VARCHAR(30),
-    genero VARCHAR(20),
-    status VARCHAR(50) NOT NULL
-);
+    nome VARCHAR(255),
+    cpf VARCHAR(20) UNIQUE,
+    email VARCHAR(255),
+    senha VARCHAR(255),
+    data_nascimento DATE,
+    telefone VARCHAR(255),
+    genero VARCHAR(255),
+    status VARCHAR(255)
+    );
 
-
--- ENTREGADOR
-
-CREATE TABLE entregador (
+CREATE TABLE IF NOT EXISTS comerciante (
     id VARCHAR(255) PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    cpf VARCHAR(20) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    senha VARCHAR(255) NOT NULL,
-    data_nascimento DATE NOT NULL,
-    telefone VARCHAR(30),
-    genero VARCHAR(20),
-    status VARCHAR(50) NOT NULL
-);
+    nome VARCHAR(255),
+    cpf VARCHAR(250) UNIQUE,
+    email VARCHAR(255),
+    senha VARCHAR(255),
+    data_nascimento DATE,
+    telefone VARCHAR(255),
+    genero VARCHAR(255),
+    status VARCHAR(255)
+    );
 
-
--- CARRINHO
-
-CREATE TABLE carrinho (
+CREATE TABLE IF NOT EXISTS beneficiario (
     id VARCHAR(255) PRIMARY KEY,
+    nome VARCHAR(255),
+    cpf VARCHAR(20) UNIQUE,
+    email VARCHAR(255),
+    senha VARCHAR(255),
+    data_nascimento DATE,
+    telefone VARCHAR(255),
+    genero VARCHAR(255),
+    status VARCHAR(255),
+    numero_cadastro_social VARCHAR(255),
+    carrinho_id VARCHAR(255),
+    endereco_id VARCHAR(255),
+    FOREIGN KEY (endereco_id) REFERENCES endereco (id),
+    FOREIGN KEY (carrinho_id) REFERENCES carrinho (id)
+    );
+
+CREATE TABLE IF NOT EXISTS entregador (
+    id VARCHAR(255) PRIMARY KEY,
+    nome VARCHAR(255),
+    cpf VARCHAR(20) UNIQUE,
+    email VARCHAR(255),
+    senha VARCHAR(255),
+    data_nascimento DATE,
+    telefone VARCHAR(255),
+    genero VARCHAR(255),
+    status VARCHAR(255),
+    endereco_id VARCHAR(255),
+    FOREIGN KEY (endereco_id) REFERENCES endereco (id)
+    );
+
+CREATE TABLE IF NOT EXISTS estabelecimento (
+    id VARCHAR(255) PRIMARY KEY,
+    nome VARCHAR(255),
+    endereco_id VARCHAR(255),
+    comerciante_id VARCHAR(255),
+    FOREIGN KEY (endereco_id) REFERENCES endereco (id),
+    FOREIGN KEY (comerciante_id) REFERENCES comerciante (id)
+    );
+
+CREATE TABLE IF NOT EXISTS produto (
+    id VARCHAR(255) PRIMARY KEY,
+    nome VARCHAR(255),
+    lote VARCHAR(255),
+    descricao VARCHAR(255),
+    preco NUMERIC,
+    quantidade_estoque INTEGER,
+    status VARCHAR(255),
+    imagem VARCHAR(255),
+    tipo_imagem VARCHAR(255),
+    comerciante_id VARCHAR(255),
+    FOREIGN KEY (comerciante_id) REFERENCES comerciante (id)
+    );
+
+CREATE TABLE IF NOT EXISTS conta (
+    id VARCHAR(255) PRIMARY KEY,
+    numero_conta VARCHAR(255),
+    agencia VARCHAR(255),
+    saldo NUMERIC,
     beneficiario_id VARCHAR(255),
-    status VARCHAR(50),
-    criacao TIMESTAMP,
-    modificacao TIMESTAMP,
-    FOREIGN KEY (beneficiario_id) REFERENCES beneficiario(id)
-);
+    FOREIGN KEY (beneficiario_id) REFERENCES beneficiario (id)
+    );
 
-
--- CONTA
-
-CREATE TABLE conta (
+CREATE TABLE IF NOT EXISTS produto_carrinho (
     id VARCHAR(255) PRIMARY KEY,
-    numero_conta VARCHAR(50),
-    agencia VARCHAR(20),
-    saldo NUMERIC(15,2),
-    beneficiario_id VARCHAR(255) UNIQUE NOT NULL,
-    FOREIGN KEY (beneficiario_id) REFERENCES beneficiario(id)
-);
+    carrinho_id VARCHAR(255),
+    produto_id VARCHAR(255),
+    quantidade INTEGER,
+    FOREIGN KEY (carrinho_id) REFERENCES carrinho (id),
+    FOREIGN KEY (produto_id) REFERENCES produto (id)
+    );
 
-
--- ESTABELECIMENTO
-
-CREATE TABLE estabelecimento (
+CREATE TABLE IF NOT EXISTS produto_estabelecimento (
     id VARCHAR(255) PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    endereco VARCHAR(255),
-    comerciante_id VARCHAR(255) NOT NULL,
-    FOREIGN KEY (comerciante_id) REFERENCES comerciante(id)
-);
+    produto_id VARCHAR(255),
+    estabelecimento_id VARCHAR(255),
+    FOREIGN KEY (produto_id) REFERENCES produto (id),
+    FOREIGN KEY (estabelecimento_id) REFERENCES estabelecimento (id)
+    );
 
-
--- PRODUTO
-
-CREATE TABLE produto (
-    id VARCHAR(255) PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
-    descricao TEXT,
-    preco_base NUMERIC(10,2),
-    criador_id VARCHAR(255),
-    status VARCHAR(50),
-    FOREIGN KEY (criador_id) REFERENCES comerciante(id)
-);
-
-
--- PRODUTO_ESTABELECIMENTO (associativa)
-
-CREATE TABLE produto_estabelecimento (
-    produto_id VARCHAR(255) NOT NULL,
-    estabelecimento_id VARCHAR(255) NOT NULL,
-    preco_venda NUMERIC(10,2) NOT NULL,
-    estoque INT CHECK (estoque >= 0),
-    PRIMARY KEY (produto_id, estabelecimento_id),
-    FOREIGN KEY (produto_id) REFERENCES produto(id),
-    FOREIGN KEY (estabelecimento_id) REFERENCES estabelecimento(id)
-);
-
-
--- ITEM_CARRINHO
-
-CREATE TABLE item_carrinho (
-    id VARCHAR(255) PRIMARY KEY,
-    carrinho_id VARCHAR(255) NOT NULL,
-    produto_id VARCHAR(255) NOT NULL,
-    quantidade INT NOT NULL CHECK (quantidade >= 0),
-    preco_unitario NUMERIC(10,2),
-    FOREIGN KEY (carrinho_id) REFERENCES carrinho(id),
-    FOREIGN KEY (produto_id) REFERENCES produto(id)
-);
-
-
--- VERIFICATION_TOKEN
-
-CREATE TABLE verification_token (
-    id VARCHAR(255) PRIMARY KEY,
-    token VARCHAR(255) NOT NULL,
-    user_id VARCHAR(255),
-    expiry_date TIMESTAMP NOT NULL
-);
+CREATE TABLE IF NOT EXISTS verification_token (
+    token VARCHAR(255) PRIMARY KEY,
+    user_email VARCHAR(255),
+    expiry_date DATE,
+    nome VARCHAR(255),
+    cpf VARCHAR(20),
+    senha_criptografada VARCHAR(255),
+    data_nascimento VARCHAR(255),
+    telefone VARCHAR(255),
+    genero VARCHAR(255),
+    tipo_pessoa VARCHAR(255)
+    );
