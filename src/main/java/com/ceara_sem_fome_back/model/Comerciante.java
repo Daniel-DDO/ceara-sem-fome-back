@@ -23,12 +23,10 @@ public class Comerciante extends Pessoa {
 
     @OneToMany(mappedBy = "comerciante", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
-    private List<Estabelecimento> estabelecimentos;
+    private List<Estabelecimento> estabelecimentos = new ArrayList<>();
 
     public Comerciante(String nome, String cpf, String email, String senha,
                        LocalDate dataNascimento, String telefone, String genero) {
         super(nome, cpf, email, senha, dataNascimento, telefone, genero);
-        //@OneToMany(mappedBy = "comerciante", fetch = FetchType.LAZY)
-        List<Estabelecimento> estabelecimentos = new ArrayList<>();
     }
 }

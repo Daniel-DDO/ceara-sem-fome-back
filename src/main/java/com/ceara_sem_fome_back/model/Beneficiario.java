@@ -12,12 +12,14 @@ import java.time.LocalDate;
 @EqualsAndHashCode(callSuper = true)
 public class Beneficiario extends Pessoa {
 
-   
     private String numeroCadastroSocial;
 
     @OneToOne(mappedBy = "beneficiario", cascade = CascadeType.ALL)
     @ToString.Exclude
     private Conta conta;
+    @ManyToOne
+    @JoinColumn(name = "carrinho_id")
+    private Carrinho carrinho;
 
     public Beneficiario(String nome, String cpf, String email, String senha,
                         LocalDate dataNascimento, String telefone, String genero) {

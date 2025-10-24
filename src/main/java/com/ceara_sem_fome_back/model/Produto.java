@@ -20,13 +20,19 @@ public class Produto {
     private String descricao;
     private double preco;
     private int quantidadeEstoque;
+    @Enumerated(EnumType.STRING)
     private StatusProduto status;
+
+    @Lob
+    @Column(name = "imagem")
+    private byte[] imagem;
+    private String tipoImagem;
 
     @OneToMany(mappedBy = "produto", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProdutoEstabelecimento> estabelecimentos = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "comerciante_cpf")
+    @JoinColumn(name = "comerciante_id")
     //quem adicionou o produto
     private Comerciante criador;
 

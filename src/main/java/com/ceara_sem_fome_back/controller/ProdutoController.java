@@ -7,8 +7,11 @@ import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.Produto;
 import com.ceara_sem_fome_back.model.ProdutoEstabelecimento;
 import com.ceara_sem_fome_back.service.ProdutoService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +20,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URI;
 import java.util.List;
 
 @Controller
@@ -47,6 +52,8 @@ public class ProdutoController {
         List<ProdutoEstabelecimento> produtos = produtoService.listarProdutosPorEstabelecimento(estabelecimentoId);
         return ResponseEntity.ok(produtos);
     }
+
+    //sobre o produto
 
     @PostMapping("/aprovar")
     public ResponseEntity<ProdutoDTO> aprovarProduto(@RequestBody ProdutoDTO produtoDTO) {
@@ -91,6 +98,79 @@ public class ProdutoController {
                 produtoRemov.getDescricao(), produtoRemov.getPreco(), produtoRemov.getQuantidadeEstoque(), produtoRemov.getStatus());
 
         return ResponseEntity.ok(prodRespota);
+    }
+
+    //imagens
+
+    @PostMapping(value = "/{id}/imagem", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> uploadImagem(
+            @PathVariable String id,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            Produto atualizado = produtoService.salvarImagem(id, file);
+            //Retorna 200 OK com header Location apontando para endpoint de imagem
+            URI uri = URI.create("/produtos/" + id + "/imagem");
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.LOCATION, uri.toString())
+                    .body("Imagem salva com sucesso.");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erro ao salvar imagem: " + e.getMessage());
+        }
+    }
+
+    //imagem: retorna bytes e Content-Type correto
+    @GetMapping("/{id}/imagem")
+    public ResponseEntity<byte[]> getImagem(@PathVariable String id) {
+        try {
+            byte[] imagem = produtoService.buscarImagem(id);
+            if (imagem == null || imagem.length == 0) {
+                return ResponseEntity.notFound().build();
+            }
+            String tipo = produtoService.buscarTipoImagem(id);
+            MediaType mediaType;
+            try {
+                mediaType = (tipo != null) ? MediaType.parseMediaType(tipo) : MediaType.APPLICATION_OCTET_STREAM;
+            } catch (Exception ex) {
+                mediaType = MediaType.APPLICATION_OCTET_STREAM;
+            }
+            return ResponseEntity.ok()
+                    .contentType(mediaType)
+                    .body(imagem);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    //Deleta imagem do produto (mantém produto)
+    @DeleteMapping("/{id}/imagem")
+    public ResponseEntity<?> deleteImagem(@PathVariable String id) {
+        try {
+            produtoService.removerImagem(id);
+            return ResponseEntity.ok("Imagem removida com sucesso.");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erro ao remover imagem: " + e.getMessage());
+        }
+    }
+
+    //informa se o produto possui imagem e qual o tipo
+    @GetMapping("/{id}/imagem/metadata")
+    public ResponseEntity<?> metadataImagem(@PathVariable String id) {
+        try {
+            boolean possui = produtoService.possuiImagem(id);
+            String tipo = produtoService.buscarTipoImagem(id);
+            return ResponseEntity.ok(new Object() {
+                public final boolean existe = possui;
+                public final String tipoMime = tipo;
+            });
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
 }

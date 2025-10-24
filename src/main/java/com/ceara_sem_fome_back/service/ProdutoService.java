@@ -8,12 +8,15 @@ import com.ceara_sem_fome_back.repository.EstabelecimentoRepository;
 import com.ceara_sem_fome_back.repository.ProdutoEstabelecimentoRepository;
 import com.ceara_sem_fome_back.repository.ProdutoRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import com.ceara_sem_fome_back.model.Produto;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class ProdutoService {
@@ -128,6 +131,68 @@ public class ProdutoService {
         produtoRepository.save(produto);
 
         return produto;
+    }
+
+    //imagem:
+
+    @Transactional
+    public Produto salvarImagem(String id, MultipartFile file) throws IOException {
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
+
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Arquivo de imagem inválido ou ausente.");
+        }
+
+        produto.setImagem(file.getBytes());
+        produto.setTipoImagem(file.getContentType()); //pode ser null dependendo do client
+        return produtoRepository.save(produto);
+    }
+
+    //retorna bytes da imagem (ou null se não há imagem)
+    @Transactional(readOnly = true)
+    public byte[] buscarImagem(String id) {
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
+        return produto.getImagem();
+    }
+
+    @Transactional(readOnly = true)
+    public String buscarTipoImagem(String id) {
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
+        return produto.getTipoImagem();
+    }
+
+    //remove apenas a imagem (mantém produto)
+    @Transactional
+    public void removerImagem(String id) {
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
+        produto.setImagem(null);
+        produto.setTipoImagem(null);
+        produtoRepository.save(produto);
+    }
+
+    //criar produto com imagem (criar produto + upload na requisição)
+    @Transactional
+    public Produto criarProdutoComImagem(Produto produto, MultipartFile file) throws IOException {
+        if (produto == null || produto.getId() == null) {
+            throw new IllegalArgumentException("Produto ou id ausente.");
+        }
+        if (file != null && !file.isEmpty()) {
+            produto.setImagem(file.getBytes());
+            produto.setTipoImagem(file.getContentType());
+        }
+        return produtoRepository.save(produto);
+    }
+
+    //verifica se tem imagem
+    @Transactional(readOnly = true)
+    public boolean possuiImagem(String id) {
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
+        return produto.getImagem() != null && produto.getImagem().length > 0;
     }
 
 }
