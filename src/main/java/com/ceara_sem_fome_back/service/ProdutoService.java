@@ -7,6 +7,7 @@ import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.EstabelecimentoRepository;
 import com.ceara_sem_fome_back.repository.ProdutoEstabelecimentoRepository;
 import com.ceara_sem_fome_back.repository.ProdutoRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -68,37 +69,65 @@ public class ProdutoService {
         return produtos;
     }
 
-    //apenas o começo, vai mudar
 
-    public void gerenciarProduto(Produto produto) {
+    public Produto aprovarProduto(String id) {
+        Produto produto = produtoRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
 
+        if (!produto.getStatus().equals(StatusProduto.PENDENTE)) {
+            throw new IllegalStateException("Produto já foi autorizado, recusado ou desativado.");
+        }
+
+        produto.setStatus(StatusProduto.AUTORIZADO);
+        produtoRepository.save(produto);
+
+        return produto;
     }
 
-    public void aprovarProduto(Produto produto) {
-        if (produtoRepository.existsProdutoById(produto.getId())) {
-            produto.setStatus(StatusProduto.AUTORIZADO);
-            produtoRepository.save(produto);
+    public Produto recusarProduto(String id) {
+        Produto produto = produtoRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
+
+        if (!produto.getStatus().equals(StatusProduto.PENDENTE)) {
+            throw new IllegalStateException("Produto já foi autorizado, recusado ou desativado.");
         }
+
+        produto.setStatus(StatusProduto.RECUSADO);
+        produtoRepository.save(produto);
+
+        return produto;
     }
 
-    public void recusarProduto(Produto produto) {
-        if (produtoRepository.existsProdutoById(produto.getId())) {
-            produto.setStatus(StatusProduto.RECUSADO);
-            produtoRepository.save(produto);
+    public Produto editarProduto(String id, String nome, String lote, String descricao, double preco, int quantidadeEstoque) {
+        Produto produto = produtoRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
+
+        if (!produto.getStatus().equals(StatusProduto.AUTORIZADO)) {
+            throw new IllegalStateException("Produto não autorizado.");
         }
+
+        produto.setNome(nome); produto.setLote(lote); produto.setDescricao(descricao);
+        produto.setPreco(preco); produto.setQuantidadeEstoque(quantidadeEstoque);
+
+        //só uma observação: acho que isso daqui deve mudar, pq dependendo do que o comerciante mudar,
+        //o produto deveria voltar para o status de pendente, necessitando de uma reavaliação.
+
+        produtoRepository.save(produto);
+
+        return produto;
     }
 
-    public void editarProduto(Produto produto) {
-        if (produtoRepository.existsProdutoById(produto.getId())) {
-            produtoRepository.save(produto);
-        }
-    }
+    public Produto removerProduto(String id) {
+        Produto produto = produtoRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
 
-    public void removerProduto(Produto produto) {
-        if (produtoRepository.existsProdutoById(produto.getId())) {
-            produto.setStatus(StatusProduto.DESATIVADO);
-            produtoRepository.save(produto);
+        if (produto.getStatus().equals(StatusProduto.RECUSADO)) {
+            throw new IllegalStateException("Produto já foi recusado.");
         }
+        else if (produto.getStatus().equals(StatusProduto.PENDENTE)) {
+            throw new IllegalStateException("Produto pendente não pode ser removido.");
+        }
+
+        produto.setStatus(StatusProduto.DESATIVADO);
+        produtoRepository.save(produto);
+
+        return produto;
     }
 
 }
