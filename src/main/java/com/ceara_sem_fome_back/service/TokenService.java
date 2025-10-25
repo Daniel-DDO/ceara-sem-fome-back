@@ -17,7 +17,7 @@ public class TokenService {
     private VerificationTokenRepository tokenRepository;
 
     /**
-     * [SIMPLIFICADO] Valida um token de forma genérica. Verifica se existe e não está expirado.
+     * Valida um token de forma genérica. Verifica se existe e não está expirado.
      * Esta é a única responsabilidade que restou nesta classe.
      * @param token O token a ser validado.
      * @return true se o token for válido, false caso contrário.

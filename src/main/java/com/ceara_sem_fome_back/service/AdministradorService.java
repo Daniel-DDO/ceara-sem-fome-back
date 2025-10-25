@@ -3,8 +3,8 @@ package com.ceara_sem_fome_back.service;
 import com.ceara_sem_fome_back.data.AdministradorData;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.AdministradorRequest;
-import com.ceara_sem_fome_back.dto.PessoaUpdateDto; // ⬅️ NOVO IMPORT
-import com.ceara_sem_fome_back.exception.*; // ⬅️ MUDANÇA (Importa todos)
+import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
+import com.ceara_sem_fome_back.exception.*;
 import com.ceara_sem_fome_back.model.Administrador;
 import com.ceara_sem_fome_back.repository.AdministradorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Objects; // ⬅️ NOVO IMPORT
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -34,11 +34,10 @@ public class AdministradorService implements UserDetailsService {
     @Autowired
     private CadastroService cadastroService; // <-- Perfeito, já está aqui
 
-    // [MÉTODO CORRIGIDO]
     public Administrador logarAdm(String email, String senha) {
         Optional<Administrador> administrador = administradorRepository.findByEmail(email);
 
-        // 1. Usa passwordEncoder.matches() para comparar a senha criptografada
+        //1. Usa passwordEncoder.matches() para comparar a senha criptografada
         if (administrador.isPresent() && passwordEncoder.matches(senha, administrador.get().getSenha())) {
             return administrador.get();
         }
@@ -50,20 +49,15 @@ public class AdministradorService implements UserDetailsService {
         return PessoaUtils.verificarCpf(cpf);
     }
 
-    // [MÉTODO CORRIGIDO]
     @Transactional
     public void iniciarCadastro(AdministradorRequest request) {
-        // 2. Chama a validação CORRETA (cruzada)
+        //2. Chama a validação CORRETA (cruzada)
         cadastroService.validarCpfDisponivelEmTodosOsPerfis(request.getCpf());
         cadastroService.validarEmailDisponivelEmTodosOsPerfis(request.getEmail());
 
-        // 3. Delega a criação do token
+        //3. Delega a criação do token
         cadastroService.criarTokenDeCadastroEVenviarEmailAdm(request);
     }
-
-    // [MÉTODO REMOVIDO]
-    // O 'checkIfUserExists' não é mais necessário
-    // private void checkIfUserExists(String cpf, String email) { ... }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -75,7 +69,6 @@ public class AdministradorService implements UserDetailsService {
     }
 
     public Administrador salvarAdm(Administrador administrador) {
-        // ... (seu método existente, sem alteração)
         if (!verificarCpf(administrador.getCpf())) {
             throw new CpfInvalidoException(administrador.getCpf());
         }
@@ -86,7 +79,6 @@ public class AdministradorService implements UserDetailsService {
     }
 
     public PaginacaoDTO<Administrador> listarTodos(int page, int size, String sortBy, String direction) {
-        // ... (seu método existente, sem alteração)
         Sort sort = direction.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() :
                 Sort.by(sortBy).ascending();
@@ -114,25 +106,24 @@ public class AdministradorService implements UserDetailsService {
      */
     @Transactional
     public Administrador atualizarAdministrador(String userEmail, PessoaUpdateDto dto) {
-        
-        // 1. Encontra o admin pelo e-mail do token
+        //1. Encontra o admin pelo e-mail do token
         Administrador adminExistente = administradorRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Administrador não encontrado com o e-mail: " + userEmail));
 
-        // 2. Verifica se o e-mail está sendo alterado
+        //2. Verifica se o e-mail está sendo alterado
         if (!Objects.equals(adminExistente.getEmail(), dto.getEmail())) {
-            // Se mudou, valida se o NOVO email já está em uso por QUALQUER pessoa
+            //Se mudou, valida se o NOVO email já está em uso por QUALQUER pessoa
             cadastroService.validarEmailDisponivelEmTodosOsPerfis(dto.getEmail());
             adminExistente.setEmail(dto.getEmail());
         }
 
-        // 3. Atualiza os outros campos
+        //3. Atualiza os outros campos
         adminExistente.setNome(dto.getNome());
         adminExistente.setTelefone(dto.getTelefone());
         adminExistente.setDataNascimento(dto.getDataNascimento());
         adminExistente.setGenero(dto.getGenero());
 
-        // 4. Salva as alterações
+        //4. Salva as alterações
         return administradorRepository.save(adminExistente);
     }
 }

@@ -12,7 +12,7 @@ public interface EntregadorRepository extends JpaRepository <Entregador, String>
     Optional<Entregador> findByEmail(String email);
     Optional<Entregador> findByCpf(String cpf);
 
-    // MÉTODOS NOVOS E OTIMIZADOS PARA VALIDAÇÃO
+    //MÉTODOS NOVOS E OTIMIZADOS PARA VALIDAÇÃO
     boolean existsByCpf(String cpf);
     boolean existsByEmail(String email);
 }

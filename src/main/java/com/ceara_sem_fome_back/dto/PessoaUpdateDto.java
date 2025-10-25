@@ -7,9 +7,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
+@Getter
+@Setter
 public class PessoaUpdateDto {
 
     @NotBlank(message = "Nome é obrigatório")
@@ -27,22 +31,7 @@ public class PessoaUpdateDto {
     @Past(message = "Data de nascimento deve ser no passado")
     private LocalDate dataNascimento;
 
-    @NotBlank(message = "Gênero é obrigatório") // <-- MUDADO PARA @NotBlank
-    private String genero; // <-- MUDADO PARA String
+    @NotBlank(message = "Gênero é obrigatório")
+    private String genero;
 
-    // Getters e Setters
-    // (O VS Code gera para você)
-
-    public String getNome() { return nome; }
-    public void setNome(String nome) { this.nome = nome; }
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-    public String getTelefone() { return telefone; }
-    public void setTelefone(String telefone) { this.telefone = telefone; }
-    public LocalDate getDataNascimento() { return dataNascimento; }
-    public void setDataNascimento(LocalDate dataNascimento) { this.dataNascimento = dataNascimento; }
-    
-    // Métodos de Gênero atualizados para String
-    public String getGenero() { return genero; }
-    public void setGenero(String genero) { this.genero = genero; }
 }

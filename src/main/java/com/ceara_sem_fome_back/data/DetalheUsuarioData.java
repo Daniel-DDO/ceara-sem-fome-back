@@ -23,13 +23,13 @@ public class DetalheUsuarioData implements UserDetails {
 
     @Override
     public String getPassword() {
-        // [CORRIGIDO] Extrai a senha de forma segura, retornando null se a pessoa não existir
+        //Extrai a senha de forma segura, retornando null se a pessoa não existir
         return pessoa.map(Pessoa::getSenha).orElse(null);
     }
 
     @Override
     public String getUsername() {
-        // [CORRIGIDO] Extrai o e-mail de forma segura, retornando null se a pessoa não existir
+        //Extrai o e-mail de forma segura, retornando null se a pessoa não existir
         return pessoa.map(Pessoa::getEmail).orElse(null);
     }
 
@@ -50,8 +50,7 @@ public class DetalheUsuarioData implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        // [ADICIONADO] Este era o método em falta.
-        // Por agora, assumimos que se um utilizador existe, ele está ativo.
+        //Se um utilizador existe, o metodo está ativo.
         return true;
     }
 }

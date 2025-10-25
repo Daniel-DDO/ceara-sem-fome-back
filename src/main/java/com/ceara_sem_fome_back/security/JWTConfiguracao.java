@@ -1,10 +1,7 @@
 package com.ceara_sem_fome_back.security;
 
-// ⬇️ IMPORTS ADICIONADOS ⬇️
 import com.ceara_sem_fome_back.security.Handler.LoggingLogoutSuccessHandler;
 import org.springframework.beans.factory.annotation.Autowired;
-// ⬆️ IMPORTS ADICIONADOS ⬆️
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,7 +25,7 @@ public class JWTConfiguracao {
     @Value("${api.guid.token.senha}")
     private String tokenSenha;
 
-    // ⬇️ INJETAR O NOVO HANDLER ⬇️
+    //INJETAR O NOVO HANDLER
     @Autowired
     private LoggingLogoutSuccessHandler loggingLogoutSuccessHandler;
 
@@ -53,21 +50,26 @@ public class JWTConfiguracao {
                 .addFilter(new JWTAutenticarFilter(authManager, tokenSenha))
                 .addFilter(new JWTValidarFilter(authManager, tokenSenha))
                 
-                // ⬇️ ADICIONAR CONFIGURAÇÃO DE LOGOUT ⬇️
+                //CONFIGURAÇÃO DE LOGOUT
                 .logout(logout -> logout
-                    .logoutUrl("/auth/logout") // ⬅️ Define a URL de logout
-                    .logoutSuccessHandler(loggingLogoutSuccessHandler) // ⬅️ Usa nosso handler de log
+                    .logoutUrl("/auth/logout") //Define a URL de logout
+                    .logoutSuccessHandler(loggingLogoutSuccessHandler) //Usa nosso handler de log
                     .invalidateHttpSession(true)
-                    .deleteCookies("JSESSIONID") // Boa prática, mesmo sendo stateless
+                    .deleteCookies("JSESSIONID") //
                 )
-                // ⬆️ FIM DA CONFIGURAÇÃO DE LOGOUT ⬆️
+                //FIM DA CONFIGURAÇÃO DE LOGOUT
                 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 new AntPathRequestMatcher("/*/iniciar-cadastro"),
                                 new AntPathRequestMatcher("/*/login"),
                                 new AntPathRequestMatcher("/token/confirmar-cadastro"),
-                                new AntPathRequestMatcher("/auth/**") // ⬅️ Esta regra já libera o /auth/logout
+                                new AntPathRequestMatcher("/**/all"),
+                                new AntPathRequestMatcher("/version"),
+                                new AntPathRequestMatcher("/health"),
+                                new AntPathRequestMatcher("/**/meu-perfil"),
+                                new AntPathRequestMatcher("/**/estabelecimento/"),
+                                new AntPathRequestMatcher("/auth/**") //Esta regra já libera o /auth/logout
                         ).permitAll()
                         .anyRequest().authenticated()
                         //não remover esse comentário!
@@ -79,7 +81,6 @@ public class JWTConfiguracao {
 
     @Bean
     public CorsConfigurationSource corsConfiguration() {
-        // ... (código sem alteração)
         CorsConfiguration cors = new CorsConfiguration();
         cors.setAllowedOrigins(List.of("*"));
         cors.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));

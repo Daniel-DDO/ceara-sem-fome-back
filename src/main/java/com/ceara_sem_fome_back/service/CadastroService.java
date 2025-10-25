@@ -1,9 +1,9 @@
 package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.dto.*;
-// IMPORTS NOVOS DAS SUAS EXCEÇÕES
 import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
 import com.ceara_sem_fome_back.exception.EmailJaCadastradoException;
+import com.ceara_sem_fome_back.exception.LgpdNaoAceitaException;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.*;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +41,7 @@ public class CadastroService {
     @Autowired
     private EmailService emailService;
 
-    // MÉTODOS DE VALIDAÇÃO NOVOS (USANDO SUAS EXCEÇÕES)
+    //MÉTODOS DE VALIDAÇÃO
 
     /**
      * Verifica se o CPF está disponível em TODAS as tabelas de usuários.
@@ -52,8 +52,7 @@ public class CadastroService {
             administradorRepository.existsByCpf(cpf) ||
             comercianteRepository.existsByCpf(cpf) ||
             entregadorRepository.existsByCpf(cpf)) {
-            
-            // Lança sua exceção customizada
+
             throw new CpfJaCadastradoException(cpf);
         }
     }
@@ -68,12 +67,11 @@ public class CadastroService {
             comercianteRepository.existsByEmail(email) ||
             entregadorRepository.existsByEmail(email)) {
 
-            // Lança sua exceção customizada
             throw new EmailJaCadastradoException(email);
         }
     }
 
-    // FIM DOS MÉTODOS DE VALIDAÇÃO
+    //FIM DOS MÉTODOS DE VALIDAÇÃO
 
     /**
      * Cria um token "rico" contendo todos os dados do pré-cadastro,
@@ -82,15 +80,20 @@ public class CadastroService {
      */
     @Transactional
     public void criarTokenDeCadastroEVenviarEmail(CadastroRequest request, TipoPessoa tipoPessoa) {
-        
-        // 🛡️ PASSO DE VALIDAÇÃO ADICIONADO AQUI 🛡️
-        // Verifica ANTES de criar o token se os dados já existem
+
+        if ((Boolean.FALSE.equals(request.getLgpdAccepted()))) {
+            log.info("LGPD não foi aceita. Aceite e tente cadastrar novamente.");
+            throw new LgpdNaoAceitaException("Você deve aceitar os termos da LGPD para se cadastrar.");
+        }
+
+        //Verifica ANTES de criar o token se os dados já existem
         validarCpfDisponivelEmTodosOsPerfis(request.getCpf());
         validarEmailDisponivelEmTodosOsPerfis(request.getEmail());
 
-        String tokenString = UUID.randomUUID().toString();
         //Limpa tokens antigos do mesmo e-mail para evitar lixo no banco
         tokenRepository.deleteByUserEmail(request.getEmail());
+
+        String tokenString = UUID.randomUUID().toString();
 
         VerificationToken verificationToken = new VerificationToken(
                 tokenString,
@@ -101,16 +104,17 @@ public class CadastroService {
                 request.getDataNascimento(),
                 request.getTelefone(),
                 request.getGenero(),
-                tipoPessoa
+                tipoPessoa,
+                request.getLgpdAccepted()
         );
 
-        tokenRepository.save(verificationToken);
+        VerificationToken saved = tokenRepository.save(verificationToken);
+
+        log.info("Token salvo no banco: {}", saved.getToken());
         emailService.sendVerificationEmail(request.getEmail(), tokenString);
-        log.info("Token de cadastro criado e e-mail enviado para {}", request.getEmail());
+        log.info("E-mail de verificação enviado para {}", request.getEmail());
     }
 
-    // ... (Seus métodos criarTokenDeCadastroEVenviarEmailAdm, Benef, Comerc, Entreg) ...
-    // ELES NÃO MUDAM
     @Transactional
     public void criarTokenDeCadastroEVenviarEmailAdm(AdministradorRequest request) {
         criarTokenDeCadastroEVenviarEmail(request, TipoPessoa.ADMINISTRADOR);
@@ -147,22 +151,23 @@ public class CadastroService {
         }
 
         VerificationToken verificationToken = optionalToken.get();
+
         if (verificationToken.getExpiryDate().isBefore(LocalDateTime.now())) {
             tokenRepository.delete(verificationToken);
             log.warn("Token de cadastro expirado e deletado: {}", token);
             return false;
         }
 
-        // 🛡️ VALIDAÇÃO BÔNUS (Evita Race Condition) 🛡️
-        // Verifica de novo ANTES de salvar, caso alguém tenha se cadastrado
-        // com o mesmo CPF/Email enquanto este token estava ativo.
+        //(Evita race condition)
+        //Verifica de novo ANTES de salvar, caso alguém tenha se cadastrado
+        //com o mesmo CPF/Email enquanto este token estava ativo.
         try {
             validarCpfDisponivelEmTodosOsPerfis(verificationToken.getCpf());
             validarEmailDisponivelEmTodosOsPerfis(verificationToken.getUserEmail());
         } catch (CpfJaCadastradoException | EmailJaCadastradoException e) {
             log.warn("Cadastro bloqueado na finalização (race condition): {}", e.getMessage());
-            tokenRepository.delete(verificationToken); // Limpa o token inválido
-            return false; // Falha na verificação, segue o padrão do método
+            tokenRepository.delete(verificationToken); //Limpa o token inválido
+            return false; //Falha na verificação, segue o padrão do metodo
         }
 
         switch (verificationToken.getTipoPessoa()) {
@@ -174,7 +179,8 @@ public class CadastroService {
                         verificationToken.getSenhaCriptografada(),
                         verificationToken.getDataNascimento(),
                         verificationToken.getTelefone(),
-                        verificationToken.getGenero()
+                        verificationToken.getGenero(),
+                        verificationToken.getLgpdAccepted()
                 );
                 administradorRepository.save(novoAdministrador);
             }
@@ -186,8 +192,10 @@ public class CadastroService {
                         verificationToken.getSenhaCriptografada(),
                         verificationToken.getDataNascimento(),
                         verificationToken.getTelefone(),
-                        verificationToken.getGenero()
+                        verificationToken.getGenero(),
+                        verificationToken.getLgpdAccepted()
                 );
+
                 beneficiarioRepository.save(novoBeneficiario);
             }
             case COMERCIANTE -> {
@@ -198,7 +206,8 @@ public class CadastroService {
                         verificationToken.getSenhaCriptografada(),
                         verificationToken.getDataNascimento(),
                         verificationToken.getTelefone(),
-                        verificationToken.getGenero()
+                        verificationToken.getGenero(),
+                        verificationToken.getLgpdAccepted()
                 );
                 comercianteRepository.save(novoComerciante);
             }
@@ -210,7 +219,8 @@ public class CadastroService {
                         verificationToken.getSenhaCriptografada(),
                         verificationToken.getDataNascimento(),
                         verificationToken.getTelefone(),
-                        verificationToken.getGenero()
+                        verificationToken.getGenero(),
+                        verificationToken.getLgpdAccepted()
                 );
                 entregadorRepository.save(novoEntregador);
             }
@@ -221,8 +231,8 @@ public class CadastroService {
             }
         }
         
-        // Se chegou até aqui, o usuário foi salvo com sucesso.
-        // Apagamos o token e retornamos true.
+        //Se chegou até aqui, o usuário foi salvo com sucesso.
+        //o token é apagado e o retorno é true.
         tokenRepository.delete(verificationToken);
         log.info("SUCESSO: {} salvo após validação de e-mail: {}", verificationToken.getTipoPessoa(), verificationToken.getUserEmail());
         return true;

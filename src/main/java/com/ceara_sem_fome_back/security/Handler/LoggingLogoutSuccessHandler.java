@@ -23,7 +23,7 @@ public class LoggingLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler i
 
         if (authentication != null) {
             String username = authentication.getName();
-            String ipAddress = request.getRemoteAddr(); // Obtém o IP da requisição
+            String ipAddress = request.getRemoteAddr(); //Obtém o IP da requisição
 
             log.info(
                 "SUCESSO LOGOUT: Usuário [{}] deslogou com sucesso. IP: {}",
@@ -32,7 +32,7 @@ public class LoggingLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler i
             );
         }
 
-        // Continua com o comportamento padrão de logout (que no seu caso é apenas dar um 200 OK)
+        //Continua com o comportamento padrão de logout (é apenas dar um 200 OK)
         super.onLogoutSuccess(request, response, authentication);
     }
 }

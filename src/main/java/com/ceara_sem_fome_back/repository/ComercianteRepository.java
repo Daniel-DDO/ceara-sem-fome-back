@@ -12,7 +12,7 @@ public interface ComercianteRepository extends JpaRepository <Comerciante, Strin
     Optional<Comerciante> findByEmail(String email);
     Optional<Comerciante> findByCpf(String cpf);
 
-    // MÉTODOS NOVOS E OTIMIZADOS PARA VALIDAÇÃO
+    //MÉTODOS NOVOS E OTIMIZADOS PARA VALIDAÇÃO
     boolean existsByCpf(String cpf);
     boolean existsByEmail(String email);
 }

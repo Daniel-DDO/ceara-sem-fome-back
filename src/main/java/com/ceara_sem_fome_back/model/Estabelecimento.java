@@ -1,18 +1,16 @@
 package com.ceara_sem_fome_back.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
-import jakarta.persistence.*;
 import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Entity
 public class Estabelecimento {
 
@@ -22,9 +20,15 @@ public class Estabelecimento {
 
     @NotBlank
     private String nome;
-    private String endereco;
 
-    @ManyToOne
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "endereco_id")
+    private Endereco endereco;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comerciante_id", nullable = false)
+    @JsonBackReference
     private Comerciante comerciante;
+
 }
+

@@ -2,7 +2,6 @@ package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.data.EntregadorData;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
-//import com.ceara_sem_fome_back.dto.ComercianteRequest;
 import com.ceara_sem_fome_back.dto.EntregadorRequest;
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
 import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;

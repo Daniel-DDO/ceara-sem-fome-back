@@ -1,13 +1,10 @@
 package com.ceara_sem_fome_back.model;
 
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-//import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.validator.constraints.br.CPF;
 
 import java.time.LocalDate;
@@ -15,15 +12,20 @@ import java.util.UUID;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @MappedSuperclass
 public abstract class Pessoa {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     protected String id;
     @NotBlank
     protected String nome;
+    @Column(unique = true)
     @CPF
     protected String cpf;
+    @Column(unique = true)
     @Email
     protected String email;
     @NotBlank
@@ -32,10 +34,15 @@ public abstract class Pessoa {
     protected LocalDate dataNascimento;
     @NotBlank
     protected String telefone;
-    @NotNull
+    @NotBlank
     protected String genero;
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    protected StatusPessoa status;
+    @NotNull
+    protected Boolean lgpdAccepted;
 
-    public Pessoa(String nome, String cpf, String email, String senha, LocalDate dataNascimento, String telefone, String genero) {
+    public Pessoa(String nome, String cpf, String email, String senha, LocalDate dataNascimento, String telefone, String genero, Boolean lgpdAccepted) {
         this.id = UUID.randomUUID().toString();
         this.nome = nome;
         this.cpf = cpf;
@@ -44,7 +51,8 @@ public abstract class Pessoa {
         this.dataNascimento = dataNascimento;
         this.telefone = telefone;
         this.genero = genero;
+        this.status = StatusPessoa.ATIVO;
+        this.lgpdAccepted = lgpdAccepted;
     }
 
-    public Pessoa() {}
 }

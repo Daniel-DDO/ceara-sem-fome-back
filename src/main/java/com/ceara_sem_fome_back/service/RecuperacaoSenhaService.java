@@ -1,6 +1,5 @@
 package com.ceara_sem_fome_back.service;
 
-import com.ceara_sem_fome_back.dto.CadastroRequest;
 import com.ceara_sem_fome_back.dto.RecuperacaoSenhaDTO;
 import com.ceara_sem_fome_back.dto.RedefinirSenhaFinalDTO;
 import com.ceara_sem_fome_back.model.*;
@@ -51,29 +50,31 @@ public class RecuperacaoSenhaService {
 
         if (beneficiario.isPresent()) {
             String userEmail = beneficiario.get().getEmail();
-            enviarTokenRecuperacao(userEmail);
+            enviarTokenRecuperacao(userEmail, TipoPessoa.BENEFICIARIO);
         } else if (comerciante.isPresent()) {
             String userEmail = comerciante.get().getEmail();
-            enviarTokenRecuperacao(userEmail);
+            enviarTokenRecuperacao(userEmail, TipoPessoa.COMERCIANTE);
         } else if (entregador.isPresent()) {
             String userEmail = entregador.get().getEmail();
-            enviarTokenRecuperacao(userEmail);
+            enviarTokenRecuperacao(userEmail, TipoPessoa.ENTREGADOR);
         } else if (administrador.isPresent()) {
             String userEmail = administrador.get().getEmail();
-            enviarTokenRecuperacao(userEmail);
+            enviarTokenRecuperacao(userEmail, TipoPessoa.ADMINISTRADOR);
         } else {
             log.warn("Verificação falhou: CPF e/ou Email não correspondem a um usuário válido.");
         }
     }
 
     //deixando o metodo generico
-    private void enviarTokenRecuperacao(String userEmail) {
+    private void enviarTokenRecuperacao(String userEmail, TipoPessoa tipoPessoa) {
         String token = UUID.randomUUID().toString();
 
         VerificationToken verificationToken = new VerificationToken();
         verificationToken.setUserEmail(userEmail);
         verificationToken.setToken(token);
         verificationToken.setExpiryDate(LocalDateTime.now().plusMinutes(10)); //validade de 10 minutos
+        verificationToken.setLgpdAccepted(true);
+        verificationToken.setTipoPessoa(tipoPessoa);
 
         tokenRepository.save(verificationToken);
 

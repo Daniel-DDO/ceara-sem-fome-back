@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collection;
-//import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -17,6 +16,10 @@ public class ComercianteData implements UserDetails {
 
     public ComercianteData(Optional<Comerciante> comerciante) {
         this.comerciante = comerciante;
+    }
+
+    public Comerciante getComerciante() {
+        return comerciante.get();
     }
 
     @Override

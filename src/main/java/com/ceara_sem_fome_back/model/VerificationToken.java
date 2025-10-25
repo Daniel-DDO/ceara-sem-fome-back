@@ -1,18 +1,18 @@
 package com.ceara_sem_fome_back.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "verification_token")
 @Getter
 @Setter
-@NoArgsConstructor // Construtor sem argumentos (essencial para JPA)
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "verification_token")
 public class VerificationToken {
 
     @Id
@@ -25,7 +25,7 @@ public class VerificationToken {
     @Column(name = "expiry_date")
     private LocalDateTime expiryDate;
 
-    // Campos adicionais para o cadastro
+    //Campos adicionais para o cadastro
     @Column(name = "nome")
     private String nome;
 
@@ -47,12 +47,15 @@ public class VerificationToken {
     @Enumerated(EnumType.STRING)
     private TipoPessoa tipoPessoa;
 
+    @NotNull
+    protected Boolean lgpdAccepted;
+
     /**
      * Construtor para criar um "token rico" com todos os dados do cadastro.
      * Este é o construtor que estava faltando.
      */
     public VerificationToken(String token, String nome, String cpf, String userEmail, String senhaCriptografada,
-                             LocalDate dataNascimento, String telefone, String genero, TipoPessoa tipoPessoa) {
+                             LocalDate dataNascimento, String telefone, String genero, TipoPessoa tipoPessoa, Boolean lgpdAccepted) {
         this.token = token;
         this.nome = nome;
         this.cpf = cpf;
@@ -61,8 +64,10 @@ public class VerificationToken {
         this.dataNascimento = dataNascimento;
         this.telefone = telefone;
         this.genero = genero;
-        this.expiryDate = LocalDateTime.now().plusMinutes(15); // Define a expiração padrão para cadastro
+        this.expiryDate = LocalDateTime.now().plusMinutes(15); //Define a expiração padrão para cadastro
         this.tipoPessoa = tipoPessoa;
+        this.lgpdAccepted = lgpdAccepted;
     }
+
 }
 
