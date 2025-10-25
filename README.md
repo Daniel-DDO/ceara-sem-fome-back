@@ -66,4 +66,18 @@ Comando para buildar e criar os containers:
 3 - usar o comando 'mvn spring-boot:run
 4 - ser feliz
 
+## Executar comando no BD após a manutenção:
+-> Novo script SQL:
+
+DO $$ DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+        EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE';
+    END LOOP;
+END $$;
+
+-------------
+Ctrl + Enter
+
 
