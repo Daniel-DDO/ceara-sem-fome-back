@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/token")
 public class TokenController {
 
-    // [ALTERADO] Injeta o novo serviço de cadastro
+    //Injeta o novo serviço de cadastro
     @Autowired
     private CadastroService cadastroService;
 
@@ -23,7 +23,7 @@ public class TokenController {
      */
     @GetMapping("/confirmar-cadastro")
     public ResponseEntity<String> confirmarCadastro(@RequestParam String token) {
-        // [ALTERADO] Chama o método do serviço correto
+        //Chama o metodo do serviço
         boolean sucesso = cadastroService.verificarEFinalizarCadastro(token);
 
         String logoCearaSemFome = "https://www.ceara.gov.br/wp-content/uploads/2024/01/logo-cesf-e-cegov-e1704803051849-600x239.png";

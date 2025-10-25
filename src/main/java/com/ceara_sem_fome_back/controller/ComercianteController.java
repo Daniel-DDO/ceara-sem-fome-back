@@ -1,12 +1,11 @@
 package com.ceara_sem_fome_back.controller;
 
-//import com.ceara_sem_fome_back.data.dto.ErrorDTO;
 import com.ceara_sem_fome_back.data.dto.ErrorDTO;
 import com.ceara_sem_fome_back.data.dto.LoginDTO;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
 import com.ceara_sem_fome_back.dto.ComercianteRequest;
-import com.ceara_sem_fome_back.dto.PessoaUpdateDto; // ⬅️ NOVO IMPORT
+import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.ComercianteService;
@@ -15,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal; // ⬅️ NOVO IMPORT
+import java.security.Principal;
 
 @RestController
 @RequestMapping({"/comerciante"})
@@ -29,7 +28,7 @@ public class ComercianteController {
 
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarComerciante(@Valid @RequestBody LoginDTO loginDTO) {
-        // ... (seu método de login existente, sem alteração)
+        //metodo de login
         try {
             if (loginDTO.getEmail() == null || loginDTO.getEmail().isBlank() ||
                     loginDTO.getSenha() == null || loginDTO.getSenha().isBlank()) {
@@ -67,7 +66,7 @@ public class ComercianteController {
 
     @PostMapping("/iniciar-cadastro")
     public ResponseEntity<Object> iniciarCadastroComerciante(@RequestBody @Valid ComercianteRequest request) {
-        // ... (seu método de iniciar-cadastro existente, sem alteração)
+        //metodo de iniciar-cadastro
         try {
             comercianteService.iniciarCadastro(request);
             return ResponseEntity.status(202).body("Verifique seu e-mail para continuar o cadastro.");
@@ -82,7 +81,7 @@ public class ComercianteController {
 
     @PostMapping("/cadastrar")
     public ResponseEntity<Object> cadastrarComerciante(@RequestBody @Valid ComercianteRequest request) {
-        // ... (seu método de cadastro existente, sem alteração)
+        //metodo de cadastro existente
             Comerciante novoComerciante = new Comerciante(
                     request.getNome(),
                     request.getCpf(),
@@ -106,12 +105,11 @@ public class ComercianteController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String direction
     ) {
-        // ... (seu método de listagem existente, sem alteração)
+        //metodo de listagem
         PaginacaoDTO<Comerciante> pagina = comercianteService.listarTodos(page, size, sortBy, direction);
         return ResponseEntity.ok(pagina);
     }
-    
-    
+
     /**
      * Endpoint para o usuário autenticado (Comerciante) atualizar seus próprios dados.
      * O usuário é identificado pelo token JWT.
@@ -119,15 +117,15 @@ public class ComercianteController {
     @PutMapping("/meu-perfil")
     public ResponseEntity<Comerciante> atualizarPerfil(
             @Valid @RequestBody PessoaUpdateDto dto,
-            Principal principal) { // ⬅️ Pega o usuário autenticado via token
+            Principal principal) { //Pega o usuário autenticado via token
 
-        // 1. Pega o e-mail do usuário logado (armazenado no token)
+        //1. Pega o e-mail do usuário logado (armazenado no token)
         String userEmail = principal.getName(); 
         
-        // 2. Chama o novo serviço de atualização
+        //2. Chama o novo serviço de atualização
         Comerciante comercianteAtualizado = comercianteService.atualizarComerciante(userEmail, dto);
         
-        // 3. 🛡️ IMPORTANTE: Nunca retorne a senha!
+        //3. A senha não retorna no JSON.
         comercianteAtualizado.setSenha(null); 
 
         // 4. Retorna o objeto atualizado

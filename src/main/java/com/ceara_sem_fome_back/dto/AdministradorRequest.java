@@ -35,7 +35,7 @@ public class AdministradorRequest implements CadastroRequest {
     @NotBlank(message = "O gênero é obrigatório.")
     private String genero;
 
-    // [NOVO] Adicionamos o campo de consentimento da LGPD
+    //campo de consentimento da LGPD
     @NotNull(message = "É preciso confirmar os termos da LGPD.")
     @AssertTrue(message = "É preciso aceitar os termos da LGPD para continuar.")
     private Boolean lgpdAccepted;

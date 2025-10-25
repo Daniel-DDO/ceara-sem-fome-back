@@ -1,12 +1,11 @@
 package com.ceara_sem_fome_back.controller;
 
-//import com.ceara_sem_fome_back.data.dto.ErrorDTO;
 import com.ceara_sem_fome_back.data.dto.ErrorDTO;
 import com.ceara_sem_fome_back.data.dto.LoginDTO;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
 import com.ceara_sem_fome_back.dto.AdministradorRequest;
-import com.ceara_sem_fome_back.dto.PessoaUpdateDto; // ⬅️ NOVO IMPORT
+import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
 import com.ceara_sem_fome_back.model.Administrador;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.AdministradorService;
@@ -15,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal; // ⬅️ NOVO IMPORT
+import java.security.Principal;
 
 @RestController
 @RequestMapping("/adm")
@@ -29,7 +28,7 @@ public class AdministradorController {
 
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarAdm(@Valid @RequestBody LoginDTO loginDTO) {
-        // ... (seu método de login existente, sem alteração)
+        //metodo de login
         try {
             if (loginDTO.getEmail() == null || loginDTO.getEmail().isBlank() ||
                     loginDTO.getSenha() == null || loginDTO.getSenha().isBlank()) {
@@ -67,7 +66,7 @@ public class AdministradorController {
 
     @PostMapping("/cadastrar")
     public ResponseEntity<Object> cadastrarAdm(@RequestBody @Valid AdministradorRequest request) {
-        // ... (seu método de cadastro existente, sem alteração)
+        //metodo de cadastro
             Administrador administradorParaSalvar = new Administrador();
             administradorParaSalvar.setNome(request.getNome());
             administradorParaSalvar.setEmail(request.getEmail());
@@ -80,7 +79,7 @@ public class AdministradorController {
 
     @PostMapping("/iniciar-cadastro")
     public ResponseEntity<Object> iniciarCadastroAdministrador(@RequestBody @Valid AdministradorRequest request) {
-        // ... (seu método de iniciar-cadastro existente, sem alteração)
+        //metodo de iniciar-cadastro
         try {
             administradorService.iniciarCadastro(request);
             return ResponseEntity.status(202).body("Verifique seu e-mail para continuar o cadastro.");
@@ -100,12 +99,11 @@ public class AdministradorController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String direction
     ) {
-        // ... (seu método de listagem existente, sem alteração)
+        //metodo de listagem
         PaginacaoDTO<Administrador> resposta = administradorService.listarTodos(page, size, sortBy, direction);
         return ResponseEntity.ok(resposta);
     }
 
-  
     /**
      * Endpoint para o usuário autenticado (Administrador) atualizar seus próprios dados.
      * O usuário é identificado pelo token JWT.
@@ -113,18 +111,18 @@ public class AdministradorController {
     @PutMapping("/meu-perfil")
     public ResponseEntity<Administrador> atualizarPerfil(
             @Valid @RequestBody PessoaUpdateDto dto,
-            Principal principal) { // ⬅️ Pega o usuário autenticado via token
+            Principal principal) { //Pega o usuário autenticado via token
 
-        // 1. Pega o e-mail do usuário logado (armazenado no token)
+        //1. Pega o e-mail do usuário logado (armazenado no token)
         String userEmail = principal.getName(); 
         
-        // 2. Chama o novo serviço de atualização
+        //2. Chama o novo serviço de atualização
         Administrador adminAtualizado = administradorService.atualizarAdministrador(userEmail, dto);
         
-        // 3. 🛡️ IMPORTANTE: Nunca retorne a senha!
+        //3. A senha não retorna no JSON.
         adminAtualizado.setSenha(null); 
 
-        // 4. Retorna o objeto atualizado
+        //4. Retorna o objeto atualizado
         return ResponseEntity.ok(adminAtualizado);
     }
 }

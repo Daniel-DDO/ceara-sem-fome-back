@@ -6,8 +6,6 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 
 @Getter
 @Setter
@@ -27,7 +25,7 @@ public class VerificationToken {
     @Column(name = "expiry_date")
     private LocalDateTime expiryDate;
 
-    // Campos adicionais para o cadastro
+    //Campos adicionais para o cadastro
     @Column(name = "nome")
     private String nome;
 

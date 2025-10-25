@@ -12,7 +12,7 @@ public interface BeneficiarioRepository extends JpaRepository<Beneficiario, Stri
     Optional<Beneficiario> findByCpf(String cpf);
     Optional<Beneficiario> findByCpfAndEmail(String cpf, String email);
 
-    // MÉTODOS NOVOS E OTIMIZADOS PARA VALIDAÇÃO
+    //MÉTODOS NOVOS E OTIMIZADOS PARA VALIDAÇÃO
     boolean existsByCpf(String cpf);
     boolean existsByEmail(String email);
 }

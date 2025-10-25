@@ -55,7 +55,7 @@ public class EmailService {
         String logoCearaSemFome = "https://www.ceara.gov.br/wp-content/uploads/2024/01/logo-cesf-e-cegov-e1704803051849-600x239.png";
         int year = LocalDateTime.now().getYear();
 
-        // Template de e-mail genérico e elegante
+        //Template de email
         return String.format("""
             <!DOCTYPE html>
             <html lang="pt-BR">

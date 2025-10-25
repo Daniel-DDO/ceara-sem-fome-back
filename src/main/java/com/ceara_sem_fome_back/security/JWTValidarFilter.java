@@ -27,13 +27,13 @@ public class JWTValidarFilter extends BasicAuthenticationFilter {
 
     private final String tokenSenha;
     
-    // Lista de rotas públicas que o filtro deve IGNORAR
+    //Lista de rotas públicas que o filtro deve IGNORAR
     private static final List<String> ROTAS_PUBLICAS = Arrays.asList(
         "/beneficiario/iniciar-cadastro",
         "/beneficiario/login",
         "/adm/login",
         "/token/confirmar-cadastro",
-        "/auth/**" // Ignora TODAS as rotas de /auth (recuperação de senha)
+        "/auth/**" //Ignora TODAS as rotas de /auth (recuperação de senha)
     );
 
     public JWTValidarFilter(AuthenticationManager authenticationManager, String tokenSenha) {
@@ -43,7 +43,6 @@ public class JWTValidarFilter extends BasicAuthenticationFilter {
 
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) throws ServletException {
-        // ... (código sem alteração)
         AntPathMatcher pathMatcher = new AntPathMatcher();
         String requestURI = request.getRequestURI();
         return ROTAS_PUBLICAS.stream().anyMatch(rota -> pathMatcher.match(rota, requestURI));
@@ -62,29 +61,26 @@ public class JWTValidarFilter extends BasicAuthenticationFilter {
         }
 
         String token = atributo.replace(ATRIBUTO_PREFIXO, "");
-        String ipAddress = request.getRemoteAddr(); // ⬅️ Capturar IP
+        String ipAddress = request.getRemoteAddr(); //Captura IP
         
         try {
             UsernamePasswordAuthenticationToken authenticationToken = getAuthenticationToken(token);
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         } catch (Exception e) {
             
-            // ⬇️ ADICIONAR LOG DE FALHA DE VALIDAÇÃO DE TOKEN ⬇️
+            //LOG DE FALHA DE VALIDAÇÃO DE TOKEN
             log.warn(
                 "FALHA TOKEN: Tentativa de validação de token falhou. Motivo: {}. IP: {}. Token: {}",
-                e.getMessage(), // Ex: "The Token has expired"
+                e.getMessage(), //Ex.: "O token expirou"
                 ipAddress,
                 token
             );
-            
             SecurityContextHolder.clearContext();
         }
-        
         chain.doFilter(request, response);
     }
 
     private UsernamePasswordAuthenticationToken getAuthenticationToken(String token) {
-        // ... (código sem alteração)
         String usuario = JWT.require(Algorithm.HMAC512(tokenSenha))
                 .build()
                 .verify(token)

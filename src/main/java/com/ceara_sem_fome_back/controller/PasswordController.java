@@ -26,7 +26,7 @@ public class PasswordController {
     }
 
     /**
-     * [ESTÉTICA] Este método foi atualizado para gerar a página de status com o novo design.
+     * [ESTÉTICA] Este metodo foi atualizado para gerar a página de status com o novo design.
      */
     @GetMapping("/validar-token-recuperacao")
     public ResponseEntity<String> validarTokenRecuperacao(@RequestParam String token) {

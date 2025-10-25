@@ -1,7 +1,6 @@
 package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.exception.EstabelecimentoJaCadastradoException;
-//import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.Estabelecimento;
 import com.ceara_sem_fome_back.repository.EstabelecimentoRepository;

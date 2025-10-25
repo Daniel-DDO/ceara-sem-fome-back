@@ -1,13 +1,12 @@
 package com.ceara_sem_fome_back.security;
 
 import com.ceara_sem_fome_back.data.dto.LoginDTO;
-import com.ceara_sem_fome_back.model.Pessoa;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j; // ⬅️ IMPORTAR SLF4J
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,7 +22,7 @@ import java.util.Date;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 
-@Slf4j // ⬅️ ADICIONAR ANOTAÇÃO DE LOG
+@Slf4j //ANOTAÇÃO DE LOG
 public class JWTAutenticarFilter extends UsernamePasswordAuthenticationFilter {
 
     public static final int TOKEN_EXPIRACAO = 600_000; //10 minutos
@@ -40,11 +39,11 @@ public class JWTAutenticarFilter extends UsernamePasswordAuthenticationFilter {
     public Authentication attemptAuthentication(@NonNull HttpServletRequest request,
                                                 @NonNull HttpServletResponse response) throws AuthenticationException {
         
-        LoginDTO login = null; // ⬅️ Declarar fora do try para usar no catch
-        String ipAddress = request.getRemoteAddr(); // ⬅️ Capturar IP
+        LoginDTO login = null; //Declarar fora do try para usar no catch
+        String ipAddress = request.getRemoteAddr(); //Captura IP
 
         try {
-            // Lê como LoginDTO
+            //Lê como LoginDTO
             login = objectMapper.readValue(request.getInputStream(), LoginDTO.class);
 
             String email = login.getEmail();
@@ -55,8 +54,8 @@ public class JWTAutenticarFilter extends UsernamePasswordAuthenticationFilter {
 
             return authenticationManager.authenticate(authToken);
 
-        } catch (AuthenticationException e) { // ⬅️ ADICIONAR ESTE CATCH
-            // LOG DE FALHA DE LOGIN (Ex: Senha incorreta)
+        } catch (AuthenticationException e) {
+            //LOG DE FALHA DE LOGIN (Ex.: Senha incorreta)
             String username = (login != null) ? login.getEmail() : "N/A";
             log.warn(
                 "FALHA LOGIN: Tentativa falhou para o usuário [{}]. Motivo: {}. IP: {}",
@@ -64,7 +63,7 @@ public class JWTAutenticarFilter extends UsernamePasswordAuthenticationFilter {
                 e.getMessage(),
                 ipAddress
             );
-            throw e; // Re-lança a exceção para o Spring tratar como falha
+            throw e; //Re-lança a exceção para o Spring tratar como falha
 
         } catch (IOException e) {
             throw new RuntimeException("Falha ao ler dados de autenticação do request", e);
@@ -86,9 +85,9 @@ public class JWTAutenticarFilter extends UsernamePasswordAuthenticationFilter {
             username = principal != null ? principal.toString() : null;
         }
 
-        String ipAddress = request.getRemoteAddr(); // ⬅️ Capturar IP
+        String ipAddress = request.getRemoteAddr(); //Captura IP
 
-        // ⬇️ ADICIONAR LOG DE SUCESSO DE LOGIN ⬇️
+        //LOG DE SUCESSO DE LOGIN
         log.info(
             "SUCESSO LOGIN: Usuário [{}] logou com sucesso. IP: {}",
             username,

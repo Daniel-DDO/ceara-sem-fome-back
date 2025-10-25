@@ -1,6 +1,5 @@
 package com.ceara_sem_fome_back.service;
 
-import com.ceara_sem_fome_back.dto.CadastroRequest;
 import com.ceara_sem_fome_back.dto.RecuperacaoSenhaDTO;
 import com.ceara_sem_fome_back.dto.RedefinirSenhaFinalDTO;
 import com.ceara_sem_fome_back.model.*;

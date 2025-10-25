@@ -6,12 +6,12 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class NovaSenhaDTO {
-    // Usamos o email para identificar o usuário no banco de dados
+    //o email é usado para identificar o usuário no banco de dados
     private String email; 
     
-    // A nova senha que o usuário escolheu
+    //nova senha que o usuário escolheu
     private String novaSenha; 
     
-    // A repetição da nova senha (para validação do backend)
+    //repetição da nova senha
     private String confirmaNovaSenha;
 }

@@ -1,7 +1,6 @@
 package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.dto.*;
-// IMPORTS NOVOS DAS SUAS EXCEÇÕES
 import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
 import com.ceara_sem_fome_back.exception.EmailJaCadastradoException;
 import com.ceara_sem_fome_back.exception.LgpdNaoAceitaException;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -43,7 +41,7 @@ public class CadastroService {
     @Autowired
     private EmailService emailService;
 
-    // MÉTODOS DE VALIDAÇÃO NOVOS (USANDO SUAS EXCEÇÕES)
+    //MÉTODOS DE VALIDAÇÃO
 
     /**
      * Verifica se o CPF está disponível em TODAS as tabelas de usuários.
@@ -54,8 +52,7 @@ public class CadastroService {
             administradorRepository.existsByCpf(cpf) ||
             comercianteRepository.existsByCpf(cpf) ||
             entregadorRepository.existsByCpf(cpf)) {
-            
-            // Lança sua exceção customizada
+
             throw new CpfJaCadastradoException(cpf);
         }
     }
@@ -70,12 +67,11 @@ public class CadastroService {
             comercianteRepository.existsByEmail(email) ||
             entregadorRepository.existsByEmail(email)) {
 
-            // Lança sua exceção customizada
             throw new EmailJaCadastradoException(email);
         }
     }
 
-    // FIM DOS MÉTODOS DE VALIDAÇÃO
+    //FIM DOS MÉTODOS DE VALIDAÇÃO
 
     /**
      * Cria um token "rico" contendo todos os dados do pré-cadastro,
@@ -162,7 +158,7 @@ public class CadastroService {
             return false;
         }
 
-        //VALIDAÇÃO BÔNUS (Evita Race Condition)
+        //(Evita race condition)
         //Verifica de novo ANTES de salvar, caso alguém tenha se cadastrado
         //com o mesmo CPF/Email enquanto este token estava ativo.
         try {
@@ -170,7 +166,7 @@ public class CadastroService {
             validarEmailDisponivelEmTodosOsPerfis(verificationToken.getUserEmail());
         } catch (CpfJaCadastradoException | EmailJaCadastradoException e) {
             log.warn("Cadastro bloqueado na finalização (race condition): {}", e.getMessage());
-            tokenRepository.delete(verificationToken); // Limpa o token inválido
+            tokenRepository.delete(verificationToken); //Limpa o token inválido
             return false; //Falha na verificação, segue o padrão do metodo
         }
 
@@ -236,7 +232,7 @@ public class CadastroService {
         }
         
         //Se chegou até aqui, o usuário foi salvo com sucesso.
-        //Apagamos o token e retornamos true.
+        //o token é apagado e o retorno é true.
         tokenRepository.delete(verificationToken);
         log.info("SUCESSO: {} salvo após validação de e-mail: {}", verificationToken.getTipoPessoa(), verificationToken.getUserEmail());
         return true;
