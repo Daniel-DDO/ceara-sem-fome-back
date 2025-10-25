@@ -40,8 +40,10 @@ public abstract class Pessoa {
     @NotNull
     @Enumerated(EnumType.STRING)
     protected StatusPessoa status;
+    @NotNull
+    protected Boolean lgpdAccepted;
 
-    public Pessoa(String nome, String cpf, String email, String senha, LocalDate dataNascimento, String telefone, String genero) {
+    public Pessoa(String nome, String cpf, String email, String senha, LocalDate dataNascimento, String telefone, String genero, Boolean lgpdAccepted) {
         this.id = UUID.randomUUID().toString();
         this.nome = nome;
         this.cpf = cpf;
@@ -51,6 +53,7 @@ public abstract class Pessoa {
         this.telefone = telefone;
         this.genero = genero;
         this.status = StatusPessoa.ATIVO;
+        this.lgpdAccepted = lgpdAccepted;
     }
 
 }

@@ -26,8 +26,7 @@ public class Comerciante extends Pessoa {
     @JsonManagedReference
     private List<Estabelecimento> estabelecimentos = new ArrayList<>();
 
-    public Comerciante(String nome, String cpf, String email, String senha,
-                       LocalDate dataNascimento, String telefone, String genero) {
-        super(nome, cpf, email, senha, dataNascimento, telefone, genero);
+    public Comerciante(String nome, String cpf, String email, String senha, LocalDate dataNascimento, String telefone, String genero, Boolean lgpdAccepted) {
+        super(nome, cpf, email, senha, dataNascimento, telefone, genero, lgpdAccepted);
     }
 }

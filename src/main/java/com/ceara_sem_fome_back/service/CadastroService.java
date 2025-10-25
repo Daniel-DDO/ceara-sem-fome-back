@@ -4,6 +4,7 @@ import com.ceara_sem_fome_back.dto.*;
 // IMPORTS NOVOS DAS SUAS EXCEÇÕES
 import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
 import com.ceara_sem_fome_back.exception.EmailJaCadastradoException;
+import com.ceara_sem_fome_back.exception.LgpdNaoAceitaException;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.*;
 import lombok.extern.slf4j.Slf4j;
@@ -84,6 +85,11 @@ public class CadastroService {
     @Transactional
     public void criarTokenDeCadastroEVenviarEmail(CadastroRequest request, TipoPessoa tipoPessoa) {
 
+        if ((Boolean.FALSE.equals(request.getLgpdAccepted()))) {
+            log.info("LGPD não foi aceita. Aceite e tente cadastrar novamente.");
+            throw new LgpdNaoAceitaException("Você deve aceitar os termos da LGPD para se cadastrar.");
+        }
+
         //Verifica ANTES de criar o token se os dados já existem
         validarCpfDisponivelEmTodosOsPerfis(request.getCpf());
         validarEmailDisponivelEmTodosOsPerfis(request.getEmail());
@@ -102,7 +108,8 @@ public class CadastroService {
                 request.getDataNascimento(),
                 request.getTelefone(),
                 request.getGenero(),
-                tipoPessoa
+                tipoPessoa,
+                request.getLgpdAccepted()
         );
 
         VerificationToken saved = tokenRepository.save(verificationToken);
@@ -164,7 +171,7 @@ public class CadastroService {
         } catch (CpfJaCadastradoException | EmailJaCadastradoException e) {
             log.warn("Cadastro bloqueado na finalização (race condition): {}", e.getMessage());
             tokenRepository.delete(verificationToken); // Limpa o token inválido
-            return false; // Falha na verificação, segue o padrão do metodo
+            return false; //Falha na verificação, segue o padrão do metodo
         }
 
         switch (verificationToken.getTipoPessoa()) {
@@ -176,7 +183,8 @@ public class CadastroService {
                         verificationToken.getSenhaCriptografada(),
                         verificationToken.getDataNascimento(),
                         verificationToken.getTelefone(),
-                        verificationToken.getGenero()
+                        verificationToken.getGenero(),
+                        verificationToken.getLgpdAccepted()
                 );
                 administradorRepository.save(novoAdministrador);
             }
@@ -188,7 +196,8 @@ public class CadastroService {
                         verificationToken.getSenhaCriptografada(),
                         verificationToken.getDataNascimento(),
                         verificationToken.getTelefone(),
-                        verificationToken.getGenero()
+                        verificationToken.getGenero(),
+                        verificationToken.getLgpdAccepted()
                 );
 
                 beneficiarioRepository.save(novoBeneficiario);
@@ -201,7 +210,8 @@ public class CadastroService {
                         verificationToken.getSenhaCriptografada(),
                         verificationToken.getDataNascimento(),
                         verificationToken.getTelefone(),
-                        verificationToken.getGenero()
+                        verificationToken.getGenero(),
+                        verificationToken.getLgpdAccepted()
                 );
                 comercianteRepository.save(novoComerciante);
             }
@@ -213,11 +223,9 @@ public class CadastroService {
                         verificationToken.getSenhaCriptografada(),
                         verificationToken.getDataNascimento(),
                         verificationToken.getTelefone(),
-                        verificationToken.getGenero()
+                        verificationToken.getGenero(),
+                        verificationToken.getLgpdAccepted()
                 );
-
-                novoEntregador.setEndereco(new Endereco());
-
                 entregadorRepository.save(novoEntregador);
             }
             default -> {
@@ -227,8 +235,8 @@ public class CadastroService {
             }
         }
         
-        // Se chegou até aqui, o usuário foi salvo com sucesso.
-        // Apagamos o token e retornamos true.
+        //Se chegou até aqui, o usuário foi salvo com sucesso.
+        //Apagamos o token e retornamos true.
         tokenRepository.delete(verificationToken);
         log.info("SUCESSO: {} salvo após validação de e-mail: {}", verificationToken.getTipoPessoa(), verificationToken.getUserEmail());
         return true;

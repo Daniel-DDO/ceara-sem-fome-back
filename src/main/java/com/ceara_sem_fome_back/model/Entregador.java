@@ -22,8 +22,8 @@ public class Entregador extends Pessoa {
     @JoinColumn(name = "endereco_id")
     private Endereco endereco;
 
-    public Entregador(String nome, String cpf, String email, String senha, LocalDate dataNascimento, String telefone, String genero) {
-        super(nome, cpf, email, senha, dataNascimento, telefone, genero);
+    public Entregador(String nome, String cpf, String email, String senha, LocalDate dataNascimento, String telefone, String genero, Boolean lgpdAccepted) {
+        super(nome, cpf, email, senha, dataNascimento, telefone, genero, lgpdAccepted);
     }
 
 }

@@ -13,8 +13,8 @@ import java.time.LocalDate;
 @EqualsAndHashCode(callSuper = true)
 public class Administrador extends Pessoa {
 
-    public Administrador(String nome, String cpf, String email, String senha, LocalDate dataNascimento, String telefone, String genero) {
-        super(nome, cpf, email, senha, dataNascimento, telefone, genero);
+    public Administrador(String nome, String cpf, String email, String senha, LocalDate dataNascimento, String telefone, String genero, Boolean lgpdAccepted) {
+        super(nome, cpf, email, senha, dataNascimento, telefone, genero, lgpdAccepted);
     }
 
 }

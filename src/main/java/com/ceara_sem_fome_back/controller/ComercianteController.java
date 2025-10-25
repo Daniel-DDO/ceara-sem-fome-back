@@ -90,7 +90,8 @@ public class ComercianteController {
                     request.getSenha(),
                     request.getDataNascimento(),
                     request.getTelefone(),
-                    request.getGenero()
+                    request.getGenero(),
+                    request.getLgpdAccepted()
             );
 
             Comerciante comercianteSalvo = comercianteService.salvarComerciante(novoComerciante);

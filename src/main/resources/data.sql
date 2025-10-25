@@ -12,8 +12,8 @@ VALUES
     ('car-2', 'ABERTO', '2025-01-11', '2025-01-11')
     ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO administrador (id, nome, cpf, email, senha, data_nascimento, telefone, genero, status)
-VALUES ('adm-1', 'João Almeida', '66230022001', 'joao.admin@csf.gov.br', '123456', '1980-05-10', '(85) 90000-0001', 'MASCULINO', 'ATIVO')
+INSERT INTO administrador (id, nome, cpf, email, senha, data_nascimento, telefone, genero, status, lgpd_accepted)
+VALUES ('adm-1', 'João Almeida', '66230022001', 'joao.admin@csf.gov.br', '123456', '1980-05-10', '(85) 90000-0001', 'MASCULINO', 'ATIVO', true)
     ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO beneficiario (id, nome, cpf, email, senha, data_nascimento, telefone, genero, status, carrinho_id, endereco_id, lgpd_accepted)
@@ -22,12 +22,12 @@ VALUES
     ('ben-2', 'Carlos Pereira', '11499696019', 'carlos.pereira@gmail.com', '123456', '1990-04-10', '(85) 92222-2222', 'MASCULINO', 'ATIVO', 'car-2', 'end-3', true)
     ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO comerciante (id, nome, cpf, email, senha, data_nascimento, telefone, genero, status)
-VALUES ('com-1', 'Ana Costa', '56007707075', 'ana.mercearia@gmail.com', '123456', '1988-09-10', '(85) 93333-3333', 'FEMININO', 'ATIVO')
+INSERT INTO comerciante (id, nome, cpf, email, senha, data_nascimento, telefone, genero, status, lgpd_accepted)
+VALUES ('com-1', 'Ana Costa', '56007707075', 'ana.mercearia@gmail.com', '123456', '1988-09-10', '(85) 93333-3333', 'FEMININO', 'ATIVO', true)
     ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO entregador (id, nome, cpf, email, senha, data_nascimento, telefone, genero, status, endereco_id)
-VALUES ('ent-1', 'Pedro Santos', '01394251017', 'pedro.entregas@gmail.com', '123456', '1992-01-05', '(85) 94444-4444', 'MASCULINO', 'ATIVO', 'end-4')
+INSERT INTO entregador (id, nome, cpf, email, senha, data_nascimento, telefone, genero, status, endereco_id, lgpd_accepted)
+VALUES ('ent-1', 'Pedro Santos', '01394251017', 'pedro.entregas@gmail.com', '123456', '1992-01-05', '(85) 94444-4444', 'MASCULINO', 'ATIVO', 'end-4', true)
     ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO conta (id, numero_conta, agencia, saldo, beneficiario_id)
@@ -58,6 +58,6 @@ INSERT INTO produto_carrinho (id, carrinho_id, produto_id, quantidade) VALUES
     ('pc-2', 'car-2', 'prod-3', 2)
     ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO verification_token (token, user_email, expiry_date, nome, cpf, senha_criptografada, data_nascimento, telefone, genero, tipo_pessoa)
-VALUES ('token-1', 'dummy@teste.com', '2025-12-31', 'Dummy', '00000000000', '123456', '2000-01-01', '(85) 90000-0000', 'OUTRO', 'TESTE')
+INSERT INTO verification_token (token, user_email, expiry_date, nome, cpf, senha_criptografada, data_nascimento, telefone, genero, tipo_pessoa, lgpd_accepted)
+VALUES ('token-1', 'dummy@teste.com', '2025-12-31', 'Dummy', '00000000000', '123456', '2000-01-01', '(85) 90000-0000', 'OUTRO', 'TESTE', true)
     ON CONFLICT (token) DO NOTHING;

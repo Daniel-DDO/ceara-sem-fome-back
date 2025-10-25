@@ -84,7 +84,8 @@ public class EntregadorController {
                     request.getSenha(),
                     request.getDataNascimento(),
                     request.getTelefone(),
-                    request.getGenero()
+                    request.getGenero(),
+                    request.getLgpdAccepted()
             );
 
             Entregador entregadorSalvo = entregadorService.salvarEntregador(novoEntregador);

@@ -25,7 +25,8 @@ CREATE TABLE IF NOT EXISTS administrador (
     data_nascimento DATE,
     telefone VARCHAR(255),
     genero VARCHAR(255),
-    status VARCHAR(255)
+    status VARCHAR(255),
+    lgpd_accepted BOOLEAN
     );
 
 CREATE TABLE IF NOT EXISTS comerciante (
@@ -37,7 +38,8 @@ CREATE TABLE IF NOT EXISTS comerciante (
     data_nascimento DATE,
     telefone VARCHAR(255),
     genero VARCHAR(255),
-    status VARCHAR(255)
+    status VARCHAR(255),
+    lgpd_accepted BOOLEAN
     );
 
 CREATE TABLE IF NOT EXISTS beneficiario (
@@ -69,6 +71,7 @@ CREATE TABLE IF NOT EXISTS entregador (
     genero VARCHAR(255),
     status VARCHAR(255),
     endereco_id VARCHAR(255),
+    lgpd_accepted BOOLEAN,
     FOREIGN KEY (endereco_id) REFERENCES endereco (id)
     );
 
@@ -131,5 +134,6 @@ CREATE TABLE IF NOT EXISTS verification_token (
     data_nascimento DATE,
     telefone VARCHAR(255),
     genero VARCHAR(255),
-    tipo_pessoa VARCHAR(255)
+    tipo_pessoa VARCHAR(255),
+    lgpd_accepted BOOLEAN
     );

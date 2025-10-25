@@ -24,8 +24,7 @@ public class Beneficiario extends Pessoa {
     @JoinColumn(name = "endereco_id")
     private Endereco endereco;
 
-    public Beneficiario(String nome, String cpf, String email, String senha,
-                        LocalDate dataNascimento, String telefone, String genero) {
-        super(nome, cpf, email, senha, dataNascimento, telefone, genero);
+    public Beneficiario(String nome, String cpf, String email, String senha, LocalDate dataNascimento, String telefone, String genero, Boolean lgpdAccepted) {
+        super(nome, cpf, email, senha, dataNascimento, telefone, genero, lgpdAccepted);
     }
 }
