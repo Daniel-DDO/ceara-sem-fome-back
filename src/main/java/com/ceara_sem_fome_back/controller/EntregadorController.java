@@ -98,9 +98,22 @@ public class EntregadorController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(defaultValue = "") String nomeFiltro
     ) {
-        PaginacaoDTO<Entregador> pagina = entregadorService.listarTodos(page, size, sortBy, direction);
+        PaginacaoDTO<Entregador> pagina = entregadorService.listarComFiltro(nomeFiltro, page, size, sortBy, direction);
         return ResponseEntity.ok(pagina);
+    }
+
+    @GetMapping("/filtrar/cpf")
+    public ResponseEntity<Entregador> filtrarPorCpf(
+            @RequestParam(name = "valor") String cpf) {
+
+        Entregador entregador = entregadorService.filtrarPorCpf(cpf);
+
+        // 💡 A senha não retorna no JSON
+        entregador.setSenha(null);
+
+        return ResponseEntity.ok(entregador);
     }
 }

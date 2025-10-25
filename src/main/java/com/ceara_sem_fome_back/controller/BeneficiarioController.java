@@ -86,10 +86,11 @@ public class BeneficiarioController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(defaultValue = "") String nomeFiltro
     ) {
         //metodo de listagem
-        PaginacaoDTO<Beneficiario> pagina = beneficiarioService.listarTodos(page, size, sortBy, direction);
+        PaginacaoDTO<Beneficiario> pagina = beneficiarioService.listarComFiltro(nomeFiltro, page, size, sortBy, direction);
         return ResponseEntity.ok(pagina);
     }
 
@@ -115,5 +116,17 @@ public class BeneficiarioController {
 
         //4. Retorna o objeto atualizado com status 200 OK
         return ResponseEntity.ok(beneficiarioAtualizado);
+    }
+
+    @GetMapping("/filtrar/cpf")
+    public ResponseEntity<Beneficiario> filtrarPorCpf(
+            @RequestParam(name = "valor") String cpf) {
+
+        Beneficiario beneficiario = beneficiarioService.filtrarPorCpf(cpf);
+
+        // 💡 A senha não retorna no JSON
+        beneficiario.setSenha(null);
+
+        return ResponseEntity.ok(beneficiario);
     }
 }

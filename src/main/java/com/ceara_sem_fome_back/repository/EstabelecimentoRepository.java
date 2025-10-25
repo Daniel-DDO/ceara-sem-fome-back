@@ -1,10 +1,13 @@
 package com.ceara_sem_fome_back.repository;
 
 import com.ceara_sem_fome_back.model.Estabelecimento;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface EstabelecimentoRepository extends JpaRepository <Estabelecimento, String> {
 
+    Page<Estabelecimento> findByNomeContainingIgnoreCase(String nome, Pageable pageable);
 }

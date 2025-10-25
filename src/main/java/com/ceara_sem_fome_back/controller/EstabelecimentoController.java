@@ -40,9 +40,10 @@ public class EstabelecimentoController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(defaultValue = "") String nomeFiltro
     ) {
-        Page<Estabelecimento> pagina = estabelecimentoService.listarTodos(page, size, sortBy, direction);
+        Page<Estabelecimento> pagina = estabelecimentoService.listarComFiltro(nomeFiltro, page, size, sortBy, direction);
         return ResponseEntity.ok(pagina);
     }
 }

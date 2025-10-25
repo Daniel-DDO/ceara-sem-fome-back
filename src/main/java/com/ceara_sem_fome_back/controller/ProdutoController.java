@@ -10,6 +10,7 @@ import com.ceara_sem_fome_back.service.ProdutoService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -46,11 +47,23 @@ public class ProdutoController {
     }
 
     @GetMapping("/estabelecimento/{estabelecimentoId}")
-    public ResponseEntity<List<ProdutoEstabelecimento>> listarProdutosPorEstabelecimento(
-            @PathVariable String estabelecimentoId) {
-
-        List<ProdutoEstabelecimento> produtos = produtoService.listarProdutosPorEstabelecimento(estabelecimentoId);
-        return ResponseEntity.ok(produtos);
+    public ResponseEntity<Page<ProdutoEstabelecimento>> listarProdutosComFiltro(
+            @PathVariable String estabelecimentoId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "produto.nome") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(defaultValue = "") String nomeFiltro
+    ) {
+        Page<ProdutoEstabelecimento> pagina = produtoService.listarProdutosComFiltroPorEstabelecimento(
+                estabelecimentoId,
+                nomeFiltro,
+                page,
+                size,
+                sortBy,
+                direction
+        );
+        return ResponseEntity.ok(pagina);
     }
 
     //sobre o produto
