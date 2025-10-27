@@ -6,7 +6,13 @@ import com.ceara_sem_fome_back.dto.AdministradorRequest;
 import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
 import com.ceara_sem_fome_back.exception.*;
 import com.ceara_sem_fome_back.model.Administrador;
+import com.ceara_sem_fome_back.model.Pessoa;
+import com.ceara_sem_fome_back.model.StatusPessoa;
+import com.ceara_sem_fome_back.model.TipoPessoa;
 import com.ceara_sem_fome_back.repository.AdministradorRepository;
+
+import jakarta.persistence.EntityNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -94,6 +100,37 @@ public class AdministradorService implements UserDetailsService {
                 pagina.getSize(),
                 pagina.isLast()
         );
+    }
+
+    public Administrador alterarStatuAdministrador(String id, StatusPessoa novoStatus) {
+        Administrador administrador = administradorRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Administrador não encontrado com ID: " + id));
+        administrador.setStatus(novoStatus);
+        return administradorRepository.save(administrador);
+    }
+
+    public Pessoa alterarStatus(TipoPessoa tipo, String id, StatusPessoa novoStatus) {
+        switch (tipo) {
+            case BENEFICIARIO -> {
+                var beneficiario = beneficiarioRepository.findById(id)
+                        .orElseThrow(() -> new EntityNotFoundException("Beneficiário não encontrado"));
+                beneficiario.setStatus(novoStatus);
+                return beneficiarioRepository.save(beneficiario);
+            }
+            case COMERCIANTE -> {
+                var comerciante = comercianteRepository.findById(id)
+                        .orElseThrow(() -> new EntityNotFoundException("Comerciante não encontrado"));
+                comerciante.setStatus(novoStatus);
+                return comercianteRepository.save(comerciante);
+            }
+            case ENTREGADOR -> {
+                var entregador = entregadorRepository.findById(id)
+                        .orElseThrow(() -> new EntityNotFoundException("Entregador não encontrado"));
+                entregador.setStatus(novoStatus);
+                return entregadorRepository.save(entregador);
+            }
+            default -> throw new IllegalArgumentException("Tipo de pessoa inválido");
+        }
     }
 
     /**

@@ -93,6 +93,21 @@ public class EntregadorController {
             return ResponseEntity.status(201).body(entregadorSalvo);
     }
 
+    @PatchMapping("/{id}/alterar-status")
+    public ResponseEntity<Entregador> alterarStatusEntregador(
+            @PathVariable Long id,
+            @RequestParam Boolean ativo
+    ) {
+        Entregador entregadorAtualizado = entregadorService.alterarStatusEntregador(id, ativo);
+        return ResponseEntity.ok(entregadorAtualizado);
+    }
+
+    @PatchMapping("/{id}/bloquear-conta")
+    public ResponseEntity<Entregador> bloquearContaEntregador(@PathVariable Long id) {
+        Entregador entregadorBloqueado = entregadorService.bloquearContaEntregador(id);
+        return ResponseEntity.ok(entregadorBloqueado);
+    }
+
     @GetMapping("/all")
     public ResponseEntity<PaginacaoDTO<Entregador>> listarTodos(
             @RequestParam(defaultValue = "0") int page,

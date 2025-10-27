@@ -98,6 +98,21 @@ public class ComercianteController {
             return ResponseEntity.status(201).body(comercianteSalvo);
     }
 
+
+    // Endpoint para alterar o status ativo/inativo do comerciante
+    @PatchMapping("/{id}/alterar-status")
+    public ResponseEntity<Comerciante> alterarStatusComerciante(@PathVariable String id, @RequestParam boolean ativo) {
+        Comerciante comercianteAtualizado = comercianteService.alterarStatusComerciante(id, ativo);
+        return ResponseEntity.ok(comercianteAtualizado);
+    }
+
+    // Endpoint para bloquear conta do comerciante
+    @PatchMapping("/{id}/bloquear-conta")
+    public ResponseEntity<Comerciante> bloquearContaComerciante(@PathVariable String id) {
+        Comerciante comercianteBloqueado = comercianteService.bloquearContaComerciante(id);
+        return ResponseEntity.ok(comercianteBloqueado);
+    }
+
     @GetMapping("/all")
     public ResponseEntity<PaginacaoDTO<Comerciante>> listarTodos(
             @RequestParam(defaultValue = "0") int page,

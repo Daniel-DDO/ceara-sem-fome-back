@@ -84,6 +84,14 @@ public class EntregadorService implements UserDetailsService {
         return entregadorRepository.save(entregador);
     }
 
+    public Entregador alterarStatusEntregador(String cpf, boolean ativo) {
+        Entregador entregador = entregadorRepository.findById(cpf)
+                .orElseThrow(() -> new CpfInvalidoException(cpf));
+
+        entregador.setAtivo(ativo);
+        return entregadorRepository.save(entregador);
+    }
+
     public PaginacaoDTO<Entregador> listarTodos(int page, int size, String sortBy, String direction) {
         Sort sort = direction.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() :

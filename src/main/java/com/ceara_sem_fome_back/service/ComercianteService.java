@@ -84,6 +84,14 @@ public class ComercianteService implements UserDetailsService {
         return comercianteRepository.save(comerciante);
     }
 
+    public Comerciante alterarStatusComerciante(String cpf, boolean ativo) {
+        Comerciante comerciante = comercianteRepository.findById(cpf)
+                .orElseThrow(() -> new CpfInvalidoException(cpf));
+
+        comerciante.setAtivo(ativo);
+        return comercianteRepository.save(comerciante);
+    }
+
     public PaginacaoDTO<Comerciante> listarTodos(int page, int size, String sortBy, String direction) {
         Sort sort = direction.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() :

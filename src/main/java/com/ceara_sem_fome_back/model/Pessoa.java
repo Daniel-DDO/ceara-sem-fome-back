@@ -38,6 +38,7 @@ public abstract class Pessoa {
     protected String genero;
     @NotNull
     @Enumerated(EnumType.STRING)
+    @Column(name = "status_pessoa", nullable = false)
     protected StatusPessoa status;
     @NotNull
     protected Boolean lgpdAccepted;

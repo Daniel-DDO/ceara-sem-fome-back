@@ -7,6 +7,9 @@ import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
 import com.ceara_sem_fome_back.dto.AdministradorRequest;
 import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
 import com.ceara_sem_fome_back.model.Administrador;
+import com.ceara_sem_fome_back.model.Pessoa;
+import com.ceara_sem_fome_back.model.StatusPessoa;
+import com.ceara_sem_fome_back.model.TipoPessoa;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.AdministradorService;
 import jakarta.validation.Valid;
@@ -62,6 +65,40 @@ public class AdministradorController {
         } catch (Exception e) {
             throw new RuntimeException("Erro interno do servidor.");
         }
+    }
+
+    // Ativar conta (administrador)
+    @PatchMapping("/{id}/ativar")
+    public ResponseEntity<Pessoa> ativar(@PathVariable String id) {
+        Pessoa pessoa = adminService.alterarStatus(null, id, StatusPessoa.ATIVO);
+        return ResponseEntity.ok(pessoa);
+    }
+
+    // Desativar conta (administrador)
+    @PatchMapping("/{id}/desativar")
+    public ResponseEntity<Pessoa> desativarAdm(@PathVariable String id) {
+        Pessoa pessoa = adminService.alterarStatus(null, id, StatusPessoa.DESATIVADO);
+        return ResponseEntity.ok(pessoa);
+    }
+
+     // Desativar conta (qualquer tipo)
+    @PatchMapping("/desativar/{tipo}/{id}")
+    public ResponseEntity<Pessoa> desativar(
+            @PathVariable TipoPessoa tipo,
+            @PathVariable String id
+    ) {
+        Pessoa pessoa = adminService.alterarStatus(tipo, id, StatusPessoa.DESATIVADO);
+        return ResponseEntity.ok(pessoa);
+    }
+
+    // Bloquear conta (qualquer tipo)
+    @PatchMapping("/bloquear/{tipo}/{id}")
+    public ResponseEntity<Pessoa> bloquear(
+            @PathVariable TipoPessoa tipo,
+            @PathVariable String id
+    ) {
+        Pessoa pessoa = adminService.alterarStatus(tipo, id, StatusPessoa.BLOQUEADO);
+        return ResponseEntity.ok(pessoa);
     }
 
     @PostMapping("/cadastrar")
@@ -125,4 +162,5 @@ public class AdministradorController {
         //4. Retorna o objeto atualizado
         return ResponseEntity.ok(adminAtualizado);
     }
+
 }

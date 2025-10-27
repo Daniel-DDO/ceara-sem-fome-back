@@ -60,6 +60,27 @@ public class BeneficiarioController {
         }
     }
 
+    // Endpoint para desativar um beneficiário
+    @PatchMapping("/{id}/alterar-status")
+    public ResponseEntity<Beneficiario> desativarBeneficiario(@PathVariable String id) {
+        Beneficiario beneficiarioDesativado = beneficiarioService.alterarStatusBeneficiario(id, StatusPessoa.INATIVO);
+        return ResponseEntity.ok(beneficiarioDesativado);
+    }
+
+    // Endpoint para reativar um beneficiário
+    @PatchMapping("/{id}/reativar-beneficiario")
+    public ResponseEntity<Beneficiario> reativarBeneficiario(@PathVariable String id) {
+        Beneficiario beneficiarioReativado = beneficiarioService.alterarStatusBeneficiario(id, StatusPessoa.ATIVO);
+        return ResponseEntity.ok(beneficiarioReativado);
+    }
+
+    //Endpoint para bloquear um beneficiário
+    @PatchMapping("/{id}/bloquear-beneficiario")
+    public ResponseEntity<Beneficiario> bloquearBeneficiario(@PathVariable String id) {
+        Beneficiario beneficiarioBloqueado = beneficiarioService.alterarStatusBeneficiario(id, StatusPessoa.BLOQUEADO);
+        return ResponseEntity.ok(beneficiarioBloqueado);
+    }
+
     /**
      * Rota para iniciar o processo de cadastro.
      * Recebe os dados do usuário, verifica se já existem e envia o e-mail de confirmação.

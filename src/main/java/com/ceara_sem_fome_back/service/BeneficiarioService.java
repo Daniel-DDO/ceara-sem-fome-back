@@ -77,6 +77,14 @@ public class BeneficiarioService implements UserDetailsService {
         return beneficiario;
     }
 
+    public Beneficiario alterarStatusBeneficiario(String id, StatusPessoa novoStatus) {
+        Beneficiario beneficiario = beneficiarioRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Beneficiário não encontrado com o ID: " + id));
+
+        beneficiario.setStatus(novoStatus);
+        return beneficiarioRepository.save(beneficiario);
+    }
+
     public PaginacaoDTO<Beneficiario> listarTodos(int page, int size, String sortBy, String direction) {
         Sort sort = direction.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() :
