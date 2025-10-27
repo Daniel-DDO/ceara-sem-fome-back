@@ -2,6 +2,8 @@ package com.ceara_sem_fome_back.repository;
 
 import com.ceara_sem_fome_back.model.Administrador;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -15,4 +17,8 @@ public interface AdministradorRepository extends JpaRepository <Administrador, S
     //MÉTODOS NOVOS E OTIMIZADOS PARA VALIDAÇÃO
     boolean existsByCpf(String cpf);
     boolean existsByEmail(String email);
+
+    // Método para buscar um usuário por ID ignorando o filtro @Where
+    @Query("SELECT p FROM #{#entityName} p WHERE p.id = :id")
+    Optional<Administrador> findByIdIgnoringStatus(@Param("id") String id);
 }
