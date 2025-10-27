@@ -126,4 +126,14 @@ public class AdministradorService implements UserDetailsService {
         //4. Salva as alterações
         return administradorRepository.save(adminExistente);
     }
+
+    /**
+     * Chama o serviço de cadastro para reativar uma conta de qualquer tipo.
+     * @param userId O ID do usuário a ser reativado.
+     */
+    @Transactional
+    public void reativarConta(String userId) {
+        // Delega a lógica de busca multi-repositório para o CadastroService
+        cadastroService.reativarConta(userId);
+    }
 }

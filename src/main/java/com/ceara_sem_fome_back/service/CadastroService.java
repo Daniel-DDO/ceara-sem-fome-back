@@ -4,6 +4,7 @@ import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
 import com.ceara_sem_fome_back.exception.EmailJaCadastradoException;
 import com.ceara_sem_fome_back.exception.LgpdNaoAceitaException;
+import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.*;
 import lombok.extern.slf4j.Slf4j;
@@ -236,5 +237,67 @@ public class CadastroService {
         tokenRepository.delete(verificationToken);
         log.info("SUCESSO: {} salvo após validação de e-mail: {}", verificationToken.getTipoPessoa(), verificationToken.getUserEmail());
         return true;
+    }
+
+    //MÉTODO DE REATIVAÇÃO
+
+    /**
+     * Reativa uma conta (reverte soft delete) de qualquer tipo de Pessoa.
+     * Busca o usuário em todos os repositórios, ignorando o status.
+     *
+     * @param userId O ID da pessoa
+     * @return A Pessoa que foi reativada.
+     */
+    @Transactional
+    public Pessoa reativarConta(String userId) {
+        if (userId == null || userId.isBlank()) {
+            throw new IllegalArgumentException("ID do usuário não pode ser nulo.");
+        }
+
+        // Tenta encontrar em qualquer um dos repositórios usando o bypass
+        Optional<Beneficiario> ben = beneficiarioRepository.findByIdIgnoringStatus(userId);
+        if (ben.isPresent()) {
+            return reativarPessoa(ben.get());
+        }
+
+        Optional<Comerciante> com = comercianteRepository.findByIdIgnoringStatus(userId);
+        if (com.isPresent()) {
+            return reativarPessoa(com.get());
+        }
+
+        Optional<Entregador> ent = entregadorRepository.findByIdIgnoringStatus(userId);
+        if (ent.isPresent()) {
+            return reativarPessoa(ent.get());
+        }
+
+        Optional<Administrador> adm = administradorRepository.findByIdIgnoringStatus(userId);
+        if (adm.isPresent()) {
+            return reativarPessoa(adm.get());
+        }
+
+        // Se não encontrou em nenhum
+        log.warn("Tentativa de reativar conta falhou. ID não encontrado: {}", userId);
+        throw new RecursoNaoEncontradoException("Usuário não encontrado com o ID: " + userId);
+    }
+
+    /**
+     * Método helper privado para setar o status e salvar
+     */
+    private Pessoa reativarPessoa(Pessoa pessoa) {
+        if (pessoa.getStatus() == StatusPessoa.ATIVO) {
+            log.info("Conta {} já estava ATIVA. Nenhuma alteração feita.", pessoa.getId());
+            return pessoa; // Já está ativa
+        }
+
+        pessoa.setStatus(StatusPessoa.ATIVO);
+
+        // Salva no repositório específico
+        if (pessoa instanceof Beneficiario b) beneficiarioRepository.save(b);
+        else if (pessoa instanceof Comerciante c) comercianteRepository.save(c);
+        else if (pessoa instanceof Entregador e) entregadorRepository.save(e);
+        else if (pessoa instanceof Administrador a) administradorRepository.save(a);
+
+        log.info("SUCESSO: Conta {} ({}) reativada.", pessoa.getId(), pessoa.getClass().getSimpleName());
+        return pessoa;
     }
 }

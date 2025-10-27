@@ -6,15 +6,18 @@ import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
 import com.ceara_sem_fome_back.dto.AdministradorRequest;
 import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
+import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Administrador;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.AdministradorService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/adm")
@@ -124,5 +127,26 @@ public class AdministradorController {
 
         //4. Retorna o objeto atualizado
         return ResponseEntity.ok(adminAtualizado);
+    }
+
+    //ENDPOINT DE REATIVAÇÃO
+
+    /**
+     * Endpoint para reativar uma conta que foi desativada (soft delete).
+     * @param id O ID do usuário
+     * @return Resposta 200 OK com mensagem de sucesso.
+     */
+    @PutMapping("/conta/{id}/reativar")
+    public ResponseEntity<Object> reativarConta(@PathVariable String id) {
+        try {
+            administradorService.reativarConta(id);
+            return ResponseEntity.ok().body(Map.of("message", "Conta reativada com sucesso."));
+        } catch (RecursoNaoEncontradoException e) {
+            ErrorDTO errorDTO = new ErrorDTO(e.getMessage(), 404);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorDTO);
+        } catch (Exception e) {
+            ErrorDTO errorDTO = new ErrorDTO("Erro interno ao tentar reativar a conta.", 500);
+            return ResponseEntity.status(500).body(errorDTO);
+        }
     }
 }
