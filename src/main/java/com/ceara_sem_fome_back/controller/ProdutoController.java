@@ -3,6 +3,8 @@ package com.ceara_sem_fome_back.controller;
 import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.dto.ProdutoCadastroRequest;
 import com.ceara_sem_fome_back.dto.ProdutoDTO;
+import com.ceara_sem_fome_back.exception.AcessoNaoAutorizadoException; // Import adicionado
+import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException; // Import adicionado
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.Produto;
 import com.ceara_sem_fome_back.model.ProdutoEstabelecimento;
@@ -11,7 +13,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.MediaType; // Import adicionado
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException; // Import adicionado
 import java.net.URI;
 import java.util.List;
 
@@ -33,17 +36,31 @@ public class ProdutoController {
     @Autowired
     private ProdutoService produtoService;
 
-    @PostMapping("/cadastrar")
-    public ResponseEntity<ProdutoEstabelecimento> cadastrarProduto(
-            @RequestBody @Valid ProdutoCadastroRequest request,
+    // --- MÉTODO MODIFICADO ---
+    @PostMapping(value = "/cadastrar", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    public ResponseEntity<?> cadastrarProduto(
+            @ModelAttribute @Valid ProdutoCadastroRequest request, // Trocado para @ModelAttribute
+            @RequestParam(value = "file", required = false) MultipartFile file, // Recebe o arquivo
             @AuthenticationPrincipal ComercianteData comercianteData) {
 
         Comerciante comercianteLogado = comercianteData.getComerciante();
 
-        ProdutoEstabelecimento associacaoSalva = produtoService.cadastrarProduto(request, comercianteLogado);
-
-        return ResponseEntity.status(201).body(associacaoSalva);
+        try {
+            ProdutoEstabelecimento associacaoSalva = produtoService.cadastrarProduto(request, comercianteLogado, file);
+            return ResponseEntity.status(201).body(associacaoSalva);
+        
+        // Adicionando tratamento de exceções que o service pode lançar
+        } catch (RecursoNaoEncontradoException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (AcessoNaoAutorizadoException e) {
+            return ResponseEntity.status(403).body(e.getMessage());
+        } catch (IOException e) {
+            return ResponseEntity.status(500).body("Erro ao processar a imagem: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
+    // --- FIM DA MODIFICAÇÃO ---
 
     @GetMapping("/estabelecimento/{estabelecimentoId}")
     public ResponseEntity<List<ProdutoEstabelecimento>> listarProdutosPorEstabelecimento(

@@ -12,11 +12,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
+import java.io.IOException; // Import adicionado
 import java.util.List;
 import java.util.UUID;
 import com.ceara_sem_fome_back.model.Produto;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartFile; // Import adicionado
 
 @Service
 public class ProdutoService {
@@ -33,7 +33,9 @@ public class ProdutoService {
     @Autowired
     private ComercianteService comercianteService;
 
-    public ProdutoEstabelecimento cadastrarProduto(ProdutoCadastroRequest request, Comerciante comerciante) {
+    // --- MÉTODO MODIFICADO ---
+    @Transactional
+    public ProdutoEstabelecimento cadastrarProduto(ProdutoCadastroRequest request, Comerciante comerciante, MultipartFile file) throws IOException {
 
         Estabelecimento estabelecimento = estabelecimentoRepository.findById(request.getEstabelecimentoId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException(request.getEstabelecimentoId()));
@@ -48,8 +50,14 @@ public class ProdutoService {
         novoProduto.setPreco(request.getPrecoVenda().doubleValue());
         novoProduto.setQuantidadeEstoque(request.getEstoque());
         novoProduto.setComerciante(comerciante);
+        
+        novoProduto.setStatus(StatusProduto.PENDENTE); 
 
         Produto produtoSalvo = produtoRepository.save(novoProduto);
+
+        if (file != null && !file.isEmpty()) {
+            this.salvarImagem(produtoSalvo.getId(), file);
+        }
 
         ProdutoEstabelecimento associacao = new ProdutoEstabelecimento();
         associacao.setProduto(produtoSalvo);
@@ -188,4 +196,3 @@ public class ProdutoService {
     }
 
 }
-
