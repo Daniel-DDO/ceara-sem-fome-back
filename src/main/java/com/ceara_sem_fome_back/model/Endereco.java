@@ -22,5 +22,7 @@ public class Endereco {
     private String numero;
     private String bairro;
     private String municipio;
+    private Double latitude;
+    private Double longitude;
 
 }
