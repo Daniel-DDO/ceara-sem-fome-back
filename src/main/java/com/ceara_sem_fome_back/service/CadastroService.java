@@ -8,6 +8,7 @@ import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy; // <<< IMPORTAR
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,8 +36,11 @@ public class CadastroService {
     @Autowired
     private EntregadorRepository entregadorRepository;
 
+    // --- CORREÇÃO DA DEPENDÊNCIA CIRCULAR ---
     @Autowired
+    @Lazy // Adiciona esta anotação
     private PasswordEncoder passwordEncoder;
+    // --- FIM DA CORREÇÃO ---
 
     @Autowired
     private EmailService emailService;

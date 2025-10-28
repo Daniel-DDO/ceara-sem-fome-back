@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.service;
 
+import org.springframework.context.annotation.Lazy;
 import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.ComercianteRequest;
@@ -32,8 +33,11 @@ public class ComercianteService implements UserDetailsService {
     @Autowired
     private ComercianteRepository comercianteRepository;
 
+    // --- CORREÇÃO DA DEPENDÊNCIA CIRCULAR ---
     @Autowired
+    @Lazy // Adiciona esta anotação
     private PasswordEncoder passwordEncoder;
+    // --- FIM DA CORREÇÃO ---
 
     @Autowired
     private CadastroService cadastroService;
