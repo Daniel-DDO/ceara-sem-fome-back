@@ -69,6 +69,8 @@ public class JWTConfiguracao {
                                 new AntPathRequestMatcher("/health"),
                                 new AntPathRequestMatcher("/**/meu-perfil"),
                                 new AntPathRequestMatcher("/**/estabelecimento/"),
+                                new AntPathRequestMatcher("estabelecimento/**"),
+                                new AntPathRequestMatcher("/**/"),
                                 new AntPathRequestMatcher("/auth/**") //Esta regra já libera o /auth/logout
                         ).permitAll()
                         .anyRequest().authenticated()

@@ -23,16 +23,15 @@ public class EstabelecimentoController {
     @Autowired
     private ComercianteService comercianteService;
 
-@PostMapping("/cadastrar")
-    public ResponseEntity<Object> cadastrarEstabelecimento(@RequestBody @Valid EstabelecimentoRequest request) {
-    Comerciante comerciante = comercianteService.buscarComerciantePorCpf(request.getComercianteCpf());
-            Estabelecimento novoEstabelecimento = new Estabelecimento();
-            novoEstabelecimento.setId(request.getId());
-            novoEstabelecimento.setNome(request.getNome());
+    @PostMapping("/cadastrar")
+    public ResponseEntity<Object> cadastrarEstabelecimento(@Valid @RequestBody EstabelecimentoRequest request) {
+        Comerciante comerciante = comercianteService.buscarPorId(request.getComercianteId());
 
-            Estabelecimento estabelecimentoSalvo = estabelecimentoService.salvarEstabelecimento(novoEstabelecimento, comerciante);
+        Estabelecimento novoEstabelecimento = new Estabelecimento();
+        novoEstabelecimento.setNome(request.getNome());
 
-            return ResponseEntity.status(201).body(estabelecimentoSalvo);
+        Estabelecimento salvo = estabelecimentoService.salvarEstabelecimento(novoEstabelecimento, comerciante);
+        return ResponseEntity.status(201).body(salvo);
     }
 
     @GetMapping("/all")

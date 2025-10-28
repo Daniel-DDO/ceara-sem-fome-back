@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class EstabelecimentoService {
@@ -17,21 +18,23 @@ public class EstabelecimentoService {
     @Autowired
     private EstabelecimentoRepository estabelecimentoRepository;
 
+    @Transactional
     public Estabelecimento salvarEstabelecimento(Estabelecimento estabelecimento, Comerciante comerciante) {
 
-        if (estabelecimentoRepository.existsById(estabelecimento.getId())) {
-            throw new EstabelecimentoJaCadastradoException(estabelecimento.getId());
+        if (estabelecimentoRepository.existsByNomeAndComerciante(estabelecimento.getNome(), comerciante)) {
+            throw new EstabelecimentoJaCadastradoException(estabelecimento.getNome());
         }
 
         estabelecimento.setComerciante(comerciante);
-        return estabelecimentoRepository.save(estabelecimento);
+        Estabelecimento salvo = estabelecimentoRepository.save(estabelecimento);
+
+        comerciante.getEstabelecimentos().add(salvo);
+
+        return salvo;
     }
 
     public Page<Estabelecimento> listarTodos(int page, int size, String sortBy, String direction) {
-        Sort sort = direction.equalsIgnoreCase("desc") ?
-                Sort.by(sortBy).descending() :
-                Sort.by(sortBy).ascending();
-
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
         return estabelecimentoRepository.findAll(pageable);
     }

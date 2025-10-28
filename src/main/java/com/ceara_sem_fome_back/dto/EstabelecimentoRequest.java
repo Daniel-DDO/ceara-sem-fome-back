@@ -8,13 +8,11 @@ import lombok.Setter;
 @Setter
 public class EstabelecimentoRequest {
 
-    @NotBlank(message = "O ID (CNPJ/CPF) é obrigatório.")
-    private String id; //Usado como identificador e chave primária
-
     @NotBlank(message = "O nome do estabelecimento é obrigatório.")
     private String nome;
 
-    @NotBlank(message = "O CPF do Comerciante é obrigatório.")
-    private String comercianteCpf;
+    @NotBlank(message = "O ID do comerciante é obrigatório.")
+    private String comercianteId;
 
+    private String enderecoId;
 }

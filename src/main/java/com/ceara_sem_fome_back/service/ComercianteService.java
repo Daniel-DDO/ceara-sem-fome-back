@@ -133,11 +133,19 @@ public class ComercianteService implements UserDetailsService {
         return comercianteRepository.save(comercianteExistente);
     }
 
-    public Comerciante buscarComerciantePorCpf(String cpf) {
-        return comercianteRepository.findById(cpf).orElseThrow(() -> new CpfInvalidoException(cpf));
+    public Comerciante buscarPorId(String id) {
+        return comercianteRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Comerciante não encontrado com ID: " + id));
     }
+
+    public Comerciante buscarComerciantePorCpf(String cpf) {
+        return comercianteRepository.findByCpf(cpf)
+                .orElseThrow(() -> new CpfInvalidoException(cpf));
+    }
+
+    public void deletarPorId(String id) {
+        Comerciante comerciante = buscarPorId(id);
+        comercianteRepository.delete(comerciante);
+    }
+
 }
-
-
-
-
