@@ -12,6 +12,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class EstabelecimentoService {
 
@@ -37,5 +39,13 @@ public class EstabelecimentoService {
         Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
         return estabelecimentoRepository.findAll(pageable);
+    }
+
+    public List<Estabelecimento> buscarPorBairro(String bairro) {
+        return estabelecimentoRepository.findByEnderecoBairro(bairro);
+    }
+
+    public List<Estabelecimento> buscarPorMunicipio(String municipio) {
+        return estabelecimentoRepository.findByEnderecoMunicipio(municipio);
     }
 }

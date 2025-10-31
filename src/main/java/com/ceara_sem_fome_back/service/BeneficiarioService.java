@@ -21,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -126,5 +127,13 @@ public class BeneficiarioService implements UserDetailsService {
 
         //4. Salva as alterações no banco
         return beneficiarioRepository.save(beneficiarioExistente);
+    }
+
+    public List<Beneficiario> buscarPorBairro(String bairro) {
+        return beneficiarioRepository.findByEnderecoBairro(bairro);
+    }
+
+    public List<Beneficiario> buscarPorMunicipio(String municipio) {
+        return beneficiarioRepository.findByEnderecoMunicipio(municipio);
     }
 }

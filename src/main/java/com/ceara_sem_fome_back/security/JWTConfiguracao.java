@@ -1,6 +1,7 @@
 package com.ceara_sem_fome_back.security;
 
 import com.ceara_sem_fome_back.security.Handler.LoggingLogoutSuccessHandler;
+import com.ceara_sem_fome_back.service.ComercianteService; // <<< IMPORTADO
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -25,9 +26,12 @@ public class JWTConfiguracao {
     @Value("${api.guid.token.senha}")
     private String tokenSenha;
 
-    //INJETAR O NOVO HANDLER
     @Autowired
     private LoggingLogoutSuccessHandler loggingLogoutSuccessHandler;
+
+    // --- CORREÇÃO: Injetar o ComercianteService ---
+    @Autowired
+    private ComercianteService comercianteService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -41,21 +45,23 @@ public class JWTConfiguracao {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                 AuthenticationManager authManager) throws Exception {
+                                                   AuthenticationManager authManager) throws Exception {
 
         http
                 .cors(cors -> cors.configurationSource(corsConfiguration()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilter(new JWTAutenticarFilter(authManager, tokenSenha))
-                .addFilter(new JWTValidarFilter(authManager, tokenSenha))
+                
+                // --- CORREÇÃO: Passar o ComercianteService para o filtro ---
+                .addFilter(new JWTValidarFilter(authManager, tokenSenha, comercianteService))
                 
                 //CONFIGURAÇÃO DE LOGOUT
                 .logout(logout -> logout
-                    .logoutUrl("/auth/logout") //Define a URL de logout
-                    .logoutSuccessHandler(loggingLogoutSuccessHandler) //Usa nosso handler de log
-                    .invalidateHttpSession(true)
-                    .deleteCookies("JSESSIONID") //
+                        .logoutUrl("/auth/logout") 
+                        .logoutSuccessHandler(loggingLogoutSuccessHandler) 
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID") 
                 )
                 //FIM DA CONFIGURAÇÃO DE LOGOUT
                 
@@ -71,7 +77,9 @@ public class JWTConfiguracao {
                                 new AntPathRequestMatcher("/**/estabelecimento/"),
                                 new AntPathRequestMatcher("estabelecimento/**"),
                                 new AntPathRequestMatcher("/**/"),
-                                new AntPathRequestMatcher("/auth/**") //Esta regra já libera o /auth/logout
+                                new AntPathRequestMatcher("/auth/**"),
+                                new AntPathRequestMatcher("/**/bairro/**"),
+                                new AntPathRequestMatcher("/**/municipio/**")
                         ).permitAll()
                         .anyRequest().authenticated()
                         //não remover esse comentário!

@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
+
 @RestController
 @RequestMapping({"/estabelecimento"})
 public class EstabelecimentoController {
@@ -43,5 +45,15 @@ public class EstabelecimentoController {
     ) {
         Page<Estabelecimento> pagina = estabelecimentoService.listarTodos(page, size, sortBy, direction);
         return ResponseEntity.ok(pagina);
+    }
+
+    @GetMapping("/bairro/{bairro}")
+    public ResponseEntity<List<Estabelecimento>> listarPorBairro(@PathVariable String bairro) {
+        return ResponseEntity.ok(estabelecimentoService.buscarPorBairro(bairro));
+    }
+
+    @GetMapping("/municipio/{municipio}")
+    public ResponseEntity<List<Estabelecimento>> listarPorMunicipio(@PathVariable String municipio) {
+        return ResponseEntity.ok(estabelecimentoService.buscarPorMunicipio(municipio));
     }
 }

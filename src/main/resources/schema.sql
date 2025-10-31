@@ -6,7 +6,9 @@ CREATE TABLE IF NOT EXISTS endereco (
     logradouro VARCHAR(255),
     numero VARCHAR(255),
     bairro VARCHAR(255),
-    municipio VARCHAR(255)
+    municipio VARCHAR(255),
+    latitude DECIMAL(10, 8),
+    longitude DECIMAL(11, 8)
     );
 
 CREATE TABLE IF NOT EXISTS carrinho (

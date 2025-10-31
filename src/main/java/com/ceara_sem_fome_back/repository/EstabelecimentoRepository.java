@@ -1,11 +1,17 @@
 package com.ceara_sem_fome_back.repository;
 
+import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.Estabelecimento;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface EstabelecimentoRepository extends JpaRepository<Estabelecimento, String> {
     boolean existsByNomeAndComerciante(String nome, Comerciante comerciante);
+
+    List<Estabelecimento> findByEnderecoBairro(String bairro);
+    List<Estabelecimento> findByEnderecoMunicipio(String municipio);
 }

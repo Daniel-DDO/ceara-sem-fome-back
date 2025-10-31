@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/beneficiario")
@@ -115,5 +116,15 @@ public class BeneficiarioController {
 
         //4. Retorna o objeto atualizado com status 200 OK
         return ResponseEntity.ok(beneficiarioAtualizado);
+    }
+
+    @GetMapping("/bairro/{bairro}")
+    public ResponseEntity<List<Beneficiario>> listarPorBairro(@PathVariable String bairro) {
+        return ResponseEntity.ok(beneficiarioService.buscarPorBairro(bairro));
+    }
+
+    @GetMapping("/municipio/{municipio}")
+    public ResponseEntity<List<Beneficiario>> listarPorMunicipio(@PathVariable String municipio) {
+        return ResponseEntity.ok(beneficiarioService.buscarPorMunicipio(municipio));
     }
 }
