@@ -77,7 +77,9 @@ public class JWTConfiguracao {
                                 new AntPathRequestMatcher("/**/estabelecimento/"),
                                 new AntPathRequestMatcher("estabelecimento/**"),
                                 new AntPathRequestMatcher("/**/"),
-                                new AntPathRequestMatcher("/auth/**") 
+                                new AntPathRequestMatcher("/auth/**"),
+                                new AntPathRequestMatcher("/**/bairro/**"),
+                                new AntPathRequestMatcher("/**/municipio/**")
                         ).permitAll()
                         .anyRequest().authenticated()
                         //não remover esse comentário!
