@@ -1,10 +1,16 @@
-INSERT INTO endereco (id, cep, logradouro, numero, bairro, municipio) VALUES
-    ('end-1', '60000-000', 'Rua das Flores', '100', 'Centro', 'Fortaleza'),
-    ('end-2', '60010-200', 'Avenida Brasil', '200', 'Aldeota', 'Fortaleza'),
-    ('end-3', '60020-300', 'Rua das Acácias', '300', 'Meireles', 'Fortaleza'),
-    ('end-4', '60030-400', 'Rua das Palmeiras', '400', 'Mucuripe', 'Fortaleza'),
-    ('end-5', '60040-500', 'Rua dos Girassóis', '500', 'Benfica', 'Fortaleza')
+INSERT INTO endereco (id, cep, logradouro, numero, bairro, municipio, latitude, longitude) VALUES
+    ('end-1', '60025-061', 'Rua Major Facundo', '100', 'Centro', 'Fortaleza', -3.7275, -38.5274),
+    ('end-2', '60140-160', 'Avenida Santos Dumont', '2000', 'Aldeota', 'Fortaleza', -3.7334, -38.4911),
+    ('end-3', '60165-121', 'Rua Tibúrcio Cavalcante', '900', 'Meireles', 'Fortaleza', -3.7302, -38.4979),
+    ('end-4', '60175-020', 'Avenida Abolição', '4000', 'Mucuripe', 'Fortaleza', -3.7184, -38.4871),
+    ('end-5', '60020-181', 'Rua Padre Francisco Pinto', '500', 'Benfica', 'Fortaleza', -3.7483, -38.5369),
+    ('end-6', '61900-410', 'Avenida Dom Almeida Lustosa', '1200', 'Parangaba', 'Maracanaú', -3.8765, -38.6279),
+    ('end-7', '61760-000', 'Rua Coronel João Cândido', '55', 'Centro', 'Eusébio', -3.8921, -38.4550),
+    ('end-8', '61600-180', 'Rua Coronel Correia', '250', 'Centro', 'Caucaia', -3.7343, -38.6537),
+    ('end-9', '61800-000', 'Avenida Domingos Olímpio', '300', 'Centro', 'Pacatuba', -3.9854, -38.6203),
+    ('end-10', '61880-000', 'Rua José de Alencar', '80', 'Centro', 'Guaiúba', -4.0403, -38.6375)
     ON CONFLICT (id) DO NOTHING;
+
 
 INSERT INTO carrinho (id, status, criacao, modificacao)
 VALUES
@@ -59,5 +65,5 @@ INSERT INTO produto_carrinho (id, carrinho_id, produto_id, quantidade) VALUES
     ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO verification_token (token, user_email, expiry_date, nome, cpf, senha_criptografada, data_nascimento, telefone, genero, tipo_pessoa, lgpd_accepted)
-VALUES ('token-1', 'dummy@teste.com', '2025-12-31', 'Dummy', '00000000000', '123456', '2000-01-01', '(85) 90000-0000', 'OUTRO', 'TESTE', true)
+VALUES ('token-1', 'dummy@email.com', '2025-12-31', 'Dummy', '00000000000', '123456', '2000-01-01', '(85) 90000-0000', 'OUTRO', 'TESTE', true)
     ON CONFLICT (token) DO NOTHING;
