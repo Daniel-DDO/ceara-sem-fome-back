@@ -37,7 +37,7 @@ public class ProdutoController {
     @Autowired
     private ProdutoService produtoService;
 
-    // --- MÉTODO MODIFICADO ---
+    // --- METODO MODIFICADO ---
     @PostMapping(value = "/cadastrar", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
     public ResponseEntity<?> cadastrarProduto(
             @ModelAttribute @Valid ProdutoCadastroRequest request, // Trocado para @ModelAttribute
