@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface ProdutoRepository extends JpaRepository<Produto, String> {
     boolean existsProdutoById(String id);
 
-    // Método para buscar um produto por ID ignorando o filtro @Where
+    // Metodo para buscar um produto por ID ignorando o filtro @Where
     @Query("SELECT p FROM Produto p WHERE p.id = :id")
     Optional<Produto> findByIdIgnoringStatus(@Param("id") String id);
 }
