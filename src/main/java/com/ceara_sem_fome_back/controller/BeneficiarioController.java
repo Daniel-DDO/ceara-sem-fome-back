@@ -7,6 +7,8 @@ import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
 import com.ceara_sem_fome_back.dto.BeneficiarioRequest;
 import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
 import com.ceara_sem_fome_back.model.Beneficiario;
+import com.ceara_sem_fome_back.model.Endereco;
+import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.BeneficiarioService;
 import jakarta.validation.Valid;
@@ -79,6 +81,15 @@ public class BeneficiarioController {
     public ResponseEntity<Beneficiario> bloquearBeneficiario(@PathVariable String id) {
         Beneficiario beneficiarioBloqueado = beneficiarioService.alterarStatusBeneficiario(id, StatusPessoa.BLOQUEADO);
         return ResponseEntity.ok(beneficiarioBloqueado);
+    }
+
+    //Endpoint para um beneficiário adicionar um endereço
+    @PostMapping("/{beneficiarioId}/endereco") //verificar se beneficiarioId existe
+    public ResponseEntity<Beneficiario> adicionarEndereco(
+            @PathVariable String beneficiarioId,
+            @RequestBody Endereco enderecoRequest) {
+        Beneficiario beneficiario = beneficiarioService.adicionarEndereco(beneficiarioId, enderecoRequest);
+        return ResponseEntity.ok(beneficiario);
     }
 
     /**

@@ -8,7 +8,11 @@ import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
 import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Beneficiario;
+import com.ceara_sem_fome_back.model.Endereco;
+import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,6 +29,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class BeneficiarioService implements UserDetailsService {
 
     @Autowired
@@ -134,5 +139,17 @@ public class BeneficiarioService implements UserDetailsService {
 
         //4. Salva as alterações no banco
         return beneficiarioRepository.save(beneficiarioExistente);
+    }
+
+    //função parao beneficiário adicionar um endereço
+    @Transactional
+    public Beneficiario adicionarEndereco(String beneficiarioId, Endereco enderecoRequest) {
+        Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
+                .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado"));
+
+        entityManager.persist(enderecoRequest);
+        beneficiario.setEndereco(enderecoRequest);
+
+        return beneficiarioRepository.save(beneficiario);
     }
 }

@@ -4,9 +4,11 @@ import com.ceara_sem_fome_back.data.EntregadorData;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.EntregadorRequest;
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
+import com.ceara_sem_fome_back.exception.CpfInvalidoException;
 import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
 import com.ceara_sem_fome_back.exception.EmailJaCadastradoException;
 import com.ceara_sem_fome_back.model.Entregador;
+import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.repository.EntregadorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -84,11 +86,11 @@ public class EntregadorService implements UserDetailsService {
         return entregadorRepository.save(entregador);
     }
 
-    public Entregador alterarStatusEntregador(String cpf, boolean ativo) {
-        Entregador entregador = entregadorRepository.findById(cpf)
-                .orElseThrow(() -> new CpfInvalidoException(cpf));
+    public Entregador alterarStatusEntregador(String id, StatusPessoa novoStatus) {
+        Entregador entregador = entregadorRepository.findById(id)
+                .orElseThrow(() -> new CpfInvalidoException("Comerciante não encontrado com o ID: " + id));
 
-        entregador.setAtivo(ativo);
+        entregador.setStatus(novoStatus);
         return entregadorRepository.save(entregador);
     }
 

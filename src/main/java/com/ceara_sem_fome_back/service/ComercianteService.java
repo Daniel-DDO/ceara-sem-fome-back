@@ -10,6 +10,7 @@ import com.ceara_sem_fome_back.exception.CpfInvalidoException;
 import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
 import com.ceara_sem_fome_back.exception.EmailJaCadastradoException;
 import com.ceara_sem_fome_back.model.Comerciante;
+import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.repository.ComercianteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -84,11 +85,11 @@ public class ComercianteService implements UserDetailsService {
         return comercianteRepository.save(comerciante);
     }
 
-    public Comerciante alterarStatusComerciante(String cpf, boolean ativo) {
-        Comerciante comerciante = comercianteRepository.findById(cpf)
-                .orElseThrow(() -> new CpfInvalidoException(cpf));
+    public Comerciante alterarStatusComerciante(String id, StatusPessoa novoStatus) {
+        Comerciante comerciante = comercianteRepository.findById(id)
+                .orElseThrow(() -> new CpfInvalidoException("Comerciante não encontrado com o ID: " + id));
 
-        comerciante.setAtivo(ativo);
+        comerciante.setStatus(novoStatus);
         return comercianteRepository.save(comerciante);
     }
 

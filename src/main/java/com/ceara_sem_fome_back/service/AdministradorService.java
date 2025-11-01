@@ -5,12 +5,12 @@ import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.AdministradorRequest;
 import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
 import com.ceara_sem_fome_back.exception.*;
-import com.ceara_sem_fome_back.model.Administrador;
-import com.ceara_sem_fome_back.model.Pessoa;
-import com.ceara_sem_fome_back.model.StatusPessoa;
-import com.ceara_sem_fome_back.model.TipoPessoa;
+import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.AdministradorRepository;
 
+import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
+import com.ceara_sem_fome_back.repository.ComercianteRepository;
+import com.ceara_sem_fome_back.repository.EntregadorRepository;
 import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +33,15 @@ public class AdministradorService implements UserDetailsService {
 
     @Autowired
     private AdministradorRepository administradorRepository;
+
+    @Autowired
+    private BeneficiarioRepository beneficiarioRepository;
+
+    @Autowired
+    private ComercianteRepository comercianteRepository;
+
+    @Autowired
+    private EntregadorRepository entregadorRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -102,34 +111,33 @@ public class AdministradorService implements UserDetailsService {
         );
     }
 
-    public Administrador alterarStatuAdministrador(String id, StatusPessoa novoStatus) {
-        Administrador administrador = administradorRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Administrador não encontrado com ID: " + id));
-        administrador.setStatus(novoStatus);
-        return administradorRepository.save(administrador);
-    }
-
-    public Pessoa alterarStatus(TipoPessoa tipo, String id, StatusPessoa novoStatus) {
-        switch (tipo) {
+    public Pessoa alterarStatusAdministrador(AlterarStatusRequest request) {
+        switch (request.getTipoPessoa()) {
+            case ADMINISTRADOR -> {
+                Administrador administrador = administradorRepository.findById(request.getId())
+                        .orElseThrow(() -> new EntityNotFoundException("Administrador não encontrado"));
+                administrador.setStatus(request.getNovoTipoPessoa());
+                return administradorRepository.save(administrador);
+            }
             case BENEFICIARIO -> {
-                var beneficiario = beneficiarioRepository.findById(id)
+                Beneficiario beneficiario = beneficiarioRepository.findById(request.getId())
                         .orElseThrow(() -> new EntityNotFoundException("Beneficiário não encontrado"));
-                beneficiario.setStatus(novoStatus);
+                beneficiario.setStatus(request.getNovoTipoPessoa());
                 return beneficiarioRepository.save(beneficiario);
             }
             case COMERCIANTE -> {
-                var comerciante = comercianteRepository.findById(id)
+                Comerciante comerciante = comercianteRepository.findById(request.getId())
                         .orElseThrow(() -> new EntityNotFoundException("Comerciante não encontrado"));
-                comerciante.setStatus(novoStatus);
+                comerciante.setStatus(request.getNovoTipoPessoa());
                 return comercianteRepository.save(comerciante);
             }
             case ENTREGADOR -> {
-                var entregador = entregadorRepository.findById(id)
+                Entregador entregador = entregadorRepository.findById(request.getId())
                         .orElseThrow(() -> new EntityNotFoundException("Entregador não encontrado"));
-                entregador.setStatus(novoStatus);
+                entregador.setStatus(request.getNovoTipoPessoa());
                 return entregadorRepository.save(entregador);
             }
-            default -> throw new IllegalArgumentException("Tipo de pessoa inválido");
+            default -> throw new IllegalArgumentException("Tipo de pessoa inválido.");
         }
     }
 

@@ -70,14 +70,14 @@ public class AdministradorController {
     // Ativar conta (administrador)
     @PatchMapping("/{id}/ativar")
     public ResponseEntity<Pessoa> ativar(@PathVariable String id) {
-        Pessoa pessoa = adminService.alterarStatus(null, id, StatusPessoa.ATIVO);
+        Pessoa pessoa = administradorService.alterarStatus(null, id, StatusPessoa.ATIVO);
         return ResponseEntity.ok(pessoa);
     }
 
     // Desativar conta (administrador)
     @PatchMapping("/{id}/desativar")
     public ResponseEntity<Pessoa> desativarAdm(@PathVariable String id) {
-        Pessoa pessoa = adminService.alterarStatus(null, id, StatusPessoa.DESATIVADO);
+        Pessoa pessoa = administradorService.alterarStatus(null, id, StatusPessoa.INATIVO);
         return ResponseEntity.ok(pessoa);
     }
 
@@ -87,7 +87,7 @@ public class AdministradorController {
             @PathVariable TipoPessoa tipo,
             @PathVariable String id
     ) {
-        Pessoa pessoa = adminService.alterarStatus(tipo, id, StatusPessoa.DESATIVADO);
+        Pessoa pessoa = administradorService.alterarStatus(tipo, id, StatusPessoa.INATIVO);
         return ResponseEntity.ok(pessoa);
     }
 
@@ -97,7 +97,7 @@ public class AdministradorController {
             @PathVariable TipoPessoa tipo,
             @PathVariable String id
     ) {
-        Pessoa pessoa = adminService.alterarStatus(tipo, id, StatusPessoa.BLOQUEADO);
+        Pessoa pessoa = administradorService.alterarStatus(tipo, id, StatusPessoa.BLOQUEADO);
         return ResponseEntity.ok(pessoa);
     }
 
