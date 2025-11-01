@@ -1,7 +1,8 @@
 package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.data.BeneficiarioData;
-import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
+import com.ceara_sem_fome_back.dto.PaginacaoDTO;
+import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
 import com.ceara_sem_fome_back.dto.BeneficiarioRequest;
 import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
@@ -10,6 +11,8 @@ import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,6 +30,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class BeneficiarioService implements UserDetailsService {
 
     @Autowired
@@ -111,6 +115,14 @@ public class BeneficiarioService implements UserDetailsService {
         );
     }
 
+    public Beneficiario alterarStatusBeneficiario(AlterarStatusRequest request) {
+        Beneficiario beneficiario = beneficiarioRepository.findById(request.getId())
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Beneficiário não encontrado com o ID: " + request.getId()));
+
+        beneficiario.setStatus(request.getNovoStatusPessoa());
+        return beneficiarioRepository.save(beneficiario);
+    }
+
     /**
      * Atualiza os dados de um beneficiário com base no seu e-mail (usuário)
      * pego da autenticação.
@@ -161,4 +173,17 @@ public class BeneficiarioService implements UserDetailsService {
                 .orElseThrow(() -> new CpfInvalidoException(cpf));
 
     }
+
+    //função parao beneficiário adicionar um endereço
+//    @Transactional
+//    public Beneficiario adicionarEndereco(String beneficiarioId, Endereco enderecoRequest) {
+//        Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
+//                .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado"));
+//
+//        entityManager.persist(enderecoRequest);
+//        beneficiario.setEndereco(enderecoRequest);
+//
+//        return beneficiarioRepository.save(beneficiario);
+//    }
+
 }

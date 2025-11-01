@@ -1,13 +1,16 @@
 package com.ceara_sem_fome_back.controller;
 
-import com.ceara_sem_fome_back.data.dto.ErrorDTO;
-import com.ceara_sem_fome_back.data.dto.LoginDTO;
-import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
-import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
+import com.ceara_sem_fome_back.dto.ErrorDTO;
+import com.ceara_sem_fome_back.dto.LoginDTO;
+import com.ceara_sem_fome_back.dto.PaginacaoDTO;
+import com.ceara_sem_fome_back.dto.PessoaRespostaDTO;
 import com.ceara_sem_fome_back.dto.AdministradorRequest;
+import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
 import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Administrador;
+import com.ceara_sem_fome_back.model.Pessoa;
+import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.AdministradorService;
 import jakarta.validation.Valid;
@@ -65,6 +68,36 @@ public class AdministradorController {
         } catch (Exception e) {
             throw new RuntimeException("Erro interno do servidor.");
         }
+    }
+
+    // Ativar conta (administrador)
+    @PatchMapping("/{id}/ativar")
+    public ResponseEntity<Pessoa> ativar(@PathVariable AlterarStatusRequest request) {
+        Pessoa pessoa = administradorService.alterarStatusAdministrador(request);
+        return ResponseEntity.ok(pessoa);
+    }
+
+    // Desativar conta (administrador)
+    @PatchMapping("/{id}/desativar")
+    public ResponseEntity<Pessoa> desativarAdm(@PathVariable AlterarStatusRequest request) {
+        Pessoa pessoa = administradorService.alterarStatusAdministrador(request);
+        return ResponseEntity.ok(pessoa);
+    }
+
+    // Desativar conta (qualquer tipo)
+    @PatchMapping("/desativar/{tipo}/{id}")
+    public ResponseEntity<Pessoa> desativar(@PathVariable AlterarStatusRequest request ) {
+        request.setNovoStatusPessoa(StatusPessoa.INATIVO);
+        Pessoa pessoa = administradorService.alterarStatusAdministrador(request);
+        return ResponseEntity.ok(pessoa);
+    }
+
+    // Bloquear conta (qualquer tipo)
+    @PatchMapping("/bloquear/{tipo}/{id}")
+    public ResponseEntity<Pessoa> bloquear(@PathVariable AlterarStatusRequest request) {
+        request.setNovoStatusPessoa(StatusPessoa.BLOQUEADO);
+        Pessoa pessoa = administradorService.alterarStatusAdministrador(request);
+        return ResponseEntity.ok(pessoa);
     }
 
     @PostMapping("/cadastrar")
@@ -161,4 +194,5 @@ public class AdministradorController {
             return ResponseEntity.status(500).body(errorDTO);
         }
     }
+
 }

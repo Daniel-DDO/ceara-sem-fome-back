@@ -1,7 +1,8 @@
 package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.data.EntregadorData;
-import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
+import com.ceara_sem_fome_back.dto.PaginacaoDTO;
+import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
 import com.ceara_sem_fome_back.dto.EntregadorRequest;
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
 import com.ceara_sem_fome_back.exception.CpfInvalidoException;
@@ -84,7 +85,6 @@ public class EntregadorService implements UserDetailsService {
         }
         return entregadorRepository.save(entregador);
     }
-
     public PaginacaoDTO<Entregador> listarComFiltro(
             String nomeFiltro,
             int page,
@@ -115,6 +115,14 @@ public class EntregadorService implements UserDetailsService {
                 pagina.getSize(),
                 pagina.isLast()
         );
+    }
+
+    public Entregador alterarStatusEntregador(AlterarStatusRequest request) {
+        Entregador entregador = entregadorRepository.findById(request.getId())
+                .orElseThrow(() -> new CpfInvalidoException("Comerciante não encontrado com o ID: " + request.getId()));
+
+        entregador.setStatus(request.getNovoStatusPessoa());
+        return entregadorRepository.save(entregador);
     }
 
     public Entregador filtrarPorCpf(String cpf) {

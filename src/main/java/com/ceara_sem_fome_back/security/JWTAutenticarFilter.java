@@ -1,6 +1,6 @@
 package com.ceara_sem_fome_back.security;
 
-import com.ceara_sem_fome_back.data.dto.LoginDTO;
+import com.ceara_sem_fome_back.dto.LoginDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

@@ -1,12 +1,14 @@
 package com.ceara_sem_fome_back.controller;
 
-import com.ceara_sem_fome_back.data.dto.ErrorDTO;
-import com.ceara_sem_fome_back.data.dto.LoginDTO;
-import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
-import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
+import com.ceara_sem_fome_back.dto.ErrorDTO;
+import com.ceara_sem_fome_back.dto.LoginDTO;
+import com.ceara_sem_fome_back.dto.PaginacaoDTO;
+import com.ceara_sem_fome_back.dto.PessoaRespostaDTO;
+import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
 import com.ceara_sem_fome_back.dto.ComercianteRequest;
 import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
 import com.ceara_sem_fome_back.model.Comerciante;
+import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.ComercianteService;
 import jakarta.validation.Valid;
@@ -96,6 +98,22 @@ public class ComercianteController {
             Comerciante comercianteSalvo = comercianteService.salvarComerciante(novoComerciante);
 
             return ResponseEntity.status(201).body(comercianteSalvo);
+    }
+
+
+    // Endpoint para alterar o status ativo/inativo do comerciante
+    @PatchMapping("/{id}/alterar-status")
+    public ResponseEntity<Comerciante> alterarStatusComerciante(@PathVariable AlterarStatusRequest request) {
+        Comerciante comercianteAtualizado = comercianteService.alterarStatusComerciante(request);
+        return ResponseEntity.ok(comercianteAtualizado);
+    }
+
+    // Endpoint para bloquear conta do comerciante
+    @PatchMapping("/{id}/bloquear-conta")
+    public ResponseEntity<Comerciante> bloquearContaComerciante(@PathVariable AlterarStatusRequest request) {
+        request.setNovoStatusPessoa(StatusPessoa.BLOQUEADO);
+        Comerciante comercianteBloqueado = comercianteService.alterarStatusComerciante(request);
+        return ResponseEntity.ok(comercianteBloqueado);
     }
 
     @GetMapping("/all")

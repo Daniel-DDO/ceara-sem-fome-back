@@ -2,7 +2,8 @@ package com.ceara_sem_fome_back.service;
 
 import org.springframework.context.annotation.Lazy;
 import com.ceara_sem_fome_back.data.ComercianteData;
-import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
+import com.ceara_sem_fome_back.dto.PaginacaoDTO;
+import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
 import com.ceara_sem_fome_back.dto.ComercianteRequest;
 import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
 import com.ceara_sem_fome_back.exception.*;
@@ -24,7 +25,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -87,6 +87,32 @@ public class ComercianteService implements UserDetailsService {
         }
 
         return comercianteRepository.save(comerciante);
+    }
+
+    public Comerciante alterarStatusComerciante(AlterarStatusRequest request) {
+        Comerciante comerciante = comercianteRepository.findById(request.getId())
+                .orElseThrow(() -> new CpfInvalidoException("Comerciante não encontrado com o ID: " + request.getId()));
+
+        comerciante.setStatus(request.getNovoStatusPessoa());
+        return comercianteRepository.save(comerciante);
+    }
+
+    public PaginacaoDTO<Comerciante> listarTodos(int page, int size, String sortBy, String direction) {
+        Sort sort = direction.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Comerciante> pagina = comercianteRepository.findAll(pageable);
+
+        return new PaginacaoDTO<>(
+                pagina.getContent(),
+                pagina.getNumber(),
+                pagina.getTotalPages(),
+                pagina.getTotalElements(),
+                pagina.getSize(),
+                pagina.isLast()
+        );
     }
 
     /**s
