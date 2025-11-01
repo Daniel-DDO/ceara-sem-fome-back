@@ -10,15 +10,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Slf4j
 @SpringBootApplication
 public class CearaSemFomeBackApplication {
-
-	public static void main(String[] args) {
-		log.info("Ceará sem Fome");
-		SpringApplication.run(CearaSemFomeBackApplication.class, args);
-	}
-
-	@Bean
-	public PasswordEncoder getPasswordEncoder() {
-		BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-		return encoder;
-	}
+    public static void main(String[] args) {
+        log.info("Ceará sem Fome");
+        SpringApplication.run(CearaSemFomeBackApplication.class, args);
+    }
 }

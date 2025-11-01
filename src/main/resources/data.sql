@@ -11,11 +11,10 @@ INSERT INTO endereco (id, cep, logradouro, numero, bairro, municipio, latitude, 
     ('end-10', '61880-000', 'Rua José de Alencar', '80', 'Centro', 'Guaiúba', -4.0403, -38.6375)
     ON CONFLICT (id) DO NOTHING;
 
-
 INSERT INTO carrinho (id, status, criacao, modificacao)
 VALUES
-    ('car-1', 'ABERTO', '2025-01-10', '2025-01-10'),
-    ('car-2', 'ABERTO', '2025-01-11', '2025-01-11')
+    ('car-1', 'ATIVO', '2025-01-10', '2025-01-10'),
+    ('car-2', 'ATIVO', '2025-01-11', '2025-01-11')
     ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO administrador (id, nome, cpf, email, senha, data_nascimento, telefone, genero, status, lgpd_accepted)

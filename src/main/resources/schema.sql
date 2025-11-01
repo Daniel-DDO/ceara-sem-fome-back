@@ -139,3 +139,26 @@ CREATE TABLE IF NOT EXISTS verification_token (
     tipo_pessoa VARCHAR(255),
     lgpd_accepted BOOLEAN
     );
+
+CREATE TABLE IF NOT EXISTS compra (
+    id VARCHAR(255) PRIMARY KEY,
+    data_hora_compra TIMESTAMP NOT NULL,
+    valor_total NUMERIC NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    beneficiario_id VARCHAR(255) NOT NULL,
+    estabelecimento_id VARCHAR(255) NOT NULL,
+    endereco_id VARCHAR(255),
+    FOREIGN KEY (beneficiario_id) REFERENCES beneficiario (id),
+    FOREIGN KEY (estabelecimento_id) REFERENCES estabelecimento (id),
+    FOREIGN KEY (endereco_id) REFERENCES endereco (id)
+);
+
+CREATE TABLE IF NOT EXISTS item_compra (
+    id VARCHAR(255) PRIMARY KEY,
+    compra_id VARCHAR(255) NOT NULL,
+    produto_id VARCHAR(255) NOT NULL,
+    quantidade INTEGER NOT NULL,
+    preco_unitario NUMERIC NOT NULL,
+    FOREIGN KEY (compra_id) REFERENCES compra (id),
+    FOREIGN KEY (produto_id) REFERENCES produto (id)
+);    

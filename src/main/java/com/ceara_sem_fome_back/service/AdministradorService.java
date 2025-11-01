@@ -1,12 +1,19 @@
 package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.data.AdministradorData;
-import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
+import com.ceara_sem_fome_back.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.AdministradorRequest;
+import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
 import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
 import com.ceara_sem_fome_back.exception.*;
-import com.ceara_sem_fome_back.model.Administrador;
+import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.AdministradorRepository;
+
+import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
+import com.ceara_sem_fome_back.repository.ComercianteRepository;
+import com.ceara_sem_fome_back.repository.EntregadorRepository;
+import jakarta.persistence.EntityNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,6 +34,15 @@ public class AdministradorService implements UserDetailsService {
 
     @Autowired
     private AdministradorRepository administradorRepository;
+
+    @Autowired
+    private BeneficiarioRepository beneficiarioRepository;
+
+    @Autowired
+    private ComercianteRepository comercianteRepository;
+
+    @Autowired
+    private EntregadorRepository entregadorRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -108,6 +124,36 @@ public class AdministradorService implements UserDetailsService {
                 pagina.getSize(),
                 pagina.isLast()
         );
+    }
+
+    public Pessoa alterarStatusAdministrador(AlterarStatusRequest request) {
+        switch (request.getTipoPessoa()) {
+            case ADMINISTRADOR -> {
+                Administrador administrador = administradorRepository.findById(request.getId())
+                        .orElseThrow(() -> new EntityNotFoundException("Administrador não encontrado"));
+                administrador.setStatus(request.getNovoStatusPessoa());
+                return administradorRepository.save(administrador);
+            }
+            case BENEFICIARIO -> {
+                Beneficiario beneficiario = beneficiarioRepository.findById(request.getId())
+                        .orElseThrow(() -> new EntityNotFoundException("Beneficiário não encontrado"));
+                beneficiario.setStatus(request.getNovoStatusPessoa());
+                return beneficiarioRepository.save(beneficiario);
+            }
+            case COMERCIANTE -> {
+                Comerciante comerciante = comercianteRepository.findById(request.getId())
+                        .orElseThrow(() -> new EntityNotFoundException("Comerciante não encontrado"));
+                comerciante.setStatus(request.getNovoStatusPessoa());
+                return comercianteRepository.save(comerciante);
+            }
+            case ENTREGADOR -> {
+                Entregador entregador = entregadorRepository.findById(request.getId())
+                        .orElseThrow(() -> new EntityNotFoundException("Entregador não encontrado"));
+                entregador.setStatus(request.getNovoStatusPessoa());
+                return entregadorRepository.save(entregador);
+            }
+            default -> throw new IllegalArgumentException("Tipo de pessoa inválido.");
+        }
     }
 
     /**

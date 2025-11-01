@@ -1,6 +1,6 @@
 package com.ceara_sem_fome_back.exception;
 
-import com.ceara_sem_fome_back.data.dto.ErrorDTO;
+import com.ceara_sem_fome_back.dto.ErrorDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
