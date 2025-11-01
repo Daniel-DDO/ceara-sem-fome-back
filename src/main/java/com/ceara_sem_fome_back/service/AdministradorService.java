@@ -3,6 +3,7 @@ package com.ceara_sem_fome_back.service;
 import com.ceara_sem_fome_back.data.AdministradorData;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.AdministradorRequest;
+import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
 import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
 import com.ceara_sem_fome_back.exception.*;
 import com.ceara_sem_fome_back.model.*;
@@ -116,25 +117,25 @@ public class AdministradorService implements UserDetailsService {
             case ADMINISTRADOR -> {
                 Administrador administrador = administradorRepository.findById(request.getId())
                         .orElseThrow(() -> new EntityNotFoundException("Administrador não encontrado"));
-                administrador.setStatus(request.getNovoTipoPessoa());
+                administrador.setStatus(request.getNovoStatusPessoa());
                 return administradorRepository.save(administrador);
             }
             case BENEFICIARIO -> {
                 Beneficiario beneficiario = beneficiarioRepository.findById(request.getId())
                         .orElseThrow(() -> new EntityNotFoundException("Beneficiário não encontrado"));
-                beneficiario.setStatus(request.getNovoTipoPessoa());
+                beneficiario.setStatus(request.getNovoStatusPessoa());
                 return beneficiarioRepository.save(beneficiario);
             }
             case COMERCIANTE -> {
                 Comerciante comerciante = comercianteRepository.findById(request.getId())
                         .orElseThrow(() -> new EntityNotFoundException("Comerciante não encontrado"));
-                comerciante.setStatus(request.getNovoTipoPessoa());
+                comerciante.setStatus(request.getNovoStatusPessoa());
                 return comercianteRepository.save(comerciante);
             }
             case ENTREGADOR -> {
                 Entregador entregador = entregadorRepository.findById(request.getId())
                         .orElseThrow(() -> new EntityNotFoundException("Entregador não encontrado"));
-                entregador.setStatus(request.getNovoTipoPessoa());
+                entregador.setStatus(request.getNovoStatusPessoa());
                 return entregadorRepository.save(entregador);
             }
             default -> throw new IllegalArgumentException("Tipo de pessoa inválido.");

@@ -5,6 +5,7 @@ import com.ceara_sem_fome_back.data.dto.LoginDTO;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
 import com.ceara_sem_fome_back.dto.AdministradorRequest;
+import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
 import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
 import com.ceara_sem_fome_back.model.Administrador;
 import com.ceara_sem_fome_back.model.Pessoa;
@@ -69,35 +70,31 @@ public class AdministradorController {
 
     // Ativar conta (administrador)
     @PatchMapping("/{id}/ativar")
-    public ResponseEntity<Pessoa> ativar(@PathVariable String id) {
-        Pessoa pessoa = administradorService.alterarStatus(null, id, StatusPessoa.ATIVO);
+    public ResponseEntity<Pessoa> ativar(@PathVariable AlterarStatusRequest request) {
+        Pessoa pessoa = administradorService.alterarStatusAdministrador(request);
         return ResponseEntity.ok(pessoa);
     }
 
     // Desativar conta (administrador)
     @PatchMapping("/{id}/desativar")
-    public ResponseEntity<Pessoa> desativarAdm(@PathVariable String id) {
-        Pessoa pessoa = administradorService.alterarStatus(null, id, StatusPessoa.INATIVO);
+    public ResponseEntity<Pessoa> desativarAdm(@PathVariable AlterarStatusRequest request) {
+        Pessoa pessoa = administradorService.alterarStatusAdministrador(request);
         return ResponseEntity.ok(pessoa);
     }
 
      // Desativar conta (qualquer tipo)
     @PatchMapping("/desativar/{tipo}/{id}")
-    public ResponseEntity<Pessoa> desativar(
-            @PathVariable TipoPessoa tipo,
-            @PathVariable String id
-    ) {
-        Pessoa pessoa = administradorService.alterarStatus(tipo, id, StatusPessoa.INATIVO);
+    public ResponseEntity<Pessoa> desativar(@PathVariable AlterarStatusRequest request ) {
+        request.setNovoStatusPessoa(StatusPessoa.INATIVO);
+        Pessoa pessoa = administradorService.alterarStatusAdministrador(request);
         return ResponseEntity.ok(pessoa);
     }
 
     // Bloquear conta (qualquer tipo)
     @PatchMapping("/bloquear/{tipo}/{id}")
-    public ResponseEntity<Pessoa> bloquear(
-            @PathVariable TipoPessoa tipo,
-            @PathVariable String id
-    ) {
-        Pessoa pessoa = administradorService.alterarStatus(tipo, id, StatusPessoa.BLOQUEADO);
+    public ResponseEntity<Pessoa> bloquear(@PathVariable AlterarStatusRequest request) {
+        request.setNovoStatusPessoa(StatusPessoa.BLOQUEADO);
+        Pessoa pessoa = administradorService.alterarStatusAdministrador(request);
         return ResponseEntity.ok(pessoa);
     }
 

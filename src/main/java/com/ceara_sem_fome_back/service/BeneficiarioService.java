@@ -2,6 +2,7 @@ package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.data.BeneficiarioData;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
+import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
 import com.ceara_sem_fome_back.dto.BeneficiarioRequest;
 import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
@@ -82,11 +83,11 @@ public class BeneficiarioService implements UserDetailsService {
         return beneficiario;
     }
 
-    public Beneficiario alterarStatusBeneficiario(String id, StatusPessoa novoStatus) {
-        Beneficiario beneficiario = beneficiarioRepository.findById(id)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Beneficiário não encontrado com o ID: " + id));
+    public Beneficiario alterarStatusBeneficiario(AlterarStatusRequest request) {
+        Beneficiario beneficiario = beneficiarioRepository.findById(request.getId())
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Beneficiário não encontrado com o ID: " + request.getId()));
 
-        beneficiario.setStatus(novoStatus);
+        beneficiario.setStatus(request.getNovoStatusPessoa());
         return beneficiarioRepository.save(beneficiario);
     }
 
@@ -142,14 +143,14 @@ public class BeneficiarioService implements UserDetailsService {
     }
 
     //função parao beneficiário adicionar um endereço
-    @Transactional
-    public Beneficiario adicionarEndereco(String beneficiarioId, Endereco enderecoRequest) {
-        Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
-                .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado"));
-
-        entityManager.persist(enderecoRequest);
-        beneficiario.setEndereco(enderecoRequest);
-
-        return beneficiarioRepository.save(beneficiario);
-    }
+//    @Transactional
+//    public Beneficiario adicionarEndereco(String beneficiarioId, Endereco enderecoRequest) {
+//        Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
+//                .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado"));
+//
+//        entityManager.persist(enderecoRequest);
+//        beneficiario.setEndereco(enderecoRequest);
+//
+//        return beneficiarioRepository.save(beneficiario);
+//    }
 }

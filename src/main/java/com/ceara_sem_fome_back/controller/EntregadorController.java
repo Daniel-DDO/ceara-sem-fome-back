@@ -5,8 +5,10 @@ import com.ceara_sem_fome_back.data.dto.ErrorDTO;
 import com.ceara_sem_fome_back.data.dto.LoginDTO;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
+import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
 import com.ceara_sem_fome_back.dto.EntregadorRequest;
 import com.ceara_sem_fome_back.model.Entregador;
+import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.EntregadorService;
 import jakarta.validation.Valid;
@@ -94,17 +96,15 @@ public class EntregadorController {
     }
 
     @PatchMapping("/{id}/alterar-status")
-    public ResponseEntity<Entregador> alterarStatusEntregador(
-            @PathVariable Long id,
-            @RequestParam Boolean ativo
-    ) {
-        Entregador entregadorAtualizado = entregadorService.alterarStatusEntregador(id, ativo);
+    public ResponseEntity<Entregador> alterarStatusEntregador(@PathVariable AlterarStatusRequest request ) {
+        Entregador entregadorAtualizado = entregadorService.alterarStatusEntregador(request);
         return ResponseEntity.ok(entregadorAtualizado);
     }
 
     @PatchMapping("/{id}/bloquear-conta")
-    public ResponseEntity<Entregador> bloquearContaEntregador(@PathVariable Long id) {
-        Entregador entregadorBloqueado = entregadorService.bloquearContaEntregador(id);
+    public ResponseEntity<Entregador> bloquearContaEntregador(@PathVariable AlterarStatusRequest request) {
+        request.setNovoStatusPessoa(StatusPessoa.BLOQUEADO);
+        Entregador entregadorBloqueado = entregadorService.alterarStatusEntregador(request);
         return ResponseEntity.ok(entregadorBloqueado);
     }
 

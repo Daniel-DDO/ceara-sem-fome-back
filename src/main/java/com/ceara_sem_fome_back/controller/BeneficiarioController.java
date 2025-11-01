@@ -4,6 +4,7 @@ import com.ceara_sem_fome_back.data.dto.ErrorDTO;
 import com.ceara_sem_fome_back.data.dto.LoginDTO;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
+import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
 import com.ceara_sem_fome_back.dto.BeneficiarioRequest;
 import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
 import com.ceara_sem_fome_back.model.Beneficiario;
@@ -64,33 +65,33 @@ public class BeneficiarioController {
 
     // Endpoint para desativar um beneficiário
     @PatchMapping("/{id}/alterar-status")
-    public ResponseEntity<Beneficiario> desativarBeneficiario(@PathVariable String id) {
-        Beneficiario beneficiarioDesativado = beneficiarioService.alterarStatusBeneficiario(id, StatusPessoa.INATIVO);
+    public ResponseEntity<Beneficiario> desativarBeneficiario(@PathVariable AlterarStatusRequest request) {
+        Beneficiario beneficiarioDesativado = beneficiarioService.alterarStatusBeneficiario(request);
         return ResponseEntity.ok(beneficiarioDesativado);
     }
 
     // Endpoint para reativar um beneficiário
     @PatchMapping("/{id}/reativar-beneficiario")
-    public ResponseEntity<Beneficiario> reativarBeneficiario(@PathVariable String id) {
-        Beneficiario beneficiarioReativado = beneficiarioService.alterarStatusBeneficiario(id, StatusPessoa.ATIVO);
+    public ResponseEntity<Beneficiario> reativarBeneficiario(@PathVariable AlterarStatusRequest request) {
+        Beneficiario beneficiarioReativado = beneficiarioService.alterarStatusBeneficiario(request);
         return ResponseEntity.ok(beneficiarioReativado);
     }
 
     //Endpoint para bloquear um beneficiário
     @PatchMapping("/{id}/bloquear-beneficiario")
-    public ResponseEntity<Beneficiario> bloquearBeneficiario(@PathVariable String id) {
-        Beneficiario beneficiarioBloqueado = beneficiarioService.alterarStatusBeneficiario(id, StatusPessoa.BLOQUEADO);
+    public ResponseEntity<Beneficiario> bloquearBeneficiario(@PathVariable AlterarStatusRequest request) {
+        Beneficiario beneficiarioBloqueado = beneficiarioService.alterarStatusBeneficiario(request);
         return ResponseEntity.ok(beneficiarioBloqueado);
     }
 
     //Endpoint para um beneficiário adicionar um endereço
-    @PostMapping("/{beneficiarioId}/endereco") //verificar se beneficiarioId existe
-    public ResponseEntity<Beneficiario> adicionarEndereco(
-            @PathVariable String beneficiarioId,
-            @RequestBody Endereco enderecoRequest) {
-        Beneficiario beneficiario = beneficiarioService.adicionarEndereco(beneficiarioId, enderecoRequest);
-        return ResponseEntity.ok(beneficiario);
-    }
+//    @PostMapping("/{beneficiarioId}/endereco") //verificar se beneficiarioId existe
+//    public ResponseEntity<Beneficiario> adicionarEndereco(
+//            @PathVariable String beneficiarioId,
+//            @RequestBody Endereco enderecoRequest) {
+//        Beneficiario beneficiario = beneficiarioService.adicionarEndereco(beneficiarioId, enderecoRequest);
+//        return ResponseEntity.ok(beneficiario);
+//    }
 
     /**
      * Rota para iniciar o processo de cadastro.

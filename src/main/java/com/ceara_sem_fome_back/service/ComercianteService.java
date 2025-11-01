@@ -2,6 +2,7 @@ package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
+import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
 import com.ceara_sem_fome_back.dto.ComercianteRequest;
 import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
 import com.ceara_sem_fome_back.exception.*;
@@ -85,11 +86,11 @@ public class ComercianteService implements UserDetailsService {
         return comercianteRepository.save(comerciante);
     }
 
-    public Comerciante alterarStatusComerciante(String id, StatusPessoa novoStatus) {
-        Comerciante comerciante = comercianteRepository.findById(id)
-                .orElseThrow(() -> new CpfInvalidoException("Comerciante não encontrado com o ID: " + id));
+    public Comerciante alterarStatusComerciante(AlterarStatusRequest request) {
+        Comerciante comerciante = comercianteRepository.findById(request.getId())
+                .orElseThrow(() -> new CpfInvalidoException("Comerciante não encontrado com o ID: " + request.getId()));
 
-        comerciante.setStatus(novoStatus);
+        comerciante.setStatus(request.getNovoStatusPessoa());
         return comercianteRepository.save(comerciante);
     }
 
