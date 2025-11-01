@@ -24,6 +24,8 @@ public class Endereco {
     private String numero;
     private String bairro;
     private String municipio;
+    private Double latitude;
+    private Double longitude;
 
     @DecimalMin(value = "-90.0", message = "Latitude mínima é -90")
     @DecimalMax(value = "90.0", message = "Latitude máxima é 90")
