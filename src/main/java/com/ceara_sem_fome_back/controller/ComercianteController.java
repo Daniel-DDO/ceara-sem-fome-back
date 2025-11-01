@@ -103,10 +103,11 @@ public class ComercianteController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(required = false) String nomeFiltro
     ) {
         //metodo de listagem
-        PaginacaoDTO<Comerciante> pagina = comercianteService.listarTodos(page, size, sortBy, direction);
+        PaginacaoDTO<Comerciante> pagina = comercianteService.listarComFiltro(nomeFiltro, page, size, sortBy, direction);
         return ResponseEntity.ok(pagina);
     }
 
@@ -130,5 +131,16 @@ public class ComercianteController {
 
         // 4. Retorna o objeto atualizado
         return ResponseEntity.ok(comercianteAtualizado);
+    }
+
+    @GetMapping("/filtrar/cpf")
+    public ResponseEntity<Comerciante> filtrarPorCpf(
+            @RequestParam(name = "valor") String cpf) {
+
+        Comerciante comerciante = comercianteService.filtrarPorCpf(cpf);
+        // A senha não retorna no JSON
+        comerciante.setSenha(null);
+
+        return ResponseEntity.ok(comerciante);
     }
 }

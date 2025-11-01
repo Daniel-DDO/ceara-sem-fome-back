@@ -97,10 +97,11 @@ public class AdministradorController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(defaultValue = "") String nomeFiltro
     ) {
         //metodo de listagem
-        PaginacaoDTO<Administrador> resposta = administradorService.listarTodos(page, size, sortBy, direction);
+        PaginacaoDTO<Administrador> resposta = administradorService.listarComFiltro(nomeFiltro, page, size, sortBy, direction);
         return ResponseEntity.ok(resposta);
     }
 
@@ -124,5 +125,16 @@ public class AdministradorController {
 
         //4. Retorna o objeto atualizado
         return ResponseEntity.ok(adminAtualizado);
+    }
+
+    @GetMapping("/filtrar/cpf")
+    public ResponseEntity<Administrador> filtrarPorCpf(
+            @RequestParam(name = "valor") String cpf) {
+
+        Administrador administrador = administradorService.filtrarPorCpf(cpf);
+        // 💡 A senha não retorna no JSON
+        administrador.setSenha(null);
+
+        return ResponseEntity.ok(administrador);
     }
 }

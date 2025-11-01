@@ -4,6 +4,7 @@ import com.ceara_sem_fome_back.data.EntregadorData;
 import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.EntregadorRequest;
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
+import com.ceara_sem_fome_back.exception.CpfInvalidoException;
 import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
 import com.ceara_sem_fome_back.exception.EmailJaCadastradoException;
 import com.ceara_sem_fome_back.model.Entregador;
@@ -84,13 +85,27 @@ public class EntregadorService implements UserDetailsService {
         return entregadorRepository.save(entregador);
     }
 
-    public PaginacaoDTO<Entregador> listarTodos(int page, int size, String sortBy, String direction) {
+    public PaginacaoDTO<Entregador> listarComFiltro(
+            String nomeFiltro,
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
+
         Sort sort = direction.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() :
                 Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Entregador> pagina = entregadorRepository.findAll(pageable);
+        Page<Entregador> pagina;
+
+        // Aplica o filtro se for válido
+        if (nomeFiltro != null && !nomeFiltro.isBlank()) {
+            pagina = entregadorRepository.findByNomeContainingIgnoreCase(nomeFiltro, pageable);
+        } else {
+            // Sem filtro, apenas paginação
+            pagina = entregadorRepository.findAll(pageable);
+        }
 
         return new PaginacaoDTO<>(
                 pagina.getContent(),
@@ -100,5 +115,14 @@ public class EntregadorService implements UserDetailsService {
                 pagina.getSize(),
                 pagina.isLast()
         );
+    }
+
+    public Entregador filtrarPorCpf(String cpf) {
+        if (cpf == null || cpf.isBlank()) {
+            throw new CpfInvalidoException(cpf);
+        }
+
+        return entregadorRepository.findByCpf(cpf)
+                .orElseThrow(() -> new CpfInvalidoException(cpf));
     }
 }

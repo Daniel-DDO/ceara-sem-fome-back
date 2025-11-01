@@ -1,6 +1,8 @@
 package com.ceara_sem_fome_back.repository;
 
 import com.ceara_sem_fome_back.model.Entregador;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,4 +17,5 @@ public interface EntregadorRepository extends JpaRepository <Entregador, String>
     //MÉTODOS NOVOS E OTIMIZADOS PARA VALIDAÇÃO
     boolean existsByCpf(String cpf);
     boolean existsByEmail(String email);
+    Page<Entregador> findByNomeContainingIgnoreCase(String nome, Pageable pageable);
 }

@@ -1,6 +1,8 @@
 package com.ceara_sem_fome_back.repository;
 
 import com.ceara_sem_fome_back.model.Administrador;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,4 +17,6 @@ public interface AdministradorRepository extends JpaRepository <Administrador, S
     //MÉTODOS NOVOS E OTIMIZADOS PARA VALIDAÇÃO
     boolean existsByCpf(String cpf);
     boolean existsByEmail(String email);
+
+    Page<Administrador> findByNomeContainingIgnoreCase(String nome, Pageable pageable);
 }
