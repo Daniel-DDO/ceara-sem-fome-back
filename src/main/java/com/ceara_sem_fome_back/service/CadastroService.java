@@ -243,7 +243,7 @@ public class CadastroService {
         return true;
     }
 
-    //MÉTODO DE REATIVAÇÃO
+    //METODO DE REATIVAÇÃO
 
     /**
      * Reativa uma conta (reverte soft delete) de qualquer tipo de Pessoa.
@@ -285,7 +285,7 @@ public class CadastroService {
     }
 
     /**
-     * Método helper privado para setar o status e salvar
+     * Metodo helper privado para setar o status e salvar
      */
     private Pessoa reativarPessoa(Pessoa pessoa) {
         if (pessoa.getStatus() == StatusPessoa.ATIVO) {
