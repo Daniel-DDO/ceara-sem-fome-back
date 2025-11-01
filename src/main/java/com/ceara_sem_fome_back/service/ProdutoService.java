@@ -54,6 +54,7 @@ public class ProdutoService {
         novoProduto.setPreco(request.getPrecoVenda().doubleValue());
         novoProduto.setQuantidadeEstoque(request.getEstoque());
         novoProduto.setComerciante(comerciante);
+        novoProduto.setStatus(StatusProduto.PENDENTE);
 
         novoProduto.setStatus(StatusProduto.PENDENTE);
 
@@ -71,7 +72,8 @@ public class ProdutoService {
     }
 
     public Produto aprovarProduto(String id) {
-        Produto produto = produtoRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
+        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
 
         if (!produto.getStatus().equals(StatusProduto.PENDENTE)) {
             throw new IllegalStateException("Produto já foi autorizado, recusado ou desativado.");
@@ -84,7 +86,8 @@ public class ProdutoService {
     }
 
     public Produto recusarProduto(String id) {
-        Produto produto = produtoRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
+        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
 
         if (!produto.getStatus().equals(StatusProduto.PENDENTE)) {
             throw new IllegalStateException("Produto já foi autorizado, recusado ou desativado.");
@@ -97,7 +100,8 @@ public class ProdutoService {
     }
 
     public Produto editarProduto(String id, String nome, String lote, String descricao, double preco, int quantidadeEstoque) {
-        Produto produto = produtoRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
+        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
 
         if (!produto.getStatus().equals(StatusProduto.AUTORIZADO)) {
             throw new IllegalStateException("Produto não autorizado.");
@@ -115,7 +119,8 @@ public class ProdutoService {
     }
 
     public Produto removerProduto(String id) {
-        Produto produto = produtoRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
+        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
 
         if (produto.getStatus().equals(StatusProduto.RECUSADO)) {
             throw new IllegalStateException("Produto já foi recusado.");
@@ -134,7 +139,7 @@ public class ProdutoService {
 
     @Transactional
     public Produto salvarImagem(String id, MultipartFile file) throws IOException {
-        Produto produto = produtoRepository.findById(id)
+        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
 
         if (file == null || file.isEmpty()) {
@@ -149,14 +154,14 @@ public class ProdutoService {
     //retorna bytes da imagem (ou null se não há imagem)
     @Transactional(readOnly = true)
     public byte[] buscarImagem(String id) {
-        Produto produto = produtoRepository.findById(id)
+        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
         return produto.getImagem();
     }
 
     @Transactional(readOnly = true)
     public String buscarTipoImagem(String id) {
-        Produto produto = produtoRepository.findById(id)
+        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
         return produto.getTipoImagem();
     }
@@ -164,7 +169,7 @@ public class ProdutoService {
     //remove apenas a imagem (mantém produto)
     @Transactional
     public void removerImagem(String id) {
-        Produto produto = produtoRepository.findById(id)
+        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
         produto.setImagem(null);
         produto.setTipoImagem(null);
@@ -187,7 +192,7 @@ public class ProdutoService {
     //verifica se tem imagem
     @Transactional(readOnly = true)
     public boolean possuiImagem(String id) {
-        Produto produto = produtoRepository.findById(id)
+        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
         return produto.getImagem() != null && produto.getImagem().length > 0;
     }
