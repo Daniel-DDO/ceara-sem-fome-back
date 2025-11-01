@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.Where;
 import org.hibernate.validator.constraints.br.CPF;
 
 import java.time.LocalDate;
@@ -15,6 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @MappedSuperclass
+@Where(clause = "status = 'ATIVO'")
 public abstract class Pessoa {
 
     @Id

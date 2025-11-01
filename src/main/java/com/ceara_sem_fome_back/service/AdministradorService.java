@@ -78,13 +78,27 @@ public class AdministradorService implements UserDetailsService {
         return administradorRepository.save(administrador);
     }
 
-    public PaginacaoDTO<Administrador> listarTodos(int page, int size, String sortBy, String direction) {
+    public PaginacaoDTO<Administrador> listarComFiltro(
+            String nomeFiltro,
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
+
         Sort sort = direction.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() :
                 Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Administrador> pagina = administradorRepository.findAll(pageable);
+        Page<Administrador> pagina;
+
+        // 1. Aplica o filtro se for válido
+        if (nomeFiltro != null && !nomeFiltro.isBlank()) {
+            pagina = administradorRepository.findByNomeContainingIgnoreCase(nomeFiltro, pageable);
+        } else {
+            // Sem filtro, apenas paginação
+            pagina = administradorRepository.findAll(pageable);
+        }
 
         return new PaginacaoDTO<>(
                 pagina.getContent(),
@@ -125,5 +139,23 @@ public class AdministradorService implements UserDetailsService {
 
         //4. Salva as alterações
         return administradorRepository.save(adminExistente);
+    }
+
+    public Administrador filtrarPorCpf(String cpf) {
+        if (cpf == null || cpf.isBlank()) {
+            throw new CpfInvalidoException(cpf);
+        }
+        return administradorRepository.findByCpf(cpf)
+                .orElseThrow(() -> new CpfInvalidoException(cpf));
+    }
+
+    /**
+     * Chama o serviço de cadastro para reativar uma conta de qualquer tipo.
+     * @param userId O ID do usuário a ser reativado.
+     */
+    @Transactional
+    public void reativarConta(String userId) {
+        // Delega a lógica de busca multi-repositório para o CadastroService
+        cadastroService.reativarConta(userId);
     }
 }

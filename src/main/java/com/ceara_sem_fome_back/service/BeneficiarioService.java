@@ -5,6 +5,7 @@ import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.BeneficiarioRequest;
 import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
+import com.ceara_sem_fome_back.exception.CpfInvalidoException;
 import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Beneficiario;
@@ -78,13 +79,27 @@ public class BeneficiarioService implements UserDetailsService {
         return beneficiario;
     }
 
-    public PaginacaoDTO<Beneficiario> listarTodos(int page, int size, String sortBy, String direction) {
+    public PaginacaoDTO<Beneficiario> listarComFiltro(
+            String nomeFiltro,
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
+
         Sort sort = direction.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() :
                 Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Beneficiario> pagina = beneficiarioRepository.findAll(pageable);
+        Page<Beneficiario> pagina;
+
+        // Aplica o filtro se for válido
+        if (nomeFiltro != null && !nomeFiltro.isBlank()) {
+            pagina = beneficiarioRepository.findByNomeContainingIgnoreCase(nomeFiltro, pageable);
+        } else {
+            // Sem filtro, apenas paginação
+            pagina = beneficiarioRepository.findAll(pageable);
+        }
 
         return new PaginacaoDTO<>(
                 pagina.getContent(),
@@ -114,7 +129,7 @@ public class BeneficiarioService implements UserDetailsService {
         if (!Objects.equals(beneficiarioExistente.getEmail(), dto.getEmail())) {
             //Se o email mudou, validamos se o NOVO email já está em uso por QUALQUER pessoa
             cadastroService.validarEmailDisponivelEmTodosOsPerfis(dto.getEmail());
-            
+
             //Se a validação passar, podemos setar o novo email
             beneficiarioExistente.setEmail(dto.getEmail());
         }
@@ -135,5 +150,15 @@ public class BeneficiarioService implements UserDetailsService {
 
     public List<Beneficiario> buscarPorMunicipio(String municipio) {
         return beneficiarioRepository.findByEnderecoMunicipio(municipio);
+    }
+
+    public Beneficiario filtrarPorCpf(String cpf) {
+        if (cpf == null || cpf.isBlank()) {
+            throw new CpfInvalidoException(cpf);
+        }
+
+        return beneficiarioRepository.findByCpf(cpf)
+                .orElseThrow(() -> new CpfInvalidoException(cpf));
+
     }
 }

@@ -87,10 +87,11 @@ public class BeneficiarioController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(defaultValue = "") String nomeFiltro
     ) {
         //metodo de listagem
-        PaginacaoDTO<Beneficiario> pagina = beneficiarioService.listarTodos(page, size, sortBy, direction);
+        PaginacaoDTO<Beneficiario> pagina = beneficiarioService.listarComFiltro(nomeFiltro, page, size, sortBy, direction);
         return ResponseEntity.ok(pagina);
     }
 
@@ -106,13 +107,13 @@ public class BeneficiarioController {
 
         //1. O 'Principal' injetado pelo Spring Security contém o usuário.
         //No caso (JWT), principal.getName() retorna o E-MAIL do token.
-        String userEmail = principal.getName(); 
-        
+        String userEmail = principal.getName();
+
         //2. Chama o serviço que você criou
         Beneficiario beneficiarioAtualizado = beneficiarioService.atualizarBeneficiario(userEmail, dto);
-        
+
         //3. A senha não retorna no JSON.
-        beneficiarioAtualizado.setSenha(null); 
+        beneficiarioAtualizado.setSenha(null);
 
         //4. Retorna o objeto atualizado com status 200 OK
         return ResponseEntity.ok(beneficiarioAtualizado);
@@ -126,5 +127,17 @@ public class BeneficiarioController {
     @GetMapping("/municipio/{municipio}")
     public ResponseEntity<List<Beneficiario>> listarPorMunicipio(@PathVariable String municipio) {
         return ResponseEntity.ok(beneficiarioService.buscarPorMunicipio(municipio));
+    }
+
+    @GetMapping("/filtrar/cpf")
+    public ResponseEntity<Beneficiario> filtrarPorCpf(
+            @RequestParam(name = "valor") String cpf) {
+
+        Beneficiario beneficiario = beneficiarioService.filtrarPorCpf(cpf);
+
+        //A senha não retorna no JSON
+        beneficiario.setSenha(null);
+
+        return ResponseEntity.ok(beneficiario);
     }
 }

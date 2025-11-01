@@ -41,6 +41,28 @@ public class EstabelecimentoService {
         return estabelecimentoRepository.findAll(pageable);
     }
 
+    public Page<Estabelecimento> listarComFiltro(
+            String nomeFiltro,
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
+
+        Sort sort = direction.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        // Aplica o filtro se for válido
+        if (nomeFiltro != null && !nomeFiltro.isBlank()) {
+            return estabelecimentoRepository.findByNomeContainingIgnoreCase(nomeFiltro, pageable);
+        } else {
+            // Sem filtro, apenas paginação
+            return estabelecimentoRepository.findAll(pageable);
+        }
+    }
+
     public List<Estabelecimento> buscarPorBairro(String bairro) {
         return estabelecimentoRepository.findByEnderecoBairro(bairro);
     }

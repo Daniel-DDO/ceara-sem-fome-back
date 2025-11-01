@@ -24,6 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -88,24 +89,6 @@ public class ComercianteService implements UserDetailsService {
         return comercianteRepository.save(comerciante);
     }
 
-    public PaginacaoDTO<Comerciante> listarTodos(int page, int size, String sortBy, String direction) {
-        Sort sort = direction.equalsIgnoreCase("desc") ?
-                Sort.by(sortBy).descending() :
-                Sort.by(sortBy).ascending();
-
-        Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Comerciante> pagina = comercianteRepository.findAll(pageable);
-
-        return new PaginacaoDTO<>(
-                pagina.getContent(),
-                pagina.getNumber(),
-                pagina.getTotalPages(),
-                pagina.getTotalElements(),
-                pagina.getSize(),
-                pagina.isLast()
-        );
-    }
-
     /**s
      * Atualiza os dados de um comerciante com base no seu e-mail (usuário)
      * pego da autenticação.
@@ -140,6 +123,45 @@ public class ComercianteService implements UserDetailsService {
     public Comerciante buscarPorId(String id) {
         return comercianteRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Comerciante não encontrado com ID: " + id));
+    }
+
+    public Comerciante filtrarPorCpf(String cpf) {
+        if (cpf == null || cpf.isBlank()) {
+            throw new CpfInvalidoException(cpf);
+        }
+        return buscarComerciantePorCpf(cpf);
+    }
+
+    public PaginacaoDTO<Comerciante> listarComFiltro(
+            String nomeFiltro,
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
+
+        Sort sort = direction.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Comerciante> pagina;
+
+        // Aplica o filtro se for válido
+        if (nomeFiltro != null && !nomeFiltro.isBlank()) {
+            pagina = comercianteRepository.findByNomeContainingIgnoreCase(nomeFiltro, pageable);
+        } else {
+            // Sem filtro, apenas paginação
+            pagina = comercianteRepository.findAll(pageable);
+        }
+
+        return new PaginacaoDTO<>(
+                pagina.getContent(),
+                pagina.getNumber(),
+                pagina.getTotalPages(),
+                pagina.getTotalElements(),
+                pagina.getSize(),
+                pagina.isLast()
+        );
     }
 
     public Comerciante buscarComerciantePorCpf(String cpf) {
