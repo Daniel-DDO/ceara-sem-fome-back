@@ -75,7 +75,8 @@ public class JWTConfiguracao {
                                 new AntPathRequestMatcher("/**/municipio/**"),
                                 new AntPathRequestMatcher("/beneficiario/cadastrar-endereco"),
                                 new AntPathRequestMatcher("/estabelecimento/cadastrar-endereco"),
-                                new AntPathRequestMatcher("/api/estatisticas/**")
+                                new AntPathRequestMatcher("/api/estatisticas/**"),
+                                new AntPathRequestMatcher("/api/localizacao/consultar-cep/**")
                         ).permitAll()
                         .anyRequest().authenticated()
                 //não remover esse comentário!
