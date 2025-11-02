@@ -1,18 +1,16 @@
 package com.ceara_sem_fome_back.controller;
 
-import com.ceara_sem_fome_back.dto.ErrorDTO;
-import com.ceara_sem_fome_back.dto.LoginDTO;
-import com.ceara_sem_fome_back.dto.PaginacaoDTO;
-import com.ceara_sem_fome_back.dto.PessoaRespostaDTO;
-import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
-import com.ceara_sem_fome_back.dto.BeneficiarioRequest;
-import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
+import com.ceara_sem_fome_back.data.BeneficiarioData;
+import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.BeneficiarioService;
+import com.ceara_sem_fome_back.service.EnderecoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -27,6 +25,9 @@ public class BeneficiarioController {
 
     @Autowired
     private JWTUtil jwtUtil;
+
+    @Autowired
+    private EnderecoService enderecoService;
 
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarBeneficiario(@Valid @RequestBody LoginDTO loginDTO) {
@@ -171,4 +172,19 @@ public class BeneficiarioController {
 
         return ResponseEntity.ok(beneficiario);
     }
+
+    @PostMapping("/cadastrar-endereco")
+    public ResponseEntity<Beneficiario> cadastrarEndereco(@Valid @RequestBody EnderecoCadRequest enderecoCadRequest) {
+
+        BeneficiarioData beneficiarioData = (BeneficiarioData) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        String beneficiarioId = beneficiarioData.getId();
+        Beneficiario beneficiarioAtualizado = enderecoService.cadastrarEnderecoBenef(beneficiarioId, enderecoCadRequest);
+
+        return ResponseEntity.ok(beneficiarioAtualizado);
+    }
+
 }
