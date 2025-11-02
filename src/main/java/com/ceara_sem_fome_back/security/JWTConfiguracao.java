@@ -1,6 +1,5 @@
 package com.ceara_sem_fome_back.security;
 
-import com.ceara_sem_fome_back.security.Handler.LoggingLogoutSuccessHandler;
 import com.ceara_sem_fome_back.service.PessoaDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,10 +7,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -25,13 +25,13 @@ public class JWTConfiguracao {
     private String tokenSenha;
 
     @Autowired
-    private LoggingLogoutSuccessHandler loggingLogoutSuccessHandler;
-
-    @Autowired
     private PessoaDetailsService pessoaDetailsService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private LogoutSuccessHandler loggingLogoutSuccessHandler;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
@@ -39,7 +39,8 @@ public class JWTConfiguracao {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authManager) throws Exception {
+    public SecurityFilterChain securityFilterChain(org.springframework.security.config.annotation.web.builders.HttpSecurity http,
+                                                   AuthenticationManager authManager) throws Exception {
 
         http
                 .csrf(csrf -> csrf.disable())
@@ -47,18 +48,17 @@ public class JWTConfiguracao {
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilter(new JWTAutenticarFilter(authManager, tokenSenha))
                 .addFilter(new JWTValidarFilter(authManager, tokenSenha, pessoaDetailsService))
-
                 .logout(logout -> logout
-                        .logoutUrl("/auth/logout")
+                        .logoutRequestMatcher(new AntPathRequestMatcher("/auth/logout"))
                         .logoutSuccessHandler(loggingLogoutSuccessHandler)
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
                 )
-
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/**").permitAll()
                         .anyRequest().permitAll()
                 );
+
+        http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
         return http.build();
     }
@@ -66,20 +66,17 @@ public class JWTConfiguracao {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cors = new CorsConfiguration();
-
         cors.setAllowedOriginPatterns(List.of("*"));
         cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         cors.setAllowedHeaders(List.of("*"));
-        cors.setExposedHeaders(List.of("Authorization", "Content-Type"));
         cors.setAllowCredentials(true);
+        cors.setExposedHeaders(List.of("Authorization", "Content-Type"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", cors);
-
         return source;
     }
 }
-
 
 //
 //package com.ceara_sem_fome_back.security;
