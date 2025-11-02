@@ -59,26 +59,27 @@ public class JWTConfiguracao {
                 )
 
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers(
-                                        new AntPathRequestMatcher("/*/iniciar-cadastro"),
-                                        new AntPathRequestMatcher("/*/login"),
-                                        new AntPathRequestMatcher("/token/confirmar-cadastro"),
-                                        new AntPathRequestMatcher("/**/all"),
-                                        new AntPathRequestMatcher("/version"),
-                                        new AntPathRequestMatcher("/health"),
-                                        new AntPathRequestMatcher("/**/meu-perfil"),
-                                        new AntPathRequestMatcher("/**/estabelecimento/"),
-                                        new AntPathRequestMatcher("estabelecimento/**"),
-                                        new AntPathRequestMatcher("/**/"),
-                                        new AntPathRequestMatcher("/auth/**"),
-                                        new AntPathRequestMatcher("/**/bairro/**"),
-                                        new AntPathRequestMatcher("/**/municipio/**"),
-                                        new AntPathRequestMatcher("/beneficiario/cadastrar-endereco"),
-                                        new AntPathRequestMatcher("/estabelecimento/cadastrar-endereco")
-                                ).permitAll()
-                                .anyRequest().authenticated()
-                        //não remover esse comentário!
-                        //.anyRequest().permitAll() //para testes, permitir tudo
+                        .requestMatchers(
+                                new AntPathRequestMatcher("/*/iniciar-cadastro"),
+                                new AntPathRequestMatcher("/*/login"),
+                                new AntPathRequestMatcher("/token/confirmar-cadastro"),
+                                new AntPathRequestMatcher("/**/all"),
+                                new AntPathRequestMatcher("/version"),
+                                new AntPathRequestMatcher("/health"),
+                                new AntPathRequestMatcher("/**/meu-perfil"),
+                                new AntPathRequestMatcher("/**/estabelecimento/"),
+                                new AntPathRequestMatcher("estabelecimento/**"),
+                                new AntPathRequestMatcher("/**/"),
+                                new AntPathRequestMatcher("/auth/**"),
+                                new AntPathRequestMatcher("/**/bairro/**"),
+                                new AntPathRequestMatcher("/**/municipio/**"),
+                                new AntPathRequestMatcher("/beneficiario/cadastrar-endereco"),
+                                new AntPathRequestMatcher("/estabelecimento/cadastrar-endereco"),
+                                new AntPathRequestMatcher("/api/estatisticas/**")
+                        ).permitAll()
+                        .anyRequest().authenticated()
+                //não remover esse comentário!
+                //.anyRequest().permitAll() //para testes, permitir tudo
                 );
 
         return http.build();
@@ -88,7 +89,7 @@ public class JWTConfiguracao {
     public CorsConfigurationSource corsConfiguration() {
         CorsConfiguration cors = new CorsConfiguration();
         cors.setAllowedOrigins(List.of("*"));
-        cors.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         cors.setAllowedHeaders(List.of("*"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
