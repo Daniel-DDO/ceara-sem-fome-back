@@ -25,4 +25,8 @@ public interface EntregadorRepository extends JpaRepository <Entregador, String>
     // Metodo para buscar um usuário por ID ignorando o filtro @Where
     @Query("SELECT p FROM #{#entityName} p WHERE p.id = :id")
     Optional<Entregador> findByIdIgnoringStatus(@Param("id") String id);
+
+    // NOVOS MÉTODOS PARA ESTATÍSTICAS
+    long countByEnderecoMunicipioIgnoreCase(String municipio);
+    long countByEnderecoBairroIgnoreCase(String bairro);
 }

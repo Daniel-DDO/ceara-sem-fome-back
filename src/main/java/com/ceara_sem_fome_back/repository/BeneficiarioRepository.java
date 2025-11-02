@@ -28,4 +28,8 @@ public interface BeneficiarioRepository extends JpaRepository<Beneficiario, Stri
     // Metodo para buscar um usuário por ID ignorando o filtro @Where
     @Query("SELECT p FROM #{#entityName} p WHERE p.id = :id")
     Optional<Beneficiario> findByIdIgnoringStatus(@Param("id") String id);
+
+    // NOVOS MÉTODOS PARA ESTATÍSTICAS
+    long countByEnderecoMunicipioIgnoreCase(String municipio);
+    long countByEnderecoBairroIgnoreCase(String bairro);
 }

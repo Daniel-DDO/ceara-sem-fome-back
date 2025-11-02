@@ -18,4 +18,8 @@ public interface CompraRepository extends JpaRepository<Compra, String> {
     List<Compra> findByStatus(StatusCompra status);
     List<Compra> findByDataHoraCompraAfter(LocalDateTime data);
     List<Compra> findByDataHoraCompraBetween(LocalDateTime inicio, LocalDateTime fim);
+
+    // NOVOS MÉTODOS PARA ESTATÍSTICAS
+    long countByEnderecoMunicipioIgnoreCase(String municipio);
+    long countByEnderecoBairroIgnoreCase(String bairro);
 }
