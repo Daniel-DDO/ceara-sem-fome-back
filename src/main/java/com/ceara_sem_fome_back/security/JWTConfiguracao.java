@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -12,11 +13,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.List;
 
 @Configuration
 public class JWTConfiguracao {
@@ -39,15 +35,17 @@ public class JWTConfiguracao {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(org.springframework.security.config.annotation.web.builders.HttpSecurity http,
-                                                   AuthenticationManager authManager) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            org.springframework.security.config.annotation.web.builders.HttpSecurity http,
+            AuthenticationManager authManager
+    ) throws Exception {
 
         http
-                .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilter(new JWTAutenticarFilter(authManager, tokenSenha))
-                .addFilter(new JWTValidarFilter(authManager, tokenSenha, pessoaDetailsService))
+                .csrf(csrf -> csrf.disable()) // Desativa CSRF para APIs REST
+                .cors(cors -> cors.disable()) // Desabilita o CORS interno (vamos usar o filtro global)
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Sem sessões
+                .addFilter(new JWTAutenticarFilter(authManager, tokenSenha)) // Filtro de autenticação (login)
+                .addFilter(new JWTValidarFilter(authManager, tokenSenha, pessoaDetailsService)) // Filtro de validação JWT
                 .logout(logout -> logout
                         .logoutRequestMatcher(new AntPathRequestMatcher("/auth/logout"))
                         .logoutSuccessHandler(loggingLogoutSuccessHandler)
@@ -55,26 +53,23 @@ public class JWTConfiguracao {
                         .deleteCookies("JSESSIONID")
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        .requestMatchers(
+                                "/beneficiario/iniciar-cadastro",
+                                "/beneficiario/login",
+                                "/adm/login",
+                                "/token/confirmar-cadastro",
+                                "/auth/**"
+                        ).permitAll()
+
+                        .anyRequest().authenticated()
                 );
 
+        // Desabilita proteção a frames (útil caso use H2 Console)
         http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
         return http.build();
-    }
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration cors = new CorsConfiguration();
-        cors.setAllowedOriginPatterns(List.of("*"));
-        cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        cors.setAllowedHeaders(List.of("*"));
-        cors.setAllowCredentials(true);
-        cors.setExposedHeaders(List.of("Authorization", "Content-Type"));
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", cors);
-        return source;
     }
 }
 
