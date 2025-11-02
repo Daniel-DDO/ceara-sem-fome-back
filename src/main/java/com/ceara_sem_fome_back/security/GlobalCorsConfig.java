@@ -15,10 +15,10 @@ public class GlobalCorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration cors = new CorsConfiguration();
 
-        cors.setAllowedOriginPatterns(List.of("*")); // ou "http://localhost:5173", etc.
+        cors.setAllowedOriginPatterns(List.of("*"));
         cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        cors.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
-        cors.setExposedHeaders(List.of("Authorization")); // permite o frontend ler o header Authorization
+        cors.setAllowedHeaders(List.of("*"));
+        cors.setExposedHeaders(List.of("*"));
         cors.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

@@ -41,32 +41,31 @@ public class JWTConfiguracao {
     ) throws Exception {
 
         http
-                .csrf(csrf -> csrf.disable()) // Desativa CSRF para APIs REST
-                .cors(cors -> cors.disable()) // Desabilita o CORS interno (vamos usar o filtro global)
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Sem sessões
-                .addFilter(new JWTAutenticarFilter(authManager, tokenSenha)) // Filtro de autenticação (login)
-                .addFilter(new JWTValidarFilter(authManager, tokenSenha, pessoaDetailsService)) // Filtro de validação JWT
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> {})
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                .addFilter(new JWTAutenticarFilter(authManager, tokenSenha))
+                .addFilter(new JWTValidarFilter(authManager, tokenSenha, pessoaDetailsService))
+
                 .logout(logout -> logout
                         .logoutRequestMatcher(new AntPathRequestMatcher("/auth/logout"))
                         .logoutSuccessHandler(loggingLogoutSuccessHandler)
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
                 )
+
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        .requestMatchers(
-                                "/beneficiario/iniciar-cadastro",
-                                "/beneficiario/login",
-                                "/adm/login",
-                                "/token/confirmar-cadastro",
-                                "/auth/**"
-                        ).permitAll()
-
-                        .anyRequest().authenticated()
+                        // --- LIBERAÇÕES GERAIS ---
+                        .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/**", HttpMethod.OPTIONS.name())).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/beneficiario/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/adm/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/auth/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/token/**")).permitAll()
+                        .anyRequest().permitAll()
                 );
 
-        // Desabilita proteção a frames (útil caso use H2 Console)
         http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
         return http.build();
