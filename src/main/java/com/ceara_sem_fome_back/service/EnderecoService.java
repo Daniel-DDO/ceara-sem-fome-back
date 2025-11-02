@@ -9,9 +9,9 @@ import com.ceara_sem_fome_back.repository.EstabelecimentoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 public class EnderecoService {
 
     @Autowired
@@ -19,6 +19,9 @@ public class EnderecoService {
 
     @Autowired
     private EstabelecimentoRepository estabelecimentoRepository;
+
+    @Autowired
+    private CepGeocodingService cepGeocodingService;
 
     private Endereco cadastrarEndereco(EnderecoCadRequest request) {
         Endereco endereco = new Endereco();
@@ -28,9 +31,16 @@ public class EnderecoService {
         endereco.setBairro(request.getBairro());
         endereco.setMunicipio(request.getMunicipio());
 
+        if (endereco.getLatitude() == null || endereco.getLongitude() == null) {
+            Endereco enderecoComCoords = cepGeocodingService.getEnderecoComCep(endereco.getCep());
+            endereco.setLatitude(enderecoComCoords.getLatitude());
+            endereco.setLongitude(enderecoComCoords.getLongitude());
+        }
+
         return endereco;
     }
 
+    @Transactional
     public Beneficiario cadastrarEnderecoBenef(String beneficiarioId, EnderecoCadRequest request) {
         Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
                 .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado"));
@@ -40,6 +50,7 @@ public class EnderecoService {
         return beneficiarioRepository.save(beneficiario);
     }
 
+    @Transactional
     public Estabelecimento cadastrarEnderecoEstab(String estabelecimentoId, EnderecoCadRequest request) {
         Estabelecimento estabelecimento = estabelecimentoRepository.findById(estabelecimentoId)
                 .orElseThrow(() -> new RuntimeException("Estabelecimento não encontrado"));
