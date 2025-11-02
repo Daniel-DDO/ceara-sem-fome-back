@@ -51,7 +51,12 @@ public class JWTConfiguracao {
         CorsConfiguration cors = new CorsConfiguration();
         cors.setAllowedOriginPatterns(List.of(
                 "https://5173-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev",
-                "https://8080-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev"
+                "https://5174-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev/",
+                "https://5175-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev/",
+                "https://5176-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev/",
+                "https://5177-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev/",
+                "https://8080-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev",
+                "https://8081-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev/"
         ));
         cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         cors.setAllowedHeaders(List.of("*"));
