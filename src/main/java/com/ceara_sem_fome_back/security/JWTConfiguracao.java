@@ -50,6 +50,8 @@ public class JWTConfiguracao {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cors = new CorsConfiguration();
         cors.setAllowedOriginPatterns(List.of(
+                "https://*.cloudworkstations.dev",
+                "https://*-firebase-ceara-sem-fome-front-*.cloudworkstations.dev",
                 "https://5173-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev",
                 "https://5174-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev/",
                 "https://5175-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev/",
