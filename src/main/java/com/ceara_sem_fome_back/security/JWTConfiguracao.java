@@ -87,12 +87,14 @@ public class JWTConfiguracao {
     @Bean
     public CorsConfigurationSource corsConfiguration() {
         CorsConfiguration cors = new CorsConfiguration();
-        cors.setAllowedOrigins(List.of("*"));
-        cors.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        cors.setAllowedOrigins(List.of("http://localhost:5173"));
+        cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         cors.setAllowedHeaders(List.of("*"));
+        cors.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", cors);
         return source;
     }
+
 }
