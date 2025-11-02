@@ -41,8 +41,8 @@ VALUES
     ('cont-2', '78910-1', '0001', 125.50, 'ben-2')
     ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO estabelecimento (id, nome, endereco_id, comerciante_id)
-VALUES ('est-1', 'Mercearia da Ana', 'end-5', 'com-1')
+INSERT INTO estabelecimento (id, nome, cnpj, telefone, imagem, tipo_imagem, data_cadastro, endereco_id, comerciante_id)
+VALUES ('est-1', 'Mercearia da Ana', '9382', '(81) 986092487', null, null, '2025-01-20', 'end-5', 'com-1')
     ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO produto (id, nome, lote, descricao, preco, quantidade_estoque, status, imagem, tipo_imagem, comerciante_id)

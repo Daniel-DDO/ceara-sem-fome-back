@@ -80,6 +80,11 @@ CREATE TABLE IF NOT EXISTS entregador (
 CREATE TABLE IF NOT EXISTS estabelecimento (
     id VARCHAR(255) PRIMARY KEY,
     nome VARCHAR(255),
+    cnpj VARCHAR(255),
+    telefone VARCHAR(255),
+    imagem VARCHAR(255),
+    tipo_imagem VARCHAR(255),
+    data_cadastro TIMESTAMP,
     endereco_id VARCHAR(255),
     comerciante_id VARCHAR(255),
     FOREIGN KEY (endereco_id) REFERENCES endereco (id),

@@ -12,10 +12,14 @@ import com.ceara_sem_fome_back.service.EnderecoService;
 import com.ceara_sem_fome_back.service.EstabelecimentoService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -33,10 +37,14 @@ public class EstabelecimentoController {
 
     @PostMapping("/cadastrar")
     public ResponseEntity<Object> cadastrarEstabelecimento(@Valid @RequestBody EstabelecimentoRequest request) {
-        Comerciante comerciante = comercianteService.buscarPorId(request.getComercianteId());
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Comerciante comerciante = (Comerciante) authentication.getPrincipal();
 
         Estabelecimento novoEstabelecimento = new Estabelecimento();
         novoEstabelecimento.setNome(request.getNome());
+        novoEstabelecimento.setCnpj(request.getCnpj());
+        novoEstabelecimento.setTelefone(request.getTelefone());
+        novoEstabelecimento.setDataCadastro(LocalDateTime.now());
 
         Estabelecimento salvo = estabelecimentoService.salvarEstabelecimento(novoEstabelecimento, comerciante);
         return ResponseEntity.status(201).body(salvo);

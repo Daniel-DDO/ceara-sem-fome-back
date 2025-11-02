@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,6 +21,18 @@ public class Estabelecimento {
 
     @NotBlank
     private String nome;
+
+    private String cnpj;
+
+    private String telefone; //do comércio
+
+    @Lob
+    @Column(name = "imagem")
+    private byte[] imagem;
+
+    private String tipoImagem;
+
+    private LocalDateTime dataCadastro;
 
     @OneToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "endereco_id")
