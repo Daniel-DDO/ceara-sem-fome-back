@@ -1,7 +1,7 @@
 package com.ceara_sem_fome_back.security;
 
 import com.ceara_sem_fome_back.security.Handler.LoggingLogoutSuccessHandler;
-import com.ceara_sem_fome_back.service.ComercianteService; // <<< IMPORTADO
+import com.ceara_sem_fome_back.service.PessoaDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -10,7 +10,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -29,14 +28,11 @@ public class JWTConfiguracao {
     @Autowired
     private LoggingLogoutSuccessHandler loggingLogoutSuccessHandler;
 
-    // --- CORREÇÃO: Injetar o ComercianteService ---
     @Autowired
-    private ComercianteService comercianteService;
+    private PessoaDetailsService pessoaDetailsService;
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
@@ -51,39 +47,38 @@ public class JWTConfiguracao {
                 .cors(cors -> cors.configurationSource(corsConfiguration()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .addFilter(new JWTAutenticarFilter(authManager, tokenSenha))
-                
-                // --- CORREÇÃO: Passar o ComercianteService para o filtro ---
-                .addFilter(new JWTValidarFilter(authManager, tokenSenha, comercianteService))
-                
-                //CONFIGURAÇÃO DE LOGOUT
+                .addFilter(new JWTValidarFilter(authManager, tokenSenha, pessoaDetailsService))
+
                 .logout(logout -> logout
-                        .logoutUrl("/auth/logout") 
-                        .logoutSuccessHandler(loggingLogoutSuccessHandler) 
+                        .logoutUrl("/auth/logout")
+                        .logoutSuccessHandler(loggingLogoutSuccessHandler)
                         .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID") 
+                        .deleteCookies("JSESSIONID")
                 )
-                //FIM DA CONFIGURAÇÃO DE LOGOUT
-                
+
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                new AntPathRequestMatcher("/*/iniciar-cadastro"),
-                                new AntPathRequestMatcher("/*/login"),
-                                new AntPathRequestMatcher("/token/confirmar-cadastro"),
-                                new AntPathRequestMatcher("/**/all"),
-                                new AntPathRequestMatcher("/version"),
-                                new AntPathRequestMatcher("/health"),
-                                new AntPathRequestMatcher("/**/meu-perfil"),
-                                new AntPathRequestMatcher("/**/estabelecimento/"),
-                                new AntPathRequestMatcher("estabelecimento/**"),
-                                new AntPathRequestMatcher("/**/"),
-                                new AntPathRequestMatcher("/auth/**"),
-                                new AntPathRequestMatcher("/**/bairro/**"),
-                                new AntPathRequestMatcher("/**/municipio/**")
-                        ).permitAll()
-                        .anyRequest().authenticated()
+                                .requestMatchers(
+                                        new AntPathRequestMatcher("/*/iniciar-cadastro"),
+                                        new AntPathRequestMatcher("/*/login"),
+                                        new AntPathRequestMatcher("/token/confirmar-cadastro"),
+                                        new AntPathRequestMatcher("/**/all"),
+                                        new AntPathRequestMatcher("/version"),
+                                        new AntPathRequestMatcher("/health"),
+                                        new AntPathRequestMatcher("/**/meu-perfil"),
+                                        new AntPathRequestMatcher("/**/estabelecimento/"),
+                                        new AntPathRequestMatcher("estabelecimento/**"),
+                                        new AntPathRequestMatcher("/**/"),
+                                        new AntPathRequestMatcher("/auth/**"),
+                                        new AntPathRequestMatcher("/**/bairro/**"),
+                                        new AntPathRequestMatcher("/**/municipio/**"),
+                                        new AntPathRequestMatcher("/beneficiario/cadastrar-endereco"),
+                                        new AntPathRequestMatcher("/estabelecimento/cadastrar-endereco")
+                                ).permitAll()
+                                .anyRequest().authenticated()
                         //não remover esse comentário!
-                        //.anyRequest().permitAll() //aqui é para testar qualquer página, permitindo tudo.
+                        //.anyRequest().permitAll() //para testes, permitir tudo
                 );
 
         return http.build();

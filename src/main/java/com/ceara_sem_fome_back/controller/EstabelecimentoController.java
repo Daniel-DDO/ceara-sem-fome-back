@@ -1,11 +1,14 @@
 package com.ceara_sem_fome_back.controller;
 
+import com.ceara_sem_fome_back.dto.EnderecoCadRequest;
 import com.ceara_sem_fome_back.dto.EstabelecimentoRequest;
 //import com.ceara_sem_fome_back.model.Entregador;
+import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.Estabelecimento;
 // import com.ceara_sem_fome_back.repository.EstabelecimentoRepository;
 import com.ceara_sem_fome_back.service.ComercianteService;
+import com.ceara_sem_fome_back.service.EnderecoService;
 import com.ceara_sem_fome_back.service.EstabelecimentoService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -24,6 +27,9 @@ public class EstabelecimentoController {
 
     @Autowired
     private ComercianteService comercianteService;
+
+    @Autowired
+    private EnderecoService enderecoService;
 
     @PostMapping("/cadastrar")
     public ResponseEntity<Object> cadastrarEstabelecimento(@Valid @RequestBody EstabelecimentoRequest request) {
@@ -56,5 +62,14 @@ public class EstabelecimentoController {
     @GetMapping("/municipio/{municipio}")
     public ResponseEntity<List<Estabelecimento>> listarPorMunicipio(@PathVariable String municipio) {
         return ResponseEntity.ok(estabelecimentoService.buscarPorMunicipio(municipio));
+    }
+
+    @PostMapping("/cadastrar-endereco/{id}")
+    public ResponseEntity<Estabelecimento> cadastrarEndereco(
+            @PathVariable String id,
+            @Valid @RequestBody EnderecoCadRequest enderecoCadRequest) {
+
+        Estabelecimento estabelecimentoAtualizado = enderecoService.cadastrarEnderecoEstab(id, enderecoCadRequest);
+        return ResponseEntity.ok(estabelecimentoAtualizado);
     }
 }

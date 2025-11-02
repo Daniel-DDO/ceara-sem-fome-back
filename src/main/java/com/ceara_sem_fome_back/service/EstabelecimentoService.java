@@ -20,6 +20,9 @@ public class EstabelecimentoService {
     @Autowired
     private EstabelecimentoRepository estabelecimentoRepository;
 
+    @Autowired
+    private EnderecoService enderecoService;
+
     @Transactional
     public Estabelecimento salvarEstabelecimento(Estabelecimento estabelecimento, Comerciante comerciante) {
 

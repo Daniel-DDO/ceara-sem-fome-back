@@ -1,10 +1,7 @@
 package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.data.BeneficiarioData;
-import com.ceara_sem_fome_back.dto.PaginacaoDTO;
-import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
-import com.ceara_sem_fome_back.dto.BeneficiarioRequest;
-import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
+import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
 import com.ceara_sem_fome_back.exception.CpfInvalidoException;
 import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
@@ -173,17 +170,5 @@ public class BeneficiarioService implements UserDetailsService {
                 .orElseThrow(() -> new CpfInvalidoException(cpf));
 
     }
-
-    //função parao beneficiário adicionar um endereço
-//    @Transactional
-//    public Beneficiario adicionarEndereco(String beneficiarioId, Endereco enderecoRequest) {
-//        Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
-//                .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado"));
-//
-//        entityManager.persist(enderecoRequest);
-//        beneficiario.setEndereco(enderecoRequest);
-//
-//        return beneficiarioRepository.save(beneficiario);
-//    }
 
 }
