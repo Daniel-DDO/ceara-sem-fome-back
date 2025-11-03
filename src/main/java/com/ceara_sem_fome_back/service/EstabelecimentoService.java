@@ -1,6 +1,7 @@
 package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.dto.EnderecoCadRequest;
+import com.ceara_sem_fome_back.dto.EstabelecimentoRespostaDTO;
 import com.ceara_sem_fome_back.exception.EstabelecimentoJaCadastradoException;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.Estabelecimento;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class EstabelecimentoService {
@@ -79,5 +81,22 @@ public class EstabelecimentoService {
 
     public List<Estabelecimento> buscarPorMunicipio(String municipio) {
         return estabelecimentoRepository.findByEnderecoMunicipio(municipio);
+    }
+
+    public List<EstabelecimentoRespostaDTO> listarPorComerciante(String comercianteId) {
+        List<Estabelecimento> estabelecimentos = estabelecimentoRepository.findByComercianteId(comercianteId);
+
+        return estabelecimentos.stream()
+                .map(e -> new EstabelecimentoRespostaDTO(
+                        e.getId(),
+                        e.getNome(),
+                        e.getCnpj(),
+                        e.getTelefone(),
+                        e.getEndereco().getLogradouro(),
+                        e.getEndereco().getNumero(),
+                        e.getEndereco().getBairro(),
+                        e.getEndereco().getMunicipio()
+                ))
+                .collect(Collectors.toList());
     }
 }
