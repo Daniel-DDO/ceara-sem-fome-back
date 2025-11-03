@@ -1,0 +1,19 @@
+# Build outputs
+target/
+*.jar
+*.war
+*.log
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+

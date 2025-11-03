@@ -1,15 +1,32 @@
 package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.data.AdministradorData;
-import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
-import com.ceara_sem_fome_back.model.Administrador;
+import com.ceara_sem_fome_back.dto.PaginacaoDTO;
+import com.ceara_sem_fome_back.dto.AdministradorRequest;
+import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
+import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
+import com.ceara_sem_fome_back.exception.*;
+import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.AdministradorRepository;
+
+import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
+import com.ceara_sem_fome_back.repository.ComercianteRepository;
+import com.ceara_sem_fome_back.repository.EntregadorRepository;
+import jakarta.persistence.EntityNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -18,11 +35,27 @@ public class AdministradorService implements UserDetailsService {
     @Autowired
     private AdministradorRepository administradorRepository;
 
-    public Administrador logarAdm(String email, String senha) {
-        Administrador administrador = administradorRepository.findByEmail(email);
+    @Autowired
+    private BeneficiarioRepository beneficiarioRepository;
 
-        if (administrador != null && administrador.getSenha().equals(senha)) {
-            return administrador;
+    @Autowired
+    private ComercianteRepository comercianteRepository;
+
+    @Autowired
+    private EntregadorRepository entregadorRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private CadastroService cadastroService; // <-- Perfeito, já está aqui
+
+    public Administrador logarAdm(String email, String senha) {
+        Optional<Administrador> administrador = administradorRepository.findByEmail(email);
+
+        //1. Usa passwordEncoder.matches() para comparar a senha criptografada
+        if (administrador.isPresent() && passwordEncoder.matches(senha, administrador.get().getSenha())) {
+            return administrador.get();
         }
 
         throw new ContaNaoExisteException(email);
@@ -32,13 +65,143 @@ public class AdministradorService implements UserDetailsService {
         return PessoaUtils.verificarCpf(cpf);
     }
 
-    @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Administrador administrador = administradorRepository.findByEmail(email);
-        if (administrador == null) {
-            throw new UsernameNotFoundException("Usuário com email "+email+" não encontrado.");
-        }
-        return new AdministradorData(Optional.of(administrador));
+    @Transactional
+    public void iniciarCadastro(AdministradorRequest request) {
+        //2. Chama a validação CORRETA (cruzada)
+        cadastroService.validarCpfDisponivelEmTodosOsPerfis(request.getCpf());
+        cadastroService.validarEmailDisponivelEmTodosOsPerfis(request.getEmail());
+
+        //3. Delega a criação do token
+        cadastroService.criarTokenDeCadastroEVenviarEmailAdm(request);
     }
 
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        Optional<Administrador> administrador = administradorRepository.findByEmail(email);
+        if (administrador.isEmpty()) {
+            throw new UsernameNotFoundException("Usuário com email "+email+" não encontrado.");
+        }
+        return new AdministradorData(administrador);
+    }
+
+    public Administrador salvarAdm(Administrador administrador) {
+        if (!verificarCpf(administrador.getCpf())) {
+            throw new CpfInvalidoException(administrador.getCpf());
+        }
+        if (administradorRepository.findByEmail(administrador.getEmail()) != null) {
+            throw new EmailJaCadastradoException(administrador.getEmail());
+        }
+        return administradorRepository.save(administrador);
+    }
+
+    public PaginacaoDTO<Administrador> listarComFiltro(
+            String nomeFiltro,
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
+
+        Sort sort = direction.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Administrador> pagina;
+
+        // 1. Aplica o filtro se for válido
+        if (nomeFiltro != null && !nomeFiltro.isBlank()) {
+            pagina = administradorRepository.findByNomeContainingIgnoreCase(nomeFiltro, pageable);
+        } else {
+            // Sem filtro, apenas paginação
+            pagina = administradorRepository.findAll(pageable);
+        }
+
+        return new PaginacaoDTO<>(
+                pagina.getContent(),
+                pagina.getNumber(),
+                pagina.getTotalPages(),
+                pagina.getTotalElements(),
+                pagina.getSize(),
+                pagina.isLast()
+        );
+    }
+
+    public Pessoa alterarStatusAdministrador(AlterarStatusRequest request) {
+        switch (request.getTipoPessoa()) {
+            case ADMINISTRADOR -> {
+                Administrador administrador = administradorRepository.findById(request.getId())
+                        .orElseThrow(() -> new EntityNotFoundException("Administrador não encontrado"));
+                administrador.setStatus(request.getNovoStatusPessoa());
+                return administradorRepository.save(administrador);
+            }
+            case BENEFICIARIO -> {
+                Beneficiario beneficiario = beneficiarioRepository.findById(request.getId())
+                        .orElseThrow(() -> new EntityNotFoundException("Beneficiário não encontrado"));
+                beneficiario.setStatus(request.getNovoStatusPessoa());
+                return beneficiarioRepository.save(beneficiario);
+            }
+            case COMERCIANTE -> {
+                Comerciante comerciante = comercianteRepository.findById(request.getId())
+                        .orElseThrow(() -> new EntityNotFoundException("Comerciante não encontrado"));
+                comerciante.setStatus(request.getNovoStatusPessoa());
+                return comercianteRepository.save(comerciante);
+            }
+            case ENTREGADOR -> {
+                Entregador entregador = entregadorRepository.findById(request.getId())
+                        .orElseThrow(() -> new EntityNotFoundException("Entregador não encontrado"));
+                entregador.setStatus(request.getNovoStatusPessoa());
+                return entregadorRepository.save(entregador);
+            }
+            default -> throw new IllegalArgumentException("Tipo de pessoa inválido.");
+        }
+    }
+
+    /**
+     * Atualiza os dados de um administrador com base no seu e-mail (usuário)
+     * pego da autenticação.
+     *
+     * @param userEmail E-mail do usuário autenticado (vem do token JWT).
+     * @param dto Os novos dados para atualizar (PessoaUpdateDto).
+     * @return O administrador com os dados atualizados.
+     */
+    @Transactional
+    public Administrador atualizarAdministrador(String userEmail, PessoaUpdateDto dto) {
+        //1. Encontra o admin pelo e-mail do token
+        Administrador adminExistente = administradorRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Administrador não encontrado com o e-mail: " + userEmail));
+
+        //2. Verifica se o e-mail está sendo alterado
+        if (!Objects.equals(adminExistente.getEmail(), dto.getEmail())) {
+            //Se mudou, valida se o NOVO email já está em uso por QUALQUER pessoa
+            cadastroService.validarEmailDisponivelEmTodosOsPerfis(dto.getEmail());
+            adminExistente.setEmail(dto.getEmail());
+        }
+
+        //3. Atualiza os outros campos
+        adminExistente.setNome(dto.getNome());
+        adminExistente.setTelefone(dto.getTelefone());
+        adminExistente.setDataNascimento(dto.getDataNascimento());
+        adminExistente.setGenero(dto.getGenero());
+
+        //4. Salva as alterações
+        return administradorRepository.save(adminExistente);
+    }
+
+    public Administrador filtrarPorCpf(String cpf) {
+        if (cpf == null || cpf.isBlank()) {
+            throw new CpfInvalidoException(cpf);
+        }
+        return administradorRepository.findByCpf(cpf)
+                .orElseThrow(() -> new CpfInvalidoException(cpf));
+    }
+
+    /**
+     * Chama o serviço de cadastro para reativar uma conta de qualquer tipo.
+     * @param userId O ID do usuário a ser reativado.
+     */
+    @Transactional
+    public void reativarConta(String userId) {
+        // Delega a lógica de busca multi-repositório para o CadastroService
+        cadastroService.reativarConta(userId);
+    }
 }

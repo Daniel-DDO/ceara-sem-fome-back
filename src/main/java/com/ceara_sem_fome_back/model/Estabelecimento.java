@@ -1,17 +1,45 @@
 package com.ceara_sem_fome_back.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import lombok.Getter;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 public class Estabelecimento {
+
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
+
+    @NotBlank
     private String nome;
 
-    public Estabelecimento() {}
+    private String cnpj;
+
+    private String telefone; //do comércio
+
+    @Lob
+    @Column(name = "imagem")
+    private byte[] imagem;
+
+    private String tipoImagem;
+
+    private LocalDateTime dataCadastro;
+
+    @OneToOne(cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "endereco_id")
+    private Endereco endereco;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "comerciante_id", nullable = false)
+    @JsonBackReference
+    private Comerciante comerciante;
 }

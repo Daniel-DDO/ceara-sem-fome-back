@@ -55,4 +55,29 @@ Os fluxos de navegação garantem uma experiência de usuário eficiente:
 | **Backend** | **Spring Boot (Java)** | Framework Java que facilita a criação de aplicações robustas, escaláveis e com configuração simplificada.|
 | **API REST** | **Spring Web**| Módulo do Spring Boot para criação e exposição de endpoints RESTful.|
 
+##comandos docker
+Comando para buildar e criar os containers:
+
+1 - docker compose up -d
+
+#Para deixar a API funcionando
+1 - dar run nos containers(quem usa windows, baixar o docker desktop)
+2 - conectar o banco de dados ao container 
+3 - usar o comando 'mvn spring-boot:run
+4 - ser feliz
+
+## Executar comando no BD após a manutenção:
+-> Novo script SQL:
+
+DO $$ DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+        EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE';
+    END LOOP;
+END $$;
+
+-------------
+Ctrl + Enter
+
 
