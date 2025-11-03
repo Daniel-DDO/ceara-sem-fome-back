@@ -20,4 +20,6 @@ public interface EstabelecimentoRepository extends JpaRepository<Estabelecimento
     List<Estabelecimento> findByEnderecoMunicipio(String municipio);
 
     Page<Estabelecimento> findByNomeContainingIgnoreCase(String nome, Pageable pageable);
+
+    List<Estabelecimento> findByComercianteId(String comercianteId);
 }
