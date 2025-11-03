@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.dto.EnderecoCadRequest;
 import com.ceara_sem_fome_back.exception.EstabelecimentoJaCadastradoException;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.Estabelecimento;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -24,14 +26,19 @@ public class EstabelecimentoService {
     private EnderecoService enderecoService;
 
     @Transactional
-    public Estabelecimento salvarEstabelecimento(Estabelecimento estabelecimento, Comerciante comerciante) {
-
+    public Estabelecimento salvarEstabelecimento(Estabelecimento estabelecimento, Comerciante comerciante, EnderecoCadRequest enderecoCadRequest) {
         if (estabelecimentoRepository.existsByNomeAndComerciante(estabelecimento.getNome(), comerciante)) {
             throw new EstabelecimentoJaCadastradoException(estabelecimento.getNome());
         }
 
         estabelecimento.setComerciante(comerciante);
+        estabelecimento.setDataCadastro(LocalDateTime.now());
+
         Estabelecimento salvo = estabelecimentoRepository.save(estabelecimento);
+
+        if (enderecoCadRequest != null) {
+            salvo = enderecoService.cadastrarEnderecoEstab(salvo.getId(), enderecoCadRequest);
+        }
 
         comerciante.getEstabelecimentos().add(salvo);
 

@@ -195,6 +195,11 @@ public class ComercianteService implements UserDetailsService {
                 .orElseThrow(() -> new CpfInvalidoException(cpf));
     }
 
+    public Comerciante buscarPorEmail(String email) {
+        return comercianteRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException(email));
+    }
+
     public void deletarPorId(String id) {
         Comerciante comerciante = buscarPorId(id);
         comercianteRepository.delete(comerciante);

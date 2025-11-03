@@ -2,6 +2,8 @@ package com.ceara_sem_fome_back.security;
 
 import com.ceara_sem_fome_back.security.Handler.LoggingLogoutSuccessHandler;
 import com.ceara_sem_fome_back.service.PessoaDetailsService;
+import com.ceara_sem_fome_back.service.TokenService;
+import io.micrometer.common.KeyValues;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -37,11 +39,32 @@ public class JWTConfiguracao {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   AuthenticationManager authenticationManager,
+                                                   TokenService tokenService,
+                                                   PessoaDetailsService pessoaDetailsService,
+                                                   LoggingLogoutSuccessHandler loggingLogoutSuccessHandler) throws Exception {
+
+        AntPathRequestMatcher[] publicMatchers = JWTValidarFilter.ROTAS_PUBLICAS.stream()
+                .map(AntPathRequestMatcher::antMatcher)
+                .toArray(AntPathRequestMatcher[]::new);
+
         http
                 .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
+                        .requestMatchers(publicMatchers).permitAll()
+                        .anyRequest().authenticated()
+                )
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+                .addFilter(new JWTValidarFilter(authenticationManager, tokenService, pessoaDetailsService))
+                .logout(logout -> logout
+                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                        .logoutSuccessHandler(loggingLogoutSuccessHandler)
+                );
 
         return http.build();
     }

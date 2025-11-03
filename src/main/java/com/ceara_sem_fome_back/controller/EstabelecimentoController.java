@@ -1,5 +1,7 @@
 package com.ceara_sem_fome_back.controller;
 
+import com.ceara_sem_fome_back.data.BeneficiarioData;
+import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.dto.EnderecoCadRequest;
 import com.ceara_sem_fome_back.dto.EstabelecimentoRequest;
 //import com.ceara_sem_fome_back.model.Entregador;
@@ -36,9 +38,12 @@ public class EstabelecimentoController {
     private EnderecoService enderecoService;
 
     @PostMapping("/cadastrar")
-    public ResponseEntity<Object> cadastrarEstabelecimento(@Valid @RequestBody EstabelecimentoRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Comerciante comerciante = (Comerciante) authentication.getPrincipal();
+    public ResponseEntity<Estabelecimento> cadastrarEstabelecimento(@Valid @RequestBody EstabelecimentoRequest request) {
+        ComercianteData comercianteData =
+                (ComercianteData) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        String email = comercianteData.getUsername();
+        Comerciante comercianteLogado = comercianteService.buscarPorEmail(email);
 
         Estabelecimento novoEstabelecimento = new Estabelecimento();
         novoEstabelecimento.setNome(request.getNome());
@@ -46,7 +51,12 @@ public class EstabelecimentoController {
         novoEstabelecimento.setTelefone(request.getTelefone());
         novoEstabelecimento.setDataCadastro(LocalDateTime.now());
 
-        Estabelecimento salvo = estabelecimentoService.salvarEstabelecimento(novoEstabelecimento, comerciante);
+        Estabelecimento salvo = estabelecimentoService.salvarEstabelecimento(
+                novoEstabelecimento,
+                comercianteLogado,
+                request.getEnderecoCadRequest()
+        );
+
         return ResponseEntity.status(201).body(salvo);
     }
 
@@ -80,4 +90,5 @@ public class EstabelecimentoController {
         Estabelecimento estabelecimentoAtualizado = enderecoService.cadastrarEnderecoEstab(id, enderecoCadRequest);
         return ResponseEntity.ok(estabelecimentoAtualizado);
     }
+
 }

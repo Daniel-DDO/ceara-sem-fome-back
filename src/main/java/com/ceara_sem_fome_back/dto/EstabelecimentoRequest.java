@@ -20,7 +20,5 @@ public class EstabelecimentoRequest {
 
     private String telefone; //do comércio
 
-    private LocalDateTime dataCadastro;
-
-    private String enderecoId;
+    private EnderecoCadRequest enderecoCadRequest;
 }
