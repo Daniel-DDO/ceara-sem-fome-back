@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.controller;
 
+import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.StatusPessoa;
@@ -164,9 +165,11 @@ public class ComercianteController {
 
     @GetMapping("/meus-estabelecimentos")
     public ResponseEntity<List<EstabelecimentoRespostaDTO>> listarMeusEstabelecimentos(
-            @AuthenticationPrincipal UsuarioLogado usuarioLogado) {
+            @AuthenticationPrincipal ComercianteData comercianteData) {
+
+        String comercianteId = comercianteData.getComerciante().getId();
         List<EstabelecimentoRespostaDTO> estabelecimentos =
-                estabelecimentoService.listarPorComerciante(usuarioLogado.getId());
+                estabelecimentoService.listarPorComerciante(comercianteId);
         return ResponseEntity.ok(estabelecimentos);
     }
 
