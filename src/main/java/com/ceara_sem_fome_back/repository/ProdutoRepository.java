@@ -12,7 +12,11 @@ import java.util.Optional;
 public interface ProdutoRepository extends JpaRepository<Produto, String> {
     boolean existsProdutoById(String id);
 
+    @Query("SELECT p FROM Produto p WHERE p.id = :id AND p.status = 'AUTORIZADO'")
+    Optional<Produto> findById(@Param("id") String id);
+
     // Metodo para buscar um produto por ID ignorando o filtro @Where
-    @Query("SELECT p FROM Produto p WHERE p.id = :id")
+    @Query(value = "SELECT * FROM produto WHERE id = :id", nativeQuery = true)
     Optional<Produto> findByIdIgnoringStatus(@Param("id") String id);
+
 }

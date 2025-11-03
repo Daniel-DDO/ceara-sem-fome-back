@@ -13,7 +13,10 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "spring.sql.init.mode=never",
+        "spring.jpa.hibernate.ddl-auto=none"
+})
 @Transactional
 class CearaSemFomeBackApplicationTests {
 
