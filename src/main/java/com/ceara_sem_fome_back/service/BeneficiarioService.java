@@ -21,12 +21,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -149,13 +154,26 @@ public class BeneficiarioService implements UserDetailsService {
 
     //função parao beneficiário adicionar um endereço
     @Transactional
-    public Endereco adicionarEnderecoSeparado(String beneficiarioId, Endereco enderecoRequest) {
-        // salva o endereço na tabela de endereço
-        Endereco novoEndereco = enderecoRepository.save(enderecoRequest);
-
-        // Associa o endereço ao beneficiário
+    public Endereco cadastrarOuAtualizarEndereco(String beneficiarioId, Endereco endereco) {
         Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
-                .orElseThrow(() -> new EntityNotFoundException("Beneficiário não encontrado com o ID:" + beneficiarioId));
+                .orElseThrow(() -> new EntityNotFoundException("Beneficiário não encontrado com ID: " + beneficiarioId));
+
+        // Se já existe um endereço, reaproveita o ID (para atualizar em vez de criar um novo)
+        if (beneficiario.getEndereco() != null) {
+            endereco.setId(beneficiario.getEndereco().getId());
+        }
+
+        Endereco enderecoSalvo = enderecoRepository.save(endereco);
+        beneficiario.setEndereco(enderecoSalvo);
+        beneficiarioRepository.save(beneficiario);
+
+        return enderecoSalvo;
+    }
+
+    public Endereco buscarEnderecoDoBeneficiario(String beneficiarioId) {
+        Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
+                .orElseThrow(() -> new EntityNotFoundException("Beneficiário não encontrado com ID: " + beneficiarioId));
+
         return beneficiario.getEndereco();
     }
 }

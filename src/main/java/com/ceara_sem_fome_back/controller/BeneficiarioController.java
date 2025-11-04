@@ -90,8 +90,25 @@ public class BeneficiarioController {
             @PathVariable String beneficiarioId,
             @RequestBody Endereco endereco) {
 
-        Endereco novoEndereco = beneficiarioService.adicionarEnderecoSeparado(beneficiarioId, endereco);
+        Endereco novoEndereco = beneficiarioService.cadastrarOuAtualizarEndereco(beneficiarioId, endereco);
         return ResponseEntity.ok(novoEndereco);
+    }
+
+    // Atualizar endereço existente
+    @PutMapping("/{beneficiarioId}/endereco")
+    public ResponseEntity<Endereco> atualizarEndereco(
+            @PathVariable String beneficiarioId,
+            @RequestBody Endereco enderecoAtualizado) {
+
+        Endereco endereco = beneficiarioService.cadastrarOuAtualizarEndereco(beneficiarioId, enderecoAtualizado);
+        return ResponseEntity.ok(endereco);
+    }
+
+    // Buscar endereço
+    @GetMapping("/{beneficiarioId}/endereco")
+    public ResponseEntity<Endereco> buscarEndereco(@PathVariable String beneficiarioId) {
+        Endereco endereco = beneficiarioService.buscarEnderecoDoBeneficiario(beneficiarioId);
+        return ResponseEntity.ok(endereco);
     }
 
 
