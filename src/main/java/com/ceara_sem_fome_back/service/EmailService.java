@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.security.Deploy;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +35,7 @@ public class EmailService {
     }
 
     public void sendVerificationEmail(String toEmail, String token) {
-        String confirmationUrl = "http://localhost:8080/token/confirmar-cadastro?token=" + token;
+        String confirmationUrl = Deploy.getServidor()+"/token/confirmar-cadastro?token=" + token;
         String subject = "Verificação de E-mail - Ceará Sem Fome";
         String body = buildEmailTemplate(subject, "Para completar o seu cadastro, por favor, clique no botão abaixo:", confirmationUrl, "Verificar meu E-mail", "Este link é válido por 10 minutos.");
         sendHtmlEmail(toEmail, subject, body);
@@ -45,7 +46,7 @@ public class EmailService {
      */
     public void sendPasswordResetEmail(String toEmail, String token) {
         // Este URL aponta para o endpoint GET /validar-token-recuperacao
-        String recoveryLink = "http://localhost:8080/auth/validar-token-recuperacao?token=" + token;
+        String recoveryLink = Deploy.getServidor()+"/auth/validar-token-recuperacao?token=" + token;
         String subject = "Recuperação de Senha - Ceará Sem Fome";
         String body = buildEmailTemplate(subject, "Recebemos uma solicitação para redefinir sua senha. Clique no botão abaixo para validar o seu token.", recoveryLink, "Validar Token de Recuperação", "Este link é válido por 10 minutos.");
         sendHtmlEmail(toEmail, subject, body);
