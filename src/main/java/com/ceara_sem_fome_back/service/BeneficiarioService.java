@@ -12,6 +12,8 @@ import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.model.Endereco;
 import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
+import com.ceara_sem_fome_back.repository.EnderecoRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +43,9 @@ public class BeneficiarioService implements UserDetailsService {
 
     @Autowired
     private CadastroService cadastroService;
+
+    @Autowired
+    private EnderecoRepository enderecoRepository;
 
     public Beneficiario logarBeneficiario(String email, String senha) {
         Optional<Beneficiario> optionalBeneficiario = beneficiarioRepository.findByEmail(email);
@@ -143,14 +148,14 @@ public class BeneficiarioService implements UserDetailsService {
     }
 
     //função parao beneficiário adicionar um endereço
-//    @Transactional
-//    public Beneficiario adicionarEndereco(String beneficiarioId, Endereco enderecoRequest) {
-//        Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
-//                .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado"));
-//
-//        entityManager.persist(enderecoRequest);
-//        beneficiario.setEndereco(enderecoRequest);
-//
-//        return beneficiarioRepository.save(beneficiario);
-//    }
+    @Transactional
+    public Endereco adicionarEnderecoSeparado(String beneficiarioId, Endereco enderecoRequest) {
+        // salva o endereço na tabela de endereço
+        Endereco novoEndereco = enderecoRepository.save(enderecoRequest);
+
+        // Associa o endereço ao beneficiário
+        Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
+                .orElseThrow(() -> new EntityNotFoundException("Beneficiário não encontrado com o ID:" + beneficiarioId));
+        return beneficiario.getEndereco();
+    }
 }
