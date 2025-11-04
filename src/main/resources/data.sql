@@ -1,4 +1,3 @@
-/*
 INSERT INTO endereco (id, cep, logradouro, numero, bairro, municipio, latitude, longitude) VALUES
     ('end-1', '60025-061', 'Rua Major Facundo', '100', 'Centro', 'Fortaleza', -3.7275, -38.5274),
     ('end-2', '60140-160', 'Avenida Santos Dumont', '2000', 'Aldeota', 'Fortaleza', -3.7334, -38.4911),
@@ -67,4 +66,3 @@ INSERT INTO produto_carrinho (id, carrinho_id, produto_id, quantidade) VALUES
 INSERT INTO verification_token (token, user_email, expiry_date, nome, cpf, senha_criptografada, data_nascimento, telefone, genero, tipo_pessoa, lgpd_accepted)
 VALUES ('token-1', 'dummy@email.com', '2025-12-31', 'Dummy', '00000000000', '123456', '2000-01-01', '(85) 90000-0000', 'OUTRO', 'TESTE', true)
     ON CONFLICT (token) DO NOTHING;
-*/
