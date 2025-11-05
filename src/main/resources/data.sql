@@ -35,10 +35,12 @@ INSERT INTO entregador (id, nome, cpf, email, senha, data_nascimento, telefone, 
 VALUES ('ent-1', 'Pedro Santos', '01394251017', 'pedro.entregas@gmail.com', '123456', '1992-01-05', '(85) 94444-4444', 'MASCULINO', 'ATIVO', 'end-4', true)
     ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO conta (id, numero_conta, agencia, saldo, beneficiario_id)
+INSERT INTO conta (id, numero_conta, agencia, saldo, beneficiario_id, comerciante_id)
 VALUES
-    ('cont-1', '12345-6', '0001', 250.00, 'ben-1'),
-    ('cont-2', '78910-1', '0001', 125.50, 'ben-2')
+    ('cont-1', '12345-6', '0001', 250.00, 'ben-1', null),
+    ('cont-2', '78910-1', '0001', 125.50, 'ben-2', null),
+    ('cont-3', '12332-1', '0001', 300.00, null, 'com-1')
+
     ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO estabelecimento (id, nome, cnpj, telefone, imagem, tipo_imagem, data_cadastro, endereco_id, comerciante_id)

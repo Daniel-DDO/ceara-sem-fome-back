@@ -111,7 +111,9 @@ CREATE TABLE IF NOT EXISTS conta (
     agencia VARCHAR(255),
     saldo NUMERIC,
     beneficiario_id VARCHAR(255),
-    FOREIGN KEY (beneficiario_id) REFERENCES beneficiario (id)
+    comerciante_id VARCHAR(255),
+    FOREIGN KEY (beneficiario_id) REFERENCES beneficiario (id),
+    FOREIGN KEY (comerciante_id) REFERENCES comerciante (id)
     );
 
 CREATE TABLE IF NOT EXISTS produto_carrinho (
