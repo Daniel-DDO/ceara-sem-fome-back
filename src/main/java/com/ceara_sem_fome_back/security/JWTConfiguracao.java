@@ -1,6 +1,9 @@
 package com.ceara_sem_fome_back.security;
 
 import com.ceara_sem_fome_back.security.Handler.LoggingLogoutSuccessHandler;
+import com.ceara_sem_fome_back.service.PessoaDetailsService;
+import com.ceara_sem_fome_back.service.TokenService;
+import io.micrometer.common.KeyValues;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -9,7 +12,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -22,17 +24,14 @@ import java.util.List;
 @Configuration
 public class JWTConfiguracao {
 
-    @Value("${api.guid.token.senha}")
-    private String tokenSenha;
-
-    //INJETAR O NOVO HANDLER
     @Autowired
     private LoggingLogoutSuccessHandler loggingLogoutSuccessHandler;
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+    @Autowired
+    private PessoaDetailsService pessoaDetailsService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
@@ -41,53 +40,57 @@ public class JWTConfiguracao {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                 AuthenticationManager authManager) throws Exception {
+                                                   AuthenticationManager authenticationManager,
+                                                   TokenService tokenService,
+                                                   PessoaDetailsService pessoaDetailsService,
+                                                   LoggingLogoutSuccessHandler loggingLogoutSuccessHandler) throws Exception {
+
+        AntPathRequestMatcher[] publicMatchers = JWTValidarFilter.ROTAS_PUBLICAS.stream()
+                .map(AntPathRequestMatcher::antMatcher)
+                .toArray(AntPathRequestMatcher[]::new);
 
         http
-                .cors(cors -> cors.configurationSource(corsConfiguration()))
                 .csrf(csrf -> csrf.disable())
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilter(new JWTAutenticarFilter(authManager, tokenSenha))
-                .addFilter(new JWTValidarFilter(authManager, tokenSenha))
-                
-                //CONFIGURAÇÃO DE LOGOUT
-                .logout(logout -> logout
-                    .logoutUrl("/auth/logout") //Define a URL de logout
-                    .logoutSuccessHandler(loggingLogoutSuccessHandler) //Usa nosso handler de log
-                    .invalidateHttpSession(true)
-                    .deleteCookies("JSESSIONID") //
-                )
-                //FIM DA CONFIGURAÇÃO DE LOGOUT
-                
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                new AntPathRequestMatcher("/*/iniciar-cadastro"),
-                                new AntPathRequestMatcher("/*/login"),
-                                new AntPathRequestMatcher("/token/confirmar-cadastro"),
-                                new AntPathRequestMatcher("/**/all"),
-                                new AntPathRequestMatcher("/version"),
-                                new AntPathRequestMatcher("/health"),
-                                new AntPathRequestMatcher("/**/meu-perfil"),
-                                new AntPathRequestMatcher("/**/estabelecimento/"),
-                                new AntPathRequestMatcher("/auth/**") //Esta regra já libera o /auth/logout
-                        ).permitAll()
+
+                        .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
+                        .requestMatchers(publicMatchers).permitAll()
                         .anyRequest().authenticated()
-                        //não remover esse comentário!
-                        //.anyRequest().permitAll() //aqui é para testar qualquer página, permitindo tudo.
+                )
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+                .addFilter(new JWTValidarFilter(authenticationManager, tokenService, pessoaDetailsService))
+                .logout(logout -> logout
+                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                        .logoutSuccessHandler(loggingLogoutSuccessHandler)
                 );
 
         return http.build();
     }
 
     @Bean
-    public CorsConfigurationSource corsConfiguration() {
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cors = new CorsConfiguration();
-        cors.setAllowedOrigins(List.of("*"));
-        cors.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        cors.setAllowedOriginPatterns(List.of(
+                "https://*.cloudworkstations.dev",
+                "https://*-firebase-ceara-sem-fome-front-*.cloudworkstations.dev",
+                "https://5173-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev",
+                "https://5174-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev/",
+                "https://5175-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev/",
+                "https://5176-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev/",
+                "https://5177-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev/",
+                "https://8080-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev",
+                "https://8081-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev/"
+        ));
+        cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         cors.setAllowedHeaders(List.of("*"));
+        cors.setExposedHeaders(List.of("*"));
+        cors.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", cors);
+
         return source;
     }
 }

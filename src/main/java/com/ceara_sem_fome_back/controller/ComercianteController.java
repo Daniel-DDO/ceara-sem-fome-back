@@ -1,22 +1,20 @@
 package com.ceara_sem_fome_back.controller;
 
-import com.ceara_sem_fome_back.data.dto.ErrorDTO;
-import com.ceara_sem_fome_back.data.dto.LoginDTO;
-import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
-import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
-import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
-import com.ceara_sem_fome_back.dto.ComercianteRequest;
-import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
+import com.ceara_sem_fome_back.data.ComercianteData;
+import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.ComercianteService;
+import com.ceara_sem_fome_back.service.EstabelecimentoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping({"/comerciante"})
@@ -27,6 +25,9 @@ public class ComercianteController {
 
     @Autowired
     private JWTUtil jwtUtil;
+
+    @Autowired
+    private EstabelecimentoService estabelecimentoService;
 
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarComerciante(@Valid @RequestBody LoginDTO loginDTO) {
@@ -121,10 +122,11 @@ public class ComercianteController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(required = false) String nomeFiltro
     ) {
         //metodo de listagem
-        PaginacaoDTO<Comerciante> pagina = comercianteService.listarTodos(page, size, sortBy, direction);
+        PaginacaoDTO<Comerciante> pagina = comercianteService.listarComFiltro(nomeFiltro, page, size, sortBy, direction);
         return ResponseEntity.ok(pagina);
     }
 
@@ -149,4 +151,26 @@ public class ComercianteController {
         // 4. Retorna o objeto atualizado
         return ResponseEntity.ok(comercianteAtualizado);
     }
+
+    @GetMapping("/filtrar/cpf")
+    public ResponseEntity<Comerciante> filtrarPorCpf(
+            @RequestParam(name = "valor") String cpf) {
+
+        Comerciante comerciante = comercianteService.filtrarPorCpf(cpf);
+        // A senha não retorna no JSON
+        comerciante.setSenha(null);
+
+        return ResponseEntity.ok(comerciante);
+    }
+
+    @GetMapping("/meus-estabelecimentos")
+    public ResponseEntity<List<EstabelecimentoRespostaDTO>> listarMeusEstabelecimentos(
+            @AuthenticationPrincipal ComercianteData comercianteData) {
+
+        String comercianteId = comercianteData.getComerciante().getId();
+        List<EstabelecimentoRespostaDTO> estabelecimentos =
+                estabelecimentoService.listarPorComerciante(comercianteId);
+        return ResponseEntity.ok(estabelecimentos);
+    }
+
 }

@@ -1,19 +1,13 @@
 package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.data.BeneficiarioData;
-import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
-import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
-import com.ceara_sem_fome_back.dto.BeneficiarioRequest;
-import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
+import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
+import com.ceara_sem_fome_back.exception.CpfInvalidoException;
 import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Beneficiario;
-import com.ceara_sem_fome_back.model.Endereco;
-import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
-import com.ceara_sem_fome_back.repository.EnderecoRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,18 +15,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -48,9 +38,6 @@ public class BeneficiarioService implements UserDetailsService {
 
     @Autowired
     private CadastroService cadastroService;
-
-    @Autowired
-    private EnderecoRepository enderecoRepository;
 
     public Beneficiario logarBeneficiario(String email, String senha) {
         Optional<Beneficiario> optionalBeneficiario = beneficiarioRepository.findByEmail(email);
@@ -93,21 +80,27 @@ public class BeneficiarioService implements UserDetailsService {
         return beneficiario;
     }
 
-    public Beneficiario alterarStatusBeneficiario(AlterarStatusRequest request) {
-        Beneficiario beneficiario = beneficiarioRepository.findById(request.getId())
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Beneficiário não encontrado com o ID: " + request.getId()));
+    public PaginacaoDTO<Beneficiario> listarComFiltro(
+            String nomeFiltro,
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
 
-        beneficiario.setStatus(request.getNovoStatusPessoa());
-        return beneficiarioRepository.save(beneficiario);
-    }
-
-    public PaginacaoDTO<Beneficiario> listarTodos(int page, int size, String sortBy, String direction) {
         Sort sort = direction.equalsIgnoreCase("desc") ?
                 Sort.by(sortBy).descending() :
                 Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Beneficiario> pagina = beneficiarioRepository.findAll(pageable);
+        Page<Beneficiario> pagina;
+
+        // Aplica o filtro se for válido
+        if (nomeFiltro != null && !nomeFiltro.isBlank()) {
+            pagina = beneficiarioRepository.findByNomeContainingIgnoreCase(nomeFiltro, pageable);
+        } else {
+            // Sem filtro, apenas paginação
+            pagina = beneficiarioRepository.findAll(pageable);
+        }
 
         return new PaginacaoDTO<>(
                 pagina.getContent(),
@@ -117,6 +110,14 @@ public class BeneficiarioService implements UserDetailsService {
                 pagina.getSize(),
                 pagina.isLast()
         );
+    }
+
+    public Beneficiario alterarStatusBeneficiario(AlterarStatusRequest request) {
+        Beneficiario beneficiario = beneficiarioRepository.findById(request.getId())
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Beneficiário não encontrado com o ID: " + request.getId()));
+
+        beneficiario.setStatus(request.getNovoStatusPessoa());
+        return beneficiarioRepository.save(beneficiario);
     }
 
     /**
@@ -137,7 +138,7 @@ public class BeneficiarioService implements UserDetailsService {
         if (!Objects.equals(beneficiarioExistente.getEmail(), dto.getEmail())) {
             //Se o email mudou, validamos se o NOVO email já está em uso por QUALQUER pessoa
             cadastroService.validarEmailDisponivelEmTodosOsPerfis(dto.getEmail());
-            
+
             //Se a validação passar, podemos setar o novo email
             beneficiarioExistente.setEmail(dto.getEmail());
         }
@@ -152,28 +153,22 @@ public class BeneficiarioService implements UserDetailsService {
         return beneficiarioRepository.save(beneficiarioExistente);
     }
 
-    //função parao beneficiário adicionar um endereço
-    @Transactional
-    public Endereco cadastrarOuAtualizarEndereco(String beneficiarioId, Endereco endereco) {
-        Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
-                .orElseThrow(() -> new EntityNotFoundException("Beneficiário não encontrado com ID: " + beneficiarioId));
+    public List<Beneficiario> buscarPorBairro(String bairro) {
+        return beneficiarioRepository.findByEnderecoBairro(bairro);
+    }
 
-        // Se já existe um endereço, reaproveita o ID (para atualizar em vez de criar um novo)
-        if (beneficiario.getEndereco() != null) {
-            endereco.setId(beneficiario.getEndereco().getId());
+    public List<Beneficiario> buscarPorMunicipio(String municipio) {
+        return beneficiarioRepository.findByEnderecoMunicipio(municipio);
+    }
+
+    public Beneficiario filtrarPorCpf(String cpf) {
+        if (cpf == null || cpf.isBlank()) {
+            throw new CpfInvalidoException(cpf);
         }
 
-        Endereco enderecoSalvo = enderecoRepository.save(endereco);
-        beneficiario.setEndereco(enderecoSalvo);
-        beneficiarioRepository.save(beneficiario);
+        return beneficiarioRepository.findByCpf(cpf)
+                .orElseThrow(() -> new CpfInvalidoException(cpf));
 
-        return enderecoSalvo;
     }
 
-    public Endereco buscarEnderecoDoBeneficiario(String beneficiarioId) {
-        Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
-                .orElseThrow(() -> new EntityNotFoundException("Beneficiário não encontrado com ID: " + beneficiarioId));
-
-        return beneficiario.getEndereco();
-    }
 }

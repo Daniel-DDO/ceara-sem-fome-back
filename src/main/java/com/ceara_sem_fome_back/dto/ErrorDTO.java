@@ -1,4 +1,4 @@
-package com.ceara_sem_fome_back.data.dto;
+package com.ceara_sem_fome_back.dto;
 
 
 import lombok.Getter;

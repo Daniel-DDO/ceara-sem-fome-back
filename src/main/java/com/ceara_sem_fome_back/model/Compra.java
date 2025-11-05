@@ -40,7 +40,7 @@ public class Compra {
     @Enumerated(EnumType.STRING)
     private StatusCompra status;
 
-    public Compra(Beneficiario beneficiario, Estabelecimento estabelecimento, Endereco local, Double valorTotal) {
+    public Compra(Beneficiario beneficiario, Estabelecimento estabelecimento, Endereco endereco, Double valorTotal) {
         this.id = UUID.randomUUID().toString();
         this.dataHoraCompra = LocalDateTime.now();
         this.beneficiario = beneficiario;

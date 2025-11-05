@@ -1,24 +1,20 @@
 package com.ceara_sem_fome_back.controller;
 
-import com.ceara_sem_fome_back.data.dto.ErrorDTO;
-import com.ceara_sem_fome_back.data.dto.LoginDTO;
-import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
-import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
-import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
-import com.ceara_sem_fome_back.dto.BeneficiarioRequest;
-import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
+import com.ceara_sem_fome_back.data.BeneficiarioData;
+import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.model.Beneficiario;
-import com.ceara_sem_fome_back.model.Endereco;
-import com.ceara_sem_fome_back.model.StatusPessoa;
-import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.BeneficiarioService;
+import com.ceara_sem_fome_back.service.EnderecoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/beneficiario")
@@ -29,6 +25,9 @@ public class BeneficiarioController {
 
     @Autowired
     private JWTUtil jwtUtil;
+
+    @Autowired
+    private EnderecoService enderecoService;
 
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarBeneficiario(@Valid @RequestBody LoginDTO loginDTO) {
@@ -85,32 +84,14 @@ public class BeneficiarioController {
         return ResponseEntity.ok(beneficiarioBloqueado);
     }
 
-    @PostMapping("/{beneficiarioId}/endereco")
-    public ResponseEntity<Endereco> cadastrarEndereco(
-            @PathVariable String beneficiarioId,
-            @RequestBody Endereco endereco) {
-
-        Endereco novoEndereco = beneficiarioService.cadastrarOuAtualizarEndereco(beneficiarioId, endereco);
-        return ResponseEntity.ok(novoEndereco);
-    }
-
-    // Atualizar endereço existente
-    @PutMapping("/{beneficiarioId}/endereco")
-    public ResponseEntity<Endereco> atualizarEndereco(
-            @PathVariable String beneficiarioId,
-            @RequestBody Endereco enderecoAtualizado) {
-
-        Endereco endereco = beneficiarioService.cadastrarOuAtualizarEndereco(beneficiarioId, enderecoAtualizado);
-        return ResponseEntity.ok(endereco);
-    }
-
-    // Buscar endereço
-    @GetMapping("/{beneficiarioId}/endereco")
-    public ResponseEntity<Endereco> buscarEndereco(@PathVariable String beneficiarioId) {
-        Endereco endereco = beneficiarioService.buscarEnderecoDoBeneficiario(beneficiarioId);
-        return ResponseEntity.ok(endereco);
-    }
-
+    //Endpoint para um beneficiário adicionar um endereço
+//    @PostMapping("/{beneficiarioId}/endereco") //verificar se beneficiarioId existe
+//    public ResponseEntity<Beneficiario> adicionarEndereco(
+//            @PathVariable String beneficiarioId,
+//            @RequestBody Endereco enderecoRequest) {
+//        Beneficiario beneficiario = beneficiarioService.adicionarEndereco(beneficiarioId, enderecoRequest);
+//        return ResponseEntity.ok(beneficiario);
+//    }
 
     /**
      * Rota para iniciar o processo de cadastro.
@@ -138,10 +119,11 @@ public class BeneficiarioController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(defaultValue = "") String nomeFiltro
     ) {
         //metodo de listagem
-        PaginacaoDTO<Beneficiario> pagina = beneficiarioService.listarTodos(page, size, sortBy, direction);
+        PaginacaoDTO<Beneficiario> pagina = beneficiarioService.listarComFiltro(nomeFiltro, page, size, sortBy, direction);
         return ResponseEntity.ok(pagina);
     }
 
@@ -157,15 +139,52 @@ public class BeneficiarioController {
 
         //1. O 'Principal' injetado pelo Spring Security contém o usuário.
         //No caso (JWT), principal.getName() retorna o E-MAIL do token.
-        String userEmail = principal.getName(); 
-        
+        String userEmail = principal.getName();
+
         //2. Chama o serviço que você criou
         Beneficiario beneficiarioAtualizado = beneficiarioService.atualizarBeneficiario(userEmail, dto);
-        
+
         //3. A senha não retorna no JSON.
-        beneficiarioAtualizado.setSenha(null); 
+        beneficiarioAtualizado.setSenha(null);
 
         //4. Retorna o objeto atualizado com status 200 OK
         return ResponseEntity.ok(beneficiarioAtualizado);
     }
+
+    @GetMapping("/bairro/{bairro}")
+    public ResponseEntity<List<Beneficiario>> listarPorBairro(@PathVariable String bairro) {
+        return ResponseEntity.ok(beneficiarioService.buscarPorBairro(bairro));
+    }
+
+    @GetMapping("/municipio/{municipio}")
+    public ResponseEntity<List<Beneficiario>> listarPorMunicipio(@PathVariable String municipio) {
+        return ResponseEntity.ok(beneficiarioService.buscarPorMunicipio(municipio));
+    }
+
+    @GetMapping("/filtrar/cpf")
+    public ResponseEntity<Beneficiario> filtrarPorCpf(
+            @RequestParam(name = "valor") String cpf) {
+
+        Beneficiario beneficiario = beneficiarioService.filtrarPorCpf(cpf);
+
+        //A senha não retorna no JSON
+        beneficiario.setSenha(null);
+
+        return ResponseEntity.ok(beneficiario);
+    }
+
+    @PostMapping("/cadastrar-endereco")
+    public ResponseEntity<Beneficiario> cadastrarEndereco(@Valid @RequestBody EnderecoCadRequest enderecoCadRequest) {
+
+        BeneficiarioData beneficiarioData = (BeneficiarioData) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        String beneficiarioId = beneficiarioData.getId();
+        Beneficiario beneficiarioAtualizado = enderecoService.cadastrarEnderecoBenef(beneficiarioId, enderecoCadRequest);
+
+        return ResponseEntity.ok(beneficiarioAtualizado);
+    }
+
 }

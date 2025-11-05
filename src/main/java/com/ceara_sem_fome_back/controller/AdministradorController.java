@@ -1,24 +1,26 @@
 package com.ceara_sem_fome_back.controller;
 
-import com.ceara_sem_fome_back.data.dto.ErrorDTO;
-import com.ceara_sem_fome_back.data.dto.LoginDTO;
-import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
-import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
+import com.ceara_sem_fome_back.dto.ErrorDTO;
+import com.ceara_sem_fome_back.dto.LoginDTO;
+import com.ceara_sem_fome_back.dto.PaginacaoDTO;
+import com.ceara_sem_fome_back.dto.PessoaRespostaDTO;
 import com.ceara_sem_fome_back.dto.AdministradorRequest;
 import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
 import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
+import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Administrador;
 import com.ceara_sem_fome_back.model.Pessoa;
 import com.ceara_sem_fome_back.model.StatusPessoa;
-import com.ceara_sem_fome_back.model.TipoPessoa;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.AdministradorService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/adm")
@@ -82,7 +84,7 @@ public class AdministradorController {
         return ResponseEntity.ok(pessoa);
     }
 
-     // Desativar conta (qualquer tipo)
+    // Desativar conta (qualquer tipo)
     @PatchMapping("/desativar/{tipo}/{id}")
     public ResponseEntity<Pessoa> desativar(@PathVariable AlterarStatusRequest request ) {
         request.setNovoStatusPessoa(StatusPessoa.INATIVO);
@@ -101,14 +103,14 @@ public class AdministradorController {
     @PostMapping("/cadastrar")
     public ResponseEntity<Object> cadastrarAdm(@RequestBody @Valid AdministradorRequest request) {
         //metodo de cadastro
-            Administrador administradorParaSalvar = new Administrador();
-            administradorParaSalvar.setNome(request.getNome());
-            administradorParaSalvar.setEmail(request.getEmail());
-            administradorParaSalvar.setSenha(request.getSenha());
+        Administrador administradorParaSalvar = new Administrador();
+        administradorParaSalvar.setNome(request.getNome());
+        administradorParaSalvar.setEmail(request.getEmail());
+        administradorParaSalvar.setSenha(request.getSenha());
 
-            Administrador novoAdministrador = administradorService.salvarAdm(administradorParaSalvar);
+        Administrador novoAdministrador = administradorService.salvarAdm(administradorParaSalvar);
 
-            return ResponseEntity.status(201).body(novoAdministrador);
+        return ResponseEntity.status(201).body(novoAdministrador);
     }
 
     @PostMapping("/iniciar-cadastro")
@@ -131,10 +133,11 @@ public class AdministradorController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(defaultValue = "") String nomeFiltro
     ) {
         //metodo de listagem
-        PaginacaoDTO<Administrador> resposta = administradorService.listarTodos(page, size, sortBy, direction);
+        PaginacaoDTO<Administrador> resposta = administradorService.listarComFiltro(nomeFiltro, page, size, sortBy, direction);
         return ResponseEntity.ok(resposta);
     }
 
@@ -148,16 +151,48 @@ public class AdministradorController {
             Principal principal) { //Pega o usuário autenticado via token
 
         //1. Pega o e-mail do usuário logado (armazenado no token)
-        String userEmail = principal.getName(); 
-        
+        String userEmail = principal.getName();
+
         //2. Chama o novo serviço de atualização
         Administrador adminAtualizado = administradorService.atualizarAdministrador(userEmail, dto);
-        
+
         //3. A senha não retorna no JSON.
-        adminAtualizado.setSenha(null); 
+        adminAtualizado.setSenha(null);
 
         //4. Retorna o objeto atualizado
         return ResponseEntity.ok(adminAtualizado);
+    }
+
+    @GetMapping("/filtrar/cpf")
+    public ResponseEntity<Administrador> filtrarPorCpf(
+            @RequestParam(name = "valor") String cpf) {
+
+        Administrador administrador = administradorService.filtrarPorCpf(cpf);
+        // 💡 A senha não retorna no JSON
+        administrador.setSenha(null);
+
+        return ResponseEntity.ok(administrador);
+    }
+
+    //ENDPOINT DE REATIVAÇÃO
+
+    /**
+     * Endpoint para reativar uma conta que foi desativada (soft delete).
+     * @param id O ID do usuário
+     * @return Resposta 200 OK com mensagem de sucesso.
+     */
+    @PutMapping("/conta/{id}/reativar")
+    public ResponseEntity<Object> reativarConta(@PathVariable String id) {
+        try {
+            administradorService.reativarConta(id);
+            return ResponseEntity.ok().body(Map.of("message", "Conta reativada com sucesso."));
+        } catch (RecursoNaoEncontradoException e) {
+            ErrorDTO errorDTO = new ErrorDTO(e.getMessage(), 404);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorDTO);
+        } catch (Exception e) {
+            ErrorDTO errorDTO = new ErrorDTO("Erro interno ao tentar reativar a conta.", 500);
+            return ResponseEntity.status(500).body(errorDTO);
+        }
     }
 
 }

@@ -8,15 +8,19 @@ import com.ceara_sem_fome_back.repository.EstabelecimentoRepository;
 import com.ceara_sem_fome_back.repository.ProdutoEstabelecimentoRepository;
 import com.ceara_sem_fome_back.repository.ProdutoRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
+import java.io.IOException; // Import adicionado
 import java.util.List;
 import java.util.UUID;
 import com.ceara_sem_fome_back.model.Produto;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartFile; // Import adicionado
 
 @Service
 public class ProdutoService {
@@ -33,7 +37,9 @@ public class ProdutoService {
     @Autowired
     private ComercianteService comercianteService;
 
-    public ProdutoEstabelecimento cadastrarProduto(ProdutoCadastroRequest request, Comerciante comerciante) {
+    // --- METODO MODIFICADO ---
+    @Transactional
+    public ProdutoEstabelecimento cadastrarProduto(ProdutoCadastroRequest request, Comerciante comerciante, MultipartFile file) throws IOException {
 
         Estabelecimento estabelecimento = estabelecimentoRepository.findById(request.getEstabelecimentoId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException(request.getEstabelecimentoId()));
@@ -48,8 +54,15 @@ public class ProdutoService {
         novoProduto.setPreco(request.getPrecoVenda().doubleValue());
         novoProduto.setQuantidadeEstoque(request.getEstoque());
         novoProduto.setComerciante(comerciante);
+        novoProduto.setStatus(StatusProduto.PENDENTE);
+
+        novoProduto.setStatus(StatusProduto.PENDENTE);
 
         Produto produtoSalvo = produtoRepository.save(novoProduto);
+
+        if (file != null && !file.isEmpty()) {
+            this.salvarImagem(produtoSalvo.getId(), file);
+        }
 
         ProdutoEstabelecimento associacao = new ProdutoEstabelecimento();
         associacao.setProduto(produtoSalvo);
@@ -58,15 +71,9 @@ public class ProdutoService {
         return produtoEstabelecimentoRepository.save(associacao);
     }
 
-    public List<ProdutoEstabelecimento> listarProdutosPorEstabelecimento(String estabelecimentoId) {
-
-        List<ProdutoEstabelecimento> produtos = produtoEstabelecimentoRepository.findByEstabelecimento_Id(estabelecimentoId);
-        return produtos;
-    }
-
-
     public Produto aprovarProduto(String id) {
-        Produto produto = produtoRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
+        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
 
         if (!produto.getStatus().equals(StatusProduto.PENDENTE)) {
             throw new IllegalStateException("Produto já foi autorizado, recusado ou desativado.");
@@ -79,7 +86,8 @@ public class ProdutoService {
     }
 
     public Produto recusarProduto(String id) {
-        Produto produto = produtoRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
+        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
 
         if (!produto.getStatus().equals(StatusProduto.PENDENTE)) {
             throw new IllegalStateException("Produto já foi autorizado, recusado ou desativado.");
@@ -92,7 +100,8 @@ public class ProdutoService {
     }
 
     public Produto editarProduto(String id, String nome, String lote, String descricao, double preco, int quantidadeEstoque) {
-        Produto produto = produtoRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
+        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
 
         if (!produto.getStatus().equals(StatusProduto.AUTORIZADO)) {
             throw new IllegalStateException("Produto não autorizado.");
@@ -110,7 +119,8 @@ public class ProdutoService {
     }
 
     public Produto removerProduto(String id) {
-        Produto produto = produtoRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
+        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
+                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
 
         if (produto.getStatus().equals(StatusProduto.RECUSADO)) {
             throw new IllegalStateException("Produto já foi recusado.");
@@ -129,7 +139,7 @@ public class ProdutoService {
 
     @Transactional
     public Produto salvarImagem(String id, MultipartFile file) throws IOException {
-        Produto produto = produtoRepository.findById(id)
+        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
 
         if (file == null || file.isEmpty()) {
@@ -144,14 +154,14 @@ public class ProdutoService {
     //retorna bytes da imagem (ou null se não há imagem)
     @Transactional(readOnly = true)
     public byte[] buscarImagem(String id) {
-        Produto produto = produtoRepository.findById(id)
+        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
         return produto.getImagem();
     }
 
     @Transactional(readOnly = true)
     public String buscarTipoImagem(String id) {
-        Produto produto = produtoRepository.findById(id)
+        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
         return produto.getTipoImagem();
     }
@@ -159,7 +169,7 @@ public class ProdutoService {
     //remove apenas a imagem (mantém produto)
     @Transactional
     public void removerImagem(String id) {
-        Produto produto = produtoRepository.findById(id)
+        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
         produto.setImagem(null);
         produto.setTipoImagem(null);
@@ -182,10 +192,38 @@ public class ProdutoService {
     //verifica se tem imagem
     @Transactional(readOnly = true)
     public boolean possuiImagem(String id) {
-        Produto produto = produtoRepository.findById(id)
+        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
         return produto.getImagem() != null && produto.getImagem().length > 0;
     }
 
-}
+    public Page<ProdutoEstabelecimento> listarProdutosComFiltroPorEstabelecimento(
+            String estabelecimentoId,
+            String nomeFiltro,
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
 
+        Sort sort = direction.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        estabelecimentoRepository.findById(estabelecimentoId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Estabelecimento não encontrado."));
+
+        // Verifica se o filtro de nome deve ser aplicado
+        if (nomeFiltro != null && !nomeFiltro.isBlank()) {
+            // Com filtro de nome
+            return produtoEstabelecimentoRepository.findByEstabelecimento_IdAndProduto_NomeContainingIgnoreCase(
+                    estabelecimentoId, nomeFiltro, pageable
+            );
+        } else {
+            // Sem filtro de nome
+            return produtoEstabelecimentoRepository.findByEstabelecimento_Id(estabelecimentoId, pageable);
+        }
+    }
+
+}

@@ -1,6 +1,7 @@
 package com.ceara_sem_fome_back.data;
 
 import com.ceara_sem_fome_back.model.Comerciante;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -10,6 +11,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 @Component
+@Getter
 public class ComercianteData implements UserDetails {
 
     private final Optional<Comerciante> comerciante;

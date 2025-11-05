@@ -19,7 +19,10 @@ public class Conta {
     private BigDecimal saldo;
 
     @OneToOne
-    @JoinColumn(name = "beneficiario_id", nullable= false)
+    @JoinColumn(name = "beneficiario_id", nullable= true)
     private Beneficiario beneficiario;
 
+    @OneToOne
+    @JoinColumn(name = "comerciante_id", nullable= true)
+    private Comerciante comerciante;
 }

@@ -18,20 +18,26 @@ public class CompraController {
     private CompraService compraService;
 
     /**
-     * Cria uma nova compra a partir do carrinho do beneficiário
+     * Finaliza uma compra com base no carrinho do beneficiário.
+     * Agora o ID do estabelecimento também é obrigatório.
      */
-    @PostMapping("/finalizar/{beneficiarioId}")
-    public ResponseEntity<Compra> finalizarCompra(@PathVariable String beneficiarioId) {
+    @PostMapping("/finalizar/{beneficiarioId}/{estabelecimentoId}")
+    public ResponseEntity<?> finalizarCompra(
+            @PathVariable String beneficiarioId,
+            @PathVariable String estabelecimentoId) {
+
         try {
-            Compra compra = compraService.finalizarCompra(beneficiarioId);
+            Compra compra = compraService.finalizarCompra(beneficiarioId, estabelecimentoId);
             return ResponseEntity.ok(compra);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("Erro: " + e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.internalServerError().body("Erro inesperado ao finalizar compra.");
         }
     }
 
     /**
-     * Retorna todas as compras realizadas
+     * Retorna todas as compras realizadas.
      */
     @GetMapping
     public ResponseEntity<List<Compra>> listarTodas() {
@@ -40,33 +46,41 @@ public class CompraController {
     }
 
     /**
-     * Retorna todas as compras de um beneficiário específico
+     * Retorna todas as compras de um beneficiário específico.
      */
     @GetMapping("/beneficiario/{beneficiarioId}")
-    public ResponseEntity<List<Compra>> listarPorBeneficiario(@PathVariable String beneficiarioId) {
-        List<Compra> compras = compraService.listarPorBeneficiario(beneficiarioId);
-        return ResponseEntity.ok(compras);
+    public ResponseEntity<?> listarPorBeneficiario(@PathVariable String beneficiarioId) {
+        try {
+            List<Compra> compras = compraService.listarPorBeneficiario(beneficiarioId);
+            return ResponseEntity.ok(compras);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     /**
-     * Retorna os itens de uma compra específica
+     * Retorna os itens de uma compra específica.
      */
     @GetMapping("/{compraId}/itens")
-    public ResponseEntity<List<ItemCompra>> listarItensDaCompra(@PathVariable String compraId) {
-        List<ItemCompra> itens = compraService.listarItensDaCompra(compraId);
-        return ResponseEntity.ok(itens);
+    public ResponseEntity<?> listarItensDaCompra(@PathVariable String compraId) {
+        try {
+            List<ItemCompra> itens = compraService.listarItensDaCompra(compraId);
+            return ResponseEntity.ok(itens);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     /**
-     * Gera um comprovante (nota fiscal simples) em formato texto
+     * Gera um comprovante (nota fiscal simples) em formato texto.
      */
     @GetMapping("/{compraId}/comprovante")
-    public ResponseEntity<String> gerarComprovante(@PathVariable String compraId) {
+    public ResponseEntity<?> gerarComprovante(@PathVariable String compraId) {
         try {
             String comprovante = compraService.gerarComprovante(compraId);
             return ResponseEntity.ok(comprovante);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Erro ao gerar comprovante: " + e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("Erro: " + e.getMessage());
         }
     }
 }

@@ -4,12 +4,12 @@ import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class CompraService {
@@ -24,32 +24,48 @@ public class CompraService {
     private ProdutoCarrinhoRepository produtoCarrinhoRepository;
 
     @Autowired
+    private EstabelecimentoRepository estabelecimentoRepository;
+
+    @Autowired
     private CompraRepository compraRepository;
 
     @Autowired
     private ItemCompraRepository itemCompraRepository;
 
+    /**
+     * Finaliza a compra de um beneficiário em um determinado estabelecimento.
+     * - Cria a compra com base no carrinho
+     * - Registra os itens e o valor total
+     * - Limpa o carrinho após a finalização
+     */
+    @Transactional
     public Compra finalizarCompra(String beneficiarioId, String estabelecimentoId) {
         Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
-            .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado."));
+                .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado."));
+
+        Estabelecimento estabelecimento = estabelecimentoRepository.findById(estabelecimentoId)
+                .orElseThrow(() -> new RuntimeException("Estabelecimento não encontrado."));
 
         Carrinho carrinho = beneficiario.getCarrinho();
         if (carrinho == null) {
             throw new RuntimeException("Carrinho não encontrado para este beneficiário.");
         }
 
-        // Cria a compra
+        List<ProdutoCarrinho> produtosCarrinho = produtoCarrinhoRepository.findByCarrinho(carrinho);
+        if (produtosCarrinho.isEmpty()) {
+            throw new RuntimeException("O carrinho está vazio. Não é possível finalizar a compra.");
+        }
+
         Compra compra = new Compra();
         compra.setId(UUID.randomUUID().toString());
         compra.setDataHoraCompra(LocalDateTime.now());
-        compra.setStatus("CONCLUIDA");
+        compra.setStatus(StatusCompra.FINALIZADA);
         compra.setBeneficiario(beneficiario);
-        compra.setEstabelecimento(new Estabelecimento(estabelecimentoId)); // apenas id
+        compra.setEstabelecimento(estabelecimento);
         compra.setEndereco(beneficiario.getEndereco());
 
         BigDecimal valorTotal = BigDecimal.ZERO;
 
-        List<ProdutoCarrinho> produtosCarrinho = produtoCarrinhoRepository.findByCarrinho(carrinho);
         for (ProdutoCarrinho pc : produtosCarrinho) {
             ItemCompra item = new ItemCompra();
             item.setId(UUID.randomUUID().toString());
@@ -60,16 +76,61 @@ public class CompraService {
             itemCompraRepository.save(item);
 
             valorTotal = valorTotal.add(
-                pc.getProduto().getPreco().multiply(BigDecimal.valueOf(pc.getQuantidade()))
+                    BigDecimal.valueOf(pc.getProduto().getPreco())
+                            .multiply(BigDecimal.valueOf(pc.getQuantidade()))
             );
+
         }
 
-        compra.setValorTotal(valorTotal);
+        compra.setValorTotal(valorTotal.doubleValue());
         compraRepository.save(compra);
 
-        // Limpa o carrinho após a compra
         produtoCarrinhoRepository.deleteAll(produtosCarrinho);
 
         return compra;
+    }
+
+    /**
+     * Lista todas as compras registradas.
+     */
+    public List<Compra> listarTodas() {
+        return compraRepository.findAll();
+    }
+
+    public List<Compra> listarPorBeneficiario(String beneficiarioId) {
+        Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
+                .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado."));
+        return compraRepository.findByBeneficiario(beneficiario);
+    }
+
+    public List<ItemCompra> listarItensDaCompra(String compraId) {
+        Compra compra = compraRepository.findById(compraId)
+                .orElseThrow(() -> new RuntimeException("Compra não encontrada."));
+        return itemCompraRepository.findByCompra(compra);
+    }
+
+    public String gerarComprovante(String compraId) {
+        Compra compra = compraRepository.findById(compraId)
+                .orElseThrow(() -> new RuntimeException("Compra não encontrada."));
+
+        List<ItemCompra> itens = itemCompraRepository.findByCompra(compra);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("=== COMPROVANTE DE COMPRA ===\n");
+        sb.append("Beneficiário: ").append(compra.getBeneficiario().getNome()).append("\n");
+        sb.append("Estabelecimento: ").append(compra.getEstabelecimento().getNome()).append("\n");
+        sb.append("Data: ").append(compra.getDataHoraCompra()).append("\n\n");
+
+        sb.append("Itens:\n");
+        for (ItemCompra item : itens) {
+            sb.append("- ").append(item.getProduto().getNome())
+                    .append(" | Qtd: ").append(item.getQuantidade())
+                    .append(" | Preço: R$ ").append(item.getPrecoUnitario()).append("\n");
+        }
+
+        sb.append("\nTotal: R$ ").append(compra.getValorTotal()).append("\n");
+        sb.append("==============================");
+
+        return sb.toString();
     }
 }

@@ -1,10 +1,10 @@
 package com.ceara_sem_fome_back.controller;
 
-//import com.ceara_sem_fome_back.data.dto.ErrorDTO;
-import com.ceara_sem_fome_back.data.dto.ErrorDTO;
-import com.ceara_sem_fome_back.data.dto.LoginDTO;
-import com.ceara_sem_fome_back.data.dto.PaginacaoDTO;
-import com.ceara_sem_fome_back.data.dto.PessoaRespostaDTO;
+//import com.ceara_sem_fome_back.dto.ErrorDTO;
+import com.ceara_sem_fome_back.dto.ErrorDTO;
+import com.ceara_sem_fome_back.dto.LoginDTO;
+import com.ceara_sem_fome_back.dto.PaginacaoDTO;
+import com.ceara_sem_fome_back.dto.PessoaRespostaDTO;
 import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
 import com.ceara_sem_fome_back.dto.EntregadorRequest;
 import com.ceara_sem_fome_back.model.Entregador;
@@ -113,9 +113,22 @@ public class EntregadorController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(defaultValue = "") String nomeFiltro
     ) {
-        PaginacaoDTO<Entregador> pagina = entregadorService.listarTodos(page, size, sortBy, direction);
+        PaginacaoDTO<Entregador> pagina = entregadorService.listarComFiltro(nomeFiltro, page, size, sortBy, direction);
         return ResponseEntity.ok(pagina);
+    }
+
+    @GetMapping("/filtrar/cpf")
+    public ResponseEntity<Entregador> filtrarPorCpf(
+            @RequestParam(name = "valor") String cpf) {
+
+        Entregador entregador = entregadorService.filtrarPorCpf(cpf);
+
+        // 💡 A senha não retorna no JSON
+        entregador.setSenha(null);
+
+        return ResponseEntity.ok(entregador);
     }
 }
