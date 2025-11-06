@@ -3,6 +3,8 @@ package com.ceara_sem_fome_back.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -25,5 +27,5 @@ public class ItemCompra {
 
     private Integer quantidade;
 
-    private Double precoUnitario;
+    private BigDecimal precoUnitario;
 }

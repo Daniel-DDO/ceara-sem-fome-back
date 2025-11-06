@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -13,12 +15,12 @@ public class ProdutoDTO {
     private String nome;
     private String lote;
     private String descricao;
-    private double preco;
+    private BigDecimal preco;
     private int quantidadeEstoque;
     private StatusProduto status;
     private String imagemUrl; //ex.: "/produto/imagem/{id}"
 
-    public ProdutoDTO(String id, String nome, String lote, String descricao, double preco, int quantidadeEstoque, StatusProduto status) {
+    public ProdutoDTO(String id, String nome, String lote, String descricao, BigDecimal preco, int quantidadeEstoque, StatusProduto status) {
         this.id = id;
         this.nome = nome;
         this.lote = lote;

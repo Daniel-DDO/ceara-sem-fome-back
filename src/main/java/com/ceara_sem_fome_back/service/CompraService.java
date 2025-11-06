@@ -76,7 +76,7 @@ public class CompraService {
             itemCompraRepository.save(item);
 
             valorTotal = valorTotal.add(
-                    BigDecimal.valueOf(pc.getProduto().getPreco())
+                    pc.getProduto().getPreco()
                             .multiply(BigDecimal.valueOf(pc.getQuantidade()))
             );
 
