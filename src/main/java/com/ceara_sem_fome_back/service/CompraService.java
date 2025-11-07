@@ -32,6 +32,9 @@ public class CompraService {
     @Autowired
     private ItemCompraRepository itemCompraRepository;
 
+    @Autowired
+    private ContaRepository contaRepository;
+
     /**
      * Finaliza a compra de um beneficiário em um determinado estabelecimento.
      * - Cria a compra com base no carrinho
@@ -56,6 +59,31 @@ public class CompraService {
             throw new RuntimeException("O carrinho está vazio. Não é possível finalizar a compra.");
         }
 
+        BigDecimal valorTotal = BigDecimal.ZERO;
+        for (ProdutoCarrinho pc : produtosCarrinho) {
+            valorTotal = valorTotal.add(
+                    pc.getProduto().getPreco()
+                            .multiply(BigDecimal.valueOf(pc.getQuantidade()))
+            );
+        }
+
+        Conta contaBeneficiario = contaRepository.findByBeneficiario(beneficiario)
+                .orElseThrow(() -> new RuntimeException("Conta do beneficiário não encontrada."));
+
+        if (contaBeneficiario.getSaldo().compareTo(valorTotal) < 0) {
+            throw new RuntimeException("Saldo insuficiente para realizar a compra.");
+        }
+
+        Comerciante comerciante = estabelecimento.getComerciante();
+        Conta contaComerciante = contaRepository.findByComerciante(comerciante)
+                .orElseThrow(() -> new RuntimeException("Conta do comerciante não encontrada."));
+
+        contaBeneficiario.setSaldo(contaBeneficiario.getSaldo().subtract(valorTotal));
+        contaComerciante.setSaldo(contaComerciante.getSaldo().add(valorTotal));
+
+        contaRepository.save(contaBeneficiario);
+        contaRepository.save(contaComerciante);
+
         Compra compra = new Compra();
         compra.setId(UUID.randomUUID().toString());
         compra.setDataHoraCompra(LocalDateTime.now());
@@ -63,8 +91,8 @@ public class CompraService {
         compra.setBeneficiario(beneficiario);
         compra.setEstabelecimento(estabelecimento);
         compra.setEndereco(beneficiario.getEndereco());
-
-        BigDecimal valorTotal = BigDecimal.ZERO;
+        compra.setValorTotal(valorTotal.doubleValue());
+        compraRepository.save(compra);
 
         for (ProdutoCarrinho pc : produtosCarrinho) {
             ItemCompra item = new ItemCompra();
@@ -74,16 +102,7 @@ public class CompraService {
             item.setQuantidade(pc.getQuantidade());
             item.setPrecoUnitario(pc.getProduto().getPreco());
             itemCompraRepository.save(item);
-
-            valorTotal = valorTotal.add(
-                    pc.getProduto().getPreco()
-                            .multiply(BigDecimal.valueOf(pc.getQuantidade()))
-            );
-
         }
-
-        compra.setValorTotal(valorTotal.doubleValue());
-        compraRepository.save(compra);
 
         produtoCarrinhoRepository.deleteAll(produtosCarrinho);
 
@@ -129,7 +148,7 @@ public class CompraService {
         }
 
         sb.append("\nTotal: R$ ").append(compra.getValorTotal()).append("\n");
-        sb.append("==============================");
+        sb.append("===============================");
 
         return sb.toString();
     }
