@@ -15,8 +15,8 @@ INSERT INTO endereco (id, cep, logradouro, numero, bairro, municipio, latitude, 
 
 INSERT INTO carrinho (id, status, criacao, modificacao, subtotal)
 VALUES
-    ('car-1', 'ATIVO', '2025-01-10 10:00:00', '2025-01-10 10:00:00', 25.90),
-    ('car-2', 'ATIVO', '2025-01-11 11:00:00', '2025-01-11 11:00:00', 12.00)
+    ('car-1', 'ABERTO', '2025-01-10 10:00:00', '2025-01-10 10:00:00', 25.90),
+    ('car-2', 'ABERTO', '2025-01-11 11:00:00', '2025-01-11 11:00:00', 12.00)
     ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO administrador (id, nome, cpf, email, senha, data_nascimento, telefone, genero, status, lgpd_accepted)

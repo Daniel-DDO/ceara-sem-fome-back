@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
@@ -20,12 +21,17 @@ public class Carrinho {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @Enumerated(EnumType.STRING)
     private StatusCarrinho status = StatusCarrinho.ABERTO;
     private LocalDateTime criacao = LocalDateTime.now();
     private LocalDateTime modificacao = LocalDateTime.now();
 
     @Column(precision = 10, scale = 2)
     private BigDecimal subtotal = BigDecimal.ZERO;
+
+    @OneToOne(mappedBy = "carrinho")
+    @JsonBackReference
+    private Beneficiario beneficiario;
 
     @OneToMany(mappedBy = "carrinho", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
