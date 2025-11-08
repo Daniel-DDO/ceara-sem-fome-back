@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.dto.ReciboDTO;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class CompraService {
@@ -35,12 +37,6 @@ public class CompraService {
     @Autowired
     private ContaRepository contaRepository;
 
-    /**
-     * Finaliza a compra de um beneficiário em um determinado estabelecimento.
-     * - Cria a compra com base no carrinho
-     * - Registra os itens e o valor total
-     * - Limpa o carrinho após a finalização
-     */
     @Transactional
     public Compra finalizarCompra(String beneficiarioId, String estabelecimentoId) {
         Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
@@ -109,9 +105,6 @@ public class CompraService {
         return compra;
     }
 
-    /**
-     * Lista todas as compras registradas.
-     */
     public List<Compra> listarTodas() {
         return compraRepository.findAll();
     }
@@ -137,7 +130,7 @@ public class CompraService {
         StringBuilder sb = new StringBuilder();
         sb.append("=== COMPROVANTE DE COMPRA ===\n");
         sb.append("Beneficiário: ").append(compra.getBeneficiario().getNome()).append("\n");
-        sb.append("Estabelecimento: ").append(compra.getEstabelecimento().getNome()).append("\n");
+        sb.append("Estabelecimento: ").append(compra.getEstabelecimento().getNome()).append("\n"); // Corrigido
         sb.append("Data: ").append(compra.getDataHoraCompra()).append("\n\n");
 
         sb.append("Itens:\n");
@@ -151,5 +144,30 @@ public class CompraService {
         sb.append("===============================");
 
         return sb.toString();
+    }
+
+    @Transactional(readOnly = true)
+    public ReciboDTO obterReciboDTO(String compraId) {
+        Compra compra = compraRepository.findById(compraId)
+                .orElseThrow(() -> new RuntimeException("Compra não encontrada: " + compraId));
+
+        List<ReciboDTO.ItemCompraDTO> itensDTO = compra.getItens().stream()
+                .map(item -> new ReciboDTO.ItemCompraDTO(
+                        item.getProduto().getNome(),
+                        item.getQuantidade(),
+                        item.getPrecoUnitario(),
+                        item.getValorTotalItem()
+                )).collect(Collectors.toList());
+
+        return new ReciboDTO(
+                compra.getId(),
+                compra.getDataHoraCompra(),
+                compra.getBeneficiario().getNome(),
+                compra.getBeneficiario().getId(),
+                compra.getEstabelecimento().getComerciante().getNome(),
+                compra.getEstabelecimento().getNome(), // Corrigido
+                itensDTO,
+                BigDecimal.valueOf(compra.getValorTotal())
+        );
     }
 }

@@ -42,4 +42,12 @@ public class Estabelecimento {
     @JoinColumn(name = "comerciante_id", nullable = false)
     @JsonBackReference
     private Comerciante comerciante;
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
 }
