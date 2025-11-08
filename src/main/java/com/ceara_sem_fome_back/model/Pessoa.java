@@ -16,7 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @MappedSuperclass
-@Where(clause = "status = 'ATIVO'")
+@Where(clause = "pessoa.status = 'ATIVO'")
 public abstract class Pessoa {
 
     @Id
@@ -40,7 +40,8 @@ public abstract class Pessoa {
     protected String genero;
     @NotNull
     @Enumerated(EnumType.STRING)
-    protected StatusPessoa status;
+    @Column(name = "status")
+    private StatusPessoa status;
     @NotNull
     protected Boolean lgpdAccepted;
 

@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException; // Import adicionado
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import com.ceara_sem_fome_back.model.Produto;
@@ -51,7 +52,7 @@ public class ProdutoService {
         Produto novoProduto = new Produto();
         novoProduto.setId(UUID.randomUUID().toString());
         novoProduto.setNome(request.getNome());
-        novoProduto.setPreco(request.getPrecoVenda().doubleValue());
+        novoProduto.setPreco(BigDecimal.valueOf(request.getPrecoVenda().doubleValue()));
         novoProduto.setQuantidadeEstoque(request.getEstoque());
         novoProduto.setComerciante(comerciante);
         novoProduto.setStatus(StatusProduto.PENDENTE);
@@ -99,7 +100,7 @@ public class ProdutoService {
         return produto;
     }
 
-    public Produto editarProduto(String id, String nome, String lote, String descricao, double preco, int quantidadeEstoque) {
+    public Produto editarProduto(String id, String nome, String lote, String descricao, BigDecimal preco, int quantidadeEstoque) {
         Produto produto = produtoRepository.findByIdIgnoringStatus(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
 

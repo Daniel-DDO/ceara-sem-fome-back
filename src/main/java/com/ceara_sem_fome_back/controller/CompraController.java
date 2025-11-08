@@ -1,9 +1,14 @@
 package com.ceara_sem_fome_back.controller;
 
+import com.ceara_sem_fome_back.dto.ReciboDTO;
 import com.ceara_sem_fome_back.model.Compra;
 import com.ceara_sem_fome_back.model.ItemCompra;
 import com.ceara_sem_fome_back.service.CompraService;
+import com.ceara_sem_fome_back.service.ReciboService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,10 +22,9 @@ public class CompraController {
     @Autowired
     private CompraService compraService;
 
-    /**
-     * Finaliza uma compra com base no carrinho do beneficiário.
-     * Agora o ID do estabelecimento também é obrigatório.
-     */
+    @Autowired
+    private ReciboService reciboService;
+
     @PostMapping("/finalizar/{beneficiarioId}/{estabelecimentoId}")
     public ResponseEntity<?> finalizarCompra(
             @PathVariable String beneficiarioId,
@@ -36,18 +40,12 @@ public class CompraController {
         }
     }
 
-    /**
-     * Retorna todas as compras realizadas.
-     */
     @GetMapping
     public ResponseEntity<List<Compra>> listarTodas() {
         List<Compra> compras = compraService.listarTodas();
         return ResponseEntity.ok(compras);
     }
 
-    /**
-     * Retorna todas as compras de um beneficiário específico.
-     */
     @GetMapping("/beneficiario/{beneficiarioId}")
     public ResponseEntity<?> listarPorBeneficiario(@PathVariable String beneficiarioId) {
         try {
@@ -58,9 +56,6 @@ public class CompraController {
         }
     }
 
-    /**
-     * Retorna os itens de uma compra específica.
-     */
     @GetMapping("/{compraId}/itens")
     public ResponseEntity<?> listarItensDaCompra(@PathVariable String compraId) {
         try {
@@ -71,9 +66,6 @@ public class CompraController {
         }
     }
 
-    /**
-     * Gera um comprovante (nota fiscal simples) em formato texto.
-     */
     @GetMapping("/{compraId}/comprovante")
     public ResponseEntity<?> gerarComprovante(@PathVariable String compraId) {
         try {
@@ -81,6 +73,29 @@ public class CompraController {
             return ResponseEntity.ok(comprovante);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body("Erro: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/{compraId}/recibo-pdf")
+    public ResponseEntity<byte[]> gerarReciboPDF(@PathVariable String compraId) {
+        try {
+            byte[] recibo = reciboService.gerarReciboPDF(compraId);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", "recibo_" + compraId + ".pdf");
+            return new ResponseEntity<>(recibo, headers, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/{compraId}/recibo-dados")
+    public ResponseEntity<ReciboDTO> obterReciboDados(@PathVariable String compraId) {
+        try {
+            ReciboDTO reciboDTO = compraService.obterReciboDTO(compraId);
+            return ResponseEntity.ok(reciboDTO);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
         }
     }
 }
