@@ -40,6 +40,9 @@ public class Compra {
     @Enumerated(EnumType.STRING)
     private StatusCompra status;
 
+    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean notificadoComerciante = false;
+
     public Compra(Beneficiario beneficiario, Estabelecimento estabelecimento, Endereco endereco, Double valorTotal) {
         this.id = UUID.randomUUID().toString();
         this.dataHoraCompra = LocalDateTime.now();
@@ -48,5 +51,6 @@ public class Compra {
         this.endereco = endereco;
         this.valorTotal = valorTotal;
         this.status = StatusCompra.FINALIZADA;
+        this.notificadoComerciante = false;
     }
 }
