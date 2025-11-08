@@ -88,6 +88,7 @@ public class CompraService {
         compra.setEstabelecimento(estabelecimento);
         compra.setEndereco(beneficiario.getEndereco());
         compra.setValorTotal(valorTotal.doubleValue());
+        compra.setNotificadoComerciante(false);
         compraRepository.save(compra);
 
         for (ProdutoCarrinho pc : produtosCarrinho) {

@@ -158,6 +158,7 @@ CREATE TABLE IF NOT EXISTS compra (
     beneficiario_id VARCHAR(255) NOT NULL,
     estabelecimento_id VARCHAR(255) NOT NULL,
     endereco_id VARCHAR(255),
+    notificadoComerciante BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (beneficiario_id) REFERENCES beneficiario (id),
     FOREIGN KEY (estabelecimento_id) REFERENCES estabelecimento (id),
     FOREIGN KEY (endereco_id) REFERENCES endereco (id)
