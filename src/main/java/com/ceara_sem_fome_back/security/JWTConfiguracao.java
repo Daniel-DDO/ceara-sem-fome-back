@@ -3,17 +3,18 @@ package com.ceara_sem_fome_back.security;
 import com.ceara_sem_fome_back.security.Handler.LoggingLogoutSuccessHandler;
 import com.ceara_sem_fome_back.service.PessoaDetailsService;
 import com.ceara_sem_fome_back.service.TokenService;
-import io.micrometer.common.KeyValues;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -50,17 +51,21 @@ public class JWTConfiguracao {
                 .toArray(AntPathRequestMatcher[]::new);
 
         http
+                .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/logout")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/**", HttpMethod.OPTIONS.name())).permitAll()
                         .requestMatchers(publicMatchers).permitAll()
                         .anyRequest().authenticated()
                 )
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
-                .addFilter(new JWTValidarFilter(authenticationManager, tokenService, pessoaDetailsService))
+                .addFilterBefore(
+                        new JWTValidarFilter(authenticationManager, tokenService, pessoaDetailsService),
+                        UsernamePasswordAuthenticationFilter.class
+                )
                 .logout(logout -> logout
                         .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
                         .logoutSuccessHandler(loggingLogoutSuccessHandler)
@@ -74,14 +79,12 @@ public class JWTConfiguracao {
         CorsConfiguration cors = new CorsConfiguration();
         cors.setAllowedOriginPatterns(List.of(
                 "https://*.cloudworkstations.dev",
-                "https://*-firebase-ceara-sem-fome-front-*.cloudworkstations.dev",
-                "https://5173-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev",
-                "https://5174-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev/",
-                "https://5175-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev/",
-                "https://5176-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev/",
-                "https://5177-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev/",
-                "https://8080-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev",
-                "https://8081-firebase-ceara-sem-fome-front-1762094483792.cluster-l2bgochoazbomqgfmlhuvdvgiy.cloudworkstations.dev/"
+                "https://*.firebaseapp.com",
+                "https://*.web.app",
+                "https://*.ondigitalocean.app",
+                "http://localhost:*",
+                "http://127.0.0.1:*",
+                "https://ceara-raiz-srb9k.ondigitalocean.app"
         ));
         cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         cors.setAllowedHeaders(List.of("*"));
@@ -90,7 +93,6 @@ public class JWTConfiguracao {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", cors);
-
         return source;
     }
 }

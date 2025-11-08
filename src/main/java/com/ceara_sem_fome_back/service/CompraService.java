@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.dto.ReciboDTO;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class CompraService {
@@ -32,12 +34,9 @@ public class CompraService {
     @Autowired
     private ItemCompraRepository itemCompraRepository;
 
-    /**
-     * Finaliza a compra de um beneficiário em um determinado estabelecimento.
-     * - Cria a compra com base no carrinho
-     * - Registra os itens e o valor total
-     * - Limpa o carrinho após a finalização
-     */
+    @Autowired
+    private ContaRepository contaRepository;
+
     @Transactional
     public Compra finalizarCompra(String beneficiarioId, String estabelecimentoId) {
         Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
@@ -56,6 +55,31 @@ public class CompraService {
             throw new RuntimeException("O carrinho está vazio. Não é possível finalizar a compra.");
         }
 
+        BigDecimal valorTotal = BigDecimal.ZERO;
+        for (ProdutoCarrinho pc : produtosCarrinho) {
+            valorTotal = valorTotal.add(
+                    pc.getProduto().getPreco()
+                            .multiply(BigDecimal.valueOf(pc.getQuantidade()))
+            );
+        }
+
+        Conta contaBeneficiario = contaRepository.findByBeneficiario(beneficiario)
+                .orElseThrow(() -> new RuntimeException("Conta do beneficiário não encontrada."));
+
+        if (contaBeneficiario.getSaldo().compareTo(valorTotal) < 0) {
+            throw new RuntimeException("Saldo insuficiente para realizar a compra.");
+        }
+
+        Comerciante comerciante = estabelecimento.getComerciante();
+        Conta contaComerciante = contaRepository.findByComerciante(comerciante)
+                .orElseThrow(() -> new RuntimeException("Conta do comerciante não encontrada."));
+
+        contaBeneficiario.setSaldo(contaBeneficiario.getSaldo().subtract(valorTotal));
+        contaComerciante.setSaldo(contaComerciante.getSaldo().add(valorTotal));
+
+        contaRepository.save(contaBeneficiario);
+        contaRepository.save(contaComerciante);
+
         Compra compra = new Compra();
         compra.setId(UUID.randomUUID().toString());
         compra.setDataHoraCompra(LocalDateTime.now());
@@ -63,8 +87,8 @@ public class CompraService {
         compra.setBeneficiario(beneficiario);
         compra.setEstabelecimento(estabelecimento);
         compra.setEndereco(beneficiario.getEndereco());
-
-        BigDecimal valorTotal = BigDecimal.ZERO;
+        compra.setValorTotal(valorTotal.doubleValue());
+        compraRepository.save(compra);
 
         for (ProdutoCarrinho pc : produtosCarrinho) {
             ItemCompra item = new ItemCompra();
@@ -74,25 +98,13 @@ public class CompraService {
             item.setQuantidade(pc.getQuantidade());
             item.setPrecoUnitario(pc.getProduto().getPreco());
             itemCompraRepository.save(item);
-
-            valorTotal = valorTotal.add(
-                    BigDecimal.valueOf(pc.getProduto().getPreco())
-                            .multiply(BigDecimal.valueOf(pc.getQuantidade()))
-            );
-
         }
-
-        compra.setValorTotal(valorTotal.doubleValue());
-        compraRepository.save(compra);
 
         produtoCarrinhoRepository.deleteAll(produtosCarrinho);
 
         return compra;
     }
 
-    /**
-     * Lista todas as compras registradas.
-     */
     public List<Compra> listarTodas() {
         return compraRepository.findAll();
     }
@@ -118,7 +130,7 @@ public class CompraService {
         StringBuilder sb = new StringBuilder();
         sb.append("=== COMPROVANTE DE COMPRA ===\n");
         sb.append("Beneficiário: ").append(compra.getBeneficiario().getNome()).append("\n");
-        sb.append("Estabelecimento: ").append(compra.getEstabelecimento().getNome()).append("\n");
+        sb.append("Estabelecimento: ").append(compra.getEstabelecimento().getNome()).append("\n"); // Corrigido
         sb.append("Data: ").append(compra.getDataHoraCompra()).append("\n\n");
 
         sb.append("Itens:\n");
@@ -129,8 +141,33 @@ public class CompraService {
         }
 
         sb.append("\nTotal: R$ ").append(compra.getValorTotal()).append("\n");
-        sb.append("==============================");
+        sb.append("===============================");
 
         return sb.toString();
+    }
+
+    @Transactional(readOnly = true)
+    public ReciboDTO obterReciboDTO(String compraId) {
+        Compra compra = compraRepository.findById(compraId)
+                .orElseThrow(() -> new RuntimeException("Compra não encontrada: " + compraId));
+
+        List<ReciboDTO.ItemCompraDTO> itensDTO = compra.getItens().stream()
+                .map(item -> new ReciboDTO.ItemCompraDTO(
+                        item.getProduto().getNome(),
+                        item.getQuantidade(),
+                        item.getPrecoUnitario(),
+                        item.getValorTotalItem()
+                )).collect(Collectors.toList());
+
+        return new ReciboDTO(
+                compra.getId(),
+                compra.getDataHoraCompra(),
+                compra.getBeneficiario().getNome(),
+                compra.getBeneficiario().getId(),
+                compra.getEstabelecimento().getComerciante().getNome(),
+                compra.getEstabelecimento().getNome(), // Corrigido
+                itensDTO,
+                BigDecimal.valueOf(compra.getValorTotal())
+        );
     }
 }

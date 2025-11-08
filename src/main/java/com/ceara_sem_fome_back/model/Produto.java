@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.Where;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,7 +23,8 @@ public class Produto {
     private String nome;
     private String lote;
     private String descricao;
-    private double preco;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal preco;
     private int quantidadeEstoque;
 
     @Enumerated(EnumType.STRING)
