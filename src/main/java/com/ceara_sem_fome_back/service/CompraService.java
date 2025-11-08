@@ -3,6 +3,7 @@ package com.ceara_sem_fome_back.service;
 import com.ceara_sem_fome_back.dto.ReciboDTO;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class CompraService {
 
     @Autowired
@@ -169,5 +171,14 @@ public class CompraService {
                 itensDTO,
                 BigDecimal.valueOf(compra.getValorTotal())
         );
+    }
+
+    public List<Compra> listarPorEstabelecimentoEStatus(String estabelecimentoId, String status) {
+        log.info("[SERVIÇO] Buscando compras para Estabelecimento ID: {} com Status: {}", estabelecimentoId, status);
+
+        // Converte a string de status para o Enum
+        StatusCompra statusEnum = StatusCompra.valueOf(status.toUpperCase());
+
+        return compraRepository.findByEstabelecimentoIdAndStatus(estabelecimentoId, statusEnum);
     }
 }

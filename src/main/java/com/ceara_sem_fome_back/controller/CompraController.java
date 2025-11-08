@@ -1,15 +1,20 @@
 package com.ceara_sem_fome_back.controller;
 
+import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.dto.ReciboDTO;
+import com.ceara_sem_fome_back.exception.AcessoNaoAutorizadoException;
+import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Compra;
 import com.ceara_sem_fome_back.model.ItemCompra;
 import com.ceara_sem_fome_back.service.CompraService;
+import com.ceara_sem_fome_back.service.EstabelecimentoService;
 import com.ceara_sem_fome_back.service.ReciboService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +29,9 @@ public class CompraController {
 
     @Autowired
     private ReciboService reciboService;
+
+    @Autowired
+    private EstabelecimentoService estabelecimentoService;
 
     @PostMapping("/finalizar/{beneficiarioId}/{estabelecimentoId}")
     public ResponseEntity<?> finalizarCompra(
@@ -96,6 +104,33 @@ public class CompraController {
             return ResponseEntity.ok(reciboDTO);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/estabelecimento/{estabelecimentoId}")
+    public ResponseEntity<?> listarComprasPorEstabelecimentoEStatus(
+            @AuthenticationPrincipal ComercianteData comercianteData,
+            @PathVariable String estabelecimentoId,
+            @RequestParam String status) {
+
+        try {
+            String comercianteId = comercianteData.getComerciante().getId();
+
+            estabelecimentoService.verificarPropriedade(estabelecimentoId, comercianteId);
+
+            List<Compra> compras = compraService.listarPorEstabelecimentoEStatus(estabelecimentoId, status);
+            return ResponseEntity.ok(compras);
+
+        } catch (AcessoNaoAutorizadoException e) {
+            return ResponseEntity.status(e.getStatus()).body("Erro: " + e.getMessage());
+        } catch (RecursoNaoEncontradoException e) {
+            return ResponseEntity.status(e.getStatus()).body("Erro: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Erro: Status inválido ou mal formatado.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("Erro: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Erro inesperado ao listar compras.");
         }
     }
 }
