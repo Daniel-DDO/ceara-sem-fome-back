@@ -1,15 +1,12 @@
 package com.ceara_sem_fome_back.controller;
 
 //import com.ceara_sem_fome_back.dto.ErrorDTO;
-import com.ceara_sem_fome_back.dto.ErrorDTO;
-import com.ceara_sem_fome_back.dto.LoginDTO;
-import com.ceara_sem_fome_back.dto.PaginacaoDTO;
-import com.ceara_sem_fome_back.dto.PessoaRespostaDTO;
-import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
-import com.ceara_sem_fome_back.dto.EntregadorRequest;
+import com.ceara_sem_fome_back.dto.*;
+import com.ceara_sem_fome_back.model.Endereco;
 import com.ceara_sem_fome_back.model.Entregador;
 import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.security.JWTUtil;
+import com.ceara_sem_fome_back.service.EnderecoService;
 import com.ceara_sem_fome_back.service.EntregadorService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +19,9 @@ public class EntregadorController {
 
     @Autowired
     private EntregadorService entregadorService;
+
+    @Autowired
+    private EnderecoService enderecoService;
 
     @Autowired
     private JWTUtil jwtUtil;
@@ -130,5 +130,28 @@ public class EntregadorController {
         entregador.setSenha(null);
 
         return ResponseEntity.ok(entregador);
+    }
+
+    //camada de cadastro e update de endereços do entregador
+    @PostMapping("/{id}/endereco")
+    public ResponseEntity<Entregador> cadastrarEndereco(
+            @PathVariable String id,
+            @Valid @RequestBody EnderecoCadRequest request) {
+        Entregador entregador = enderecoService.cadastrarEnderecoEntregador(id, request);
+        return ResponseEntity.ok(entregador);
+    }
+
+    @PutMapping("/{id}/endereco")
+    public ResponseEntity<Endereco> atualizarEndereco(
+            @PathVariable String id,
+            @Valid @RequestBody Endereco novoEndereco) {
+        Endereco atualizado = enderecoService.atualizarEndereco(id, novoEndereco);
+        return ResponseEntity.ok(atualizado);
+    }
+
+    @GetMapping("/{id}/endereco")
+    public ResponseEntity<Endereco> buscarEndereco(@PathVariable String id) {
+        Endereco endereco = enderecoService.buscarPorId(id);
+        return ResponseEntity.ok(endereco);
     }
 }

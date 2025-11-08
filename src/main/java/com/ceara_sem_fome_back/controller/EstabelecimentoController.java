@@ -87,7 +87,7 @@ public class EstabelecimentoController {
             @PathVariable String id,
             @Valid @RequestBody EnderecoCadRequest enderecoCadRequest) {
 
-        Estabelecimento estabelecimentoAtualizado = enderecoService.cadastrarEnderecoEstab(id, enderecoCadRequest);
+        Estabelecimento estabelecimentoAtualizado = enderecoService.cadastrarEnderecoEstabelecimento(id, enderecoCadRequest);
         return ResponseEntity.ok(estabelecimentoAtualizado);
     }
 

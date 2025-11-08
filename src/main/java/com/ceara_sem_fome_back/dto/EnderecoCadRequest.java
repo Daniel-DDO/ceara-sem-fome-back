@@ -25,4 +25,7 @@ public class EnderecoCadRequest {
     @NotBlank(message = "O município é obrigatório.")
     private String municipio;
 
+    // Campos opcionais
+    private Double Latitude;
+    private Double Longitude;
 }

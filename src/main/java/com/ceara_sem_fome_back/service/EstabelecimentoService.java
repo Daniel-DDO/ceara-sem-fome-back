@@ -39,7 +39,7 @@ public class EstabelecimentoService {
         Estabelecimento salvo = estabelecimentoRepository.save(estabelecimento);
 
         if (enderecoCadRequest != null) {
-            salvo = enderecoService.cadastrarEnderecoEstab(salvo.getId(), enderecoCadRequest);
+            salvo = enderecoService.cadastrarEnderecoEstabelecimento(salvo.getId(), enderecoCadRequest);
         }
 
         comerciante.getEstabelecimentos().add(salvo);

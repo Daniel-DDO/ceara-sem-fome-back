@@ -3,13 +3,13 @@ package com.ceara_sem_fome_back.controller;
 import com.ceara_sem_fome_back.data.BeneficiarioData;
 import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.model.Beneficiario;
+import com.ceara_sem_fome_back.model.Endereco;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.BeneficiarioService;
 import com.ceara_sem_fome_back.service.EnderecoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -84,14 +84,13 @@ public class BeneficiarioController {
         return ResponseEntity.ok(beneficiarioBloqueado);
     }
 
-    //Endpoint para um beneficiário adicionar um endereço
-//    @PostMapping("/{beneficiarioId}/endereco") //verificar se beneficiarioId existe
-//    public ResponseEntity<Beneficiario> adicionarEndereco(
-//            @PathVariable String beneficiarioId,
-//            @RequestBody Endereco enderecoRequest) {
-//        Beneficiario beneficiario = beneficiarioService.adicionarEndereco(beneficiarioId, enderecoRequest);
-//        return ResponseEntity.ok(beneficiario);
-//    }
+    // Adicionar endereço ao beneficiário
+    @PostMapping("/{id}/endereco")
+    public ResponseEntity<Beneficiario> adicionarEndereco(
+            @PathVariable String id,
+            @RequestBody EnderecoCadRequest endereco) {
+        return ResponseEntity.ok(enderecoService.cadastrarEnderecoBeneficiario(id, endereco));
+    }
 
     /**
      * Rota para iniciar o processo de cadastro.
@@ -182,9 +181,23 @@ public class BeneficiarioController {
                 .getPrincipal();
 
         String beneficiarioId = beneficiarioData.getId();
-        Beneficiario beneficiarioAtualizado = enderecoService.cadastrarEnderecoBenef(beneficiarioId, enderecoCadRequest);
+        Beneficiario beneficiarioAtualizado = enderecoService.cadastrarEnderecoBeneficiario(beneficiarioId, enderecoCadRequest);
 
         return ResponseEntity.ok(beneficiarioAtualizado);
+    }
+
+    @PutMapping("/{id}/endereco")
+    public ResponseEntity<Endereco> atualizarEndereco(
+            @PathVariable String id,
+            @Valid @RequestBody Endereco novoEndereco) {
+        Endereco atualizado = enderecoService.atualizarEndereco(id, novoEndereco);
+        return ResponseEntity.ok(atualizado);
+    }
+
+    @GetMapping("/{id}/endereco")
+    public ResponseEntity<Endereco> buscarEndereco(@PathVariable String id) {
+        Endereco endereco = enderecoService.buscarPorId(id);
+        return ResponseEntity.ok(endereco);
     }
 
 }

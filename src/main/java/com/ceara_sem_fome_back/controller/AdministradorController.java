@@ -1,18 +1,14 @@
 package com.ceara_sem_fome_back.controller;
 
-import com.ceara_sem_fome_back.dto.ErrorDTO;
-import com.ceara_sem_fome_back.dto.LoginDTO;
-import com.ceara_sem_fome_back.dto.PaginacaoDTO;
-import com.ceara_sem_fome_back.dto.PessoaRespostaDTO;
-import com.ceara_sem_fome_back.dto.AdministradorRequest;
-import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
-import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
+import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Administrador;
+import com.ceara_sem_fome_back.model.Endereco;
 import com.ceara_sem_fome_back.model.Pessoa;
 import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.AdministradorService;
+import com.ceara_sem_fome_back.service.EnderecoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,6 +24,9 @@ public class AdministradorController {
 
     @Autowired
     private AdministradorService administradorService;
+
+    @Autowired
+    private EnderecoService enderecoService;
 
     @Autowired
     private JWTUtil jwtUtil;
@@ -193,6 +192,29 @@ public class AdministradorController {
             ErrorDTO errorDTO = new ErrorDTO("Erro interno ao tentar reativar a conta.", 500);
             return ResponseEntity.status(500).body(errorDTO);
         }
+    }
+
+    // Camada de endereço do administrador, aqui ele poderá mudar o seu próprio endereço apenas.
+    @PostMapping("/{id}/endereco")
+    public ResponseEntity<Administrador> cadastrarEndereco(
+            @PathVariable String id,
+            @Valid @RequestBody EnderecoCadRequest request) {
+        Administrador administrador = enderecoService.cadastrarEnderecoAdministrador(id, request);
+        return ResponseEntity.ok(administrador);
+    }
+
+    @PutMapping("/{id}/endereco")
+    public ResponseEntity<Endereco> atualizarEndereco(
+            @PathVariable String id,
+            @Valid @RequestBody Endereco novoEndereco) {
+        Endereco atualizado = enderecoService.atualizarEndereco(id, novoEndereco);
+        return ResponseEntity.ok(atualizado);
+    }
+
+    @GetMapping("/{id}/endereco")
+    public ResponseEntity<Endereco> buscarEndereco(@PathVariable String id) {
+        Endereco endereco = enderecoService.buscarPorId(id);
+        return ResponseEntity.ok(endereco);
     }
 
 }
