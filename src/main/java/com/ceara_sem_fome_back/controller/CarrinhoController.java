@@ -100,4 +100,21 @@ public class CarrinhoController {
             return ResponseEntity.internalServerError().body("Erro interno ao tentar remover item.");
         }
     }
+
+    @DeleteMapping("/meu-carrinho")
+    public ResponseEntity<?> limparMeuCarrinho(
+            @AuthenticationPrincipal BeneficiarioData beneficiarioData) {
+        try {
+            String email = beneficiarioData.getUsername();
+            Carrinho carrinhoLimpo = carrinhoService.limparCarrinho(email);
+            // Retorna o carrinho com a lista de produtos vazia e status FINALIZADO
+            return ResponseEntity.ok(carrinhoLimpo);
+        } catch (RecursoNaoEncontradoException e) {
+            return ResponseEntity.status(e.getStatus()).body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("Erro ao limpar carrinho: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Erro interno ao tentar limpar carrinho.");
+        }
+    }
 }

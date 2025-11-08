@@ -122,4 +122,17 @@ public class CarrinhoService {
 
         return carrinhoRepository.save(carrinho);
     }
+
+    @Transactional
+    public Carrinho limparCarrinho(String beneficiarioEmail) {
+        log.info("[SERVIÇO] Limpando e finalizando o carrinho do beneficiário: {}", beneficiarioEmail);
+
+        // Busca o carrinho ativo diretamente pelo email e status
+        Carrinho carrinho = carrinhoRepository.findByBeneficiarioEmailAndStatus(beneficiarioEmail, StatusCarrinho.ABERTO)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Não há carrinho ativo para limpar para o beneficiário: " + beneficiarioEmail));
+
+        carrinho.esvaziarCarrinho();
+
+        return carrinhoRepository.save(carrinho);
+    }
 }
