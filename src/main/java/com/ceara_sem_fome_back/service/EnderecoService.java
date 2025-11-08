@@ -1,6 +1,7 @@
 package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.dto.EnderecoCadRequest;
+import com.ceara_sem_fome_back.dto.RegiaoResponse;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.EnderecoRepository;
 import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
@@ -145,4 +146,33 @@ public class EnderecoService {
             return enderecoRepository.findAll();
         }
     }
+
+    // método para listar por região e bairro
+    @Transactional(readOnly = true)
+    public RegiaoResponse listarEntidadesPorRegiao(String municipio, String bairro) {
+        List<Beneficiario> beneficiarios;
+        List<Comerciante> comerciantes;
+        List<Estabelecimento> estabelecimentos;
+
+        if (municipio != null && bairro != null) {
+            beneficiarios = beneficiarioRepository.findByEnderecoMunicipioAndEnderecoBairro(municipio, bairro);
+            comerciantes = comercianteRepository.findByEnderecoMunicipioAndEnderecoBairro(municipio, bairro);
+            estabelecimentos = estabelecimentoRepository.findByEnderecoMunicipioAndEnderecoBairro(municipio, bairro);
+        } else if (municipio != null) {
+            beneficiarios = beneficiarioRepository.findByEnderecoMunicipio(municipio);
+            comerciantes = comercianteRepository.findByEnderecoMunicipio(municipio);
+            estabelecimentos = estabelecimentoRepository.findByEnderecoMunicipio(municipio);
+        } else if (bairro != null) {
+            beneficiarios = beneficiarioRepository.findByEnderecoBairro(bairro);
+            comerciantes = comercianteRepository.findByEnderecoBairro(bairro);
+            estabelecimentos = estabelecimentoRepository.findByEnderecoBairro(bairro);
+        } else {
+            beneficiarios = beneficiarioRepository.findAll();
+            comerciantes = comercianteRepository.findAll();
+            estabelecimentos = estabelecimentoRepository.findAll();
+        }
+
+        return new RegiaoResponse(municipio, bairro, beneficiarios, comerciantes, estabelecimentos);
+    }
+
 }

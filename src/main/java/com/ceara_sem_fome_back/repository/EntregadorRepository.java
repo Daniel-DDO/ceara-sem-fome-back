@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.repository;
 
+import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.model.Entregador;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -8,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -25,4 +27,9 @@ public interface EntregadorRepository extends JpaRepository <Entregador, String>
     // Metodo para buscar um usuário por ID ignorando o filtro @Where
     @Query("SELECT p FROM #{#entityName} p WHERE p.id = :id")
     Optional<Entregador> findByIdIgnoringStatus(@Param("id") String id);
+
+    List<Entregador> findByEnderecoMunicipio(String municipio);
+    List<Entregador> findByEnderecoBairro(String bairro);
+    List<Entregador> findByEnderecoMunicipioAndEnderecoBairro(String municipio, String bairro);
+
 }

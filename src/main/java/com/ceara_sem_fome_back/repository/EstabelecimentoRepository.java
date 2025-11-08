@@ -16,8 +16,10 @@ public interface EstabelecimentoRepository extends JpaRepository<Estabelecimento
 
     boolean existsByNomeAndComerciante(String nome, Comerciante comerciante);
 
-    List<Estabelecimento> findByEnderecoBairro(String bairro);
     List<Estabelecimento> findByEnderecoMunicipio(String municipio);
+    List<Estabelecimento> findByEnderecoBairro(String bairro);
+    List<Estabelecimento> findByEnderecoMunicipioAndEnderecoBairro(String municipio, String bairro);
+
 
     Page<Estabelecimento> findByNomeContainingIgnoreCase(String nome, Pageable pageable);
 

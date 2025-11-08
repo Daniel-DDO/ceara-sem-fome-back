@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -25,4 +26,9 @@ public interface AdministradorRepository extends JpaRepository <Administrador, S
     // Metodo para buscar um usuário por ID ignorando o filtro @Where
     @Query("SELECT p FROM #{#entityName} p WHERE p.id = :id")
     Optional<Administrador> findByIdIgnoringStatus(@Param("id") String id);
+
+    List<Administrador> findByEnderecoMunicipio(String municipio);
+    List<Administrador> findByEnderecoBairro(String bairro);
+    List<Administrador> findByEnderecoMunicipioAndEnderecoBairro(String municipio, String bairro);
+
 }
