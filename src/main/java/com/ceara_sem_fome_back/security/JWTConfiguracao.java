@@ -73,13 +73,11 @@ public class JWTConfiguracao {
         cors.setAllowedOriginPatterns(List.of(
                 "https://*.cloudworkstations.dev",
                 "https://*.firebaseapp.com",
-                "https://*-firebase-ceara-sem-fome-front-*.cloudworkstations.dev",
                 "https://*.web.app",
-                "https://ceara-raiz-srb9k.ondigitalocean.app/*",
                 "https://*.ondigitalocean.app",
                 "http://localhost:*",
                 "http://127.0.0.1:*",
-                "https://*.vercel.app"
+                "https://ceara-raiz-srb9k.ondigitalocean.app"
         ));
 
         cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
@@ -89,7 +87,7 @@ public class JWTConfiguracao {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", cors);
-
         return source;
     }
+
 }
