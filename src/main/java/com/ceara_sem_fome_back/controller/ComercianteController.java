@@ -178,27 +178,4 @@ public class ComercianteController {
         return ResponseEntity.ok(estabelecimentos);
     }
 
-    //Camada chamando os métodos de cadastro e atualização de endereço do service de endereço
-    @PostMapping("/{id}/endereco")
-    public ResponseEntity<Comerciante> cadastrarEndereco(
-            @PathVariable String id,
-            @Valid @RequestBody EnderecoCadRequest request) {
-        Comerciante comerciante = enderecoService.cadastrarEnderecoComerciante(id, request);
-        return ResponseEntity.ok(comerciante);
-    }
-
-    @PutMapping("/{id}/endereco")
-    public ResponseEntity<Endereco> atualizarEndereco(
-            @PathVariable String id,
-            @Valid @RequestBody Endereco novoEndereco) {
-        Endereco atualizado = enderecoService.atualizarEndereco(id, novoEndereco);
-        return ResponseEntity.ok(atualizado);
-    }
-
-    @GetMapping("/{id}/endereco")
-    public ResponseEntity<Endereco> buscarEndereco(@PathVariable String id) {
-        Endereco endereco = enderecoService.buscarPorId(id);
-        return ResponseEntity.ok(endereco);
-    }
-
 }

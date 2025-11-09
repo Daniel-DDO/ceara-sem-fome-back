@@ -27,8 +27,4 @@ public interface AdministradorRepository extends JpaRepository <Administrador, S
     @Query("SELECT p FROM #{#entityName} p WHERE p.id = :id")
     Optional<Administrador> findByIdIgnoringStatus(@Param("id") String id);
 
-    List<Administrador> findByEnderecoMunicipio(String municipio);
-    List<Administrador> findByEnderecoBairro(String bairro);
-    List<Administrador> findByEnderecoMunicipioAndEnderecoBairro(String municipio, String bairro);
-
 }

@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/regioes")
+@RequestMapping("/endereco")
 @RequiredArgsConstructor
 public class EnderecoController {
 

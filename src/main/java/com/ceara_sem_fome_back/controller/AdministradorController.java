@@ -194,27 +194,4 @@ public class AdministradorController {
         }
     }
 
-    // Camada de endereço do administrador, aqui ele poderá mudar o seu próprio endereço apenas.
-    @PostMapping("/{id}/endereco")
-    public ResponseEntity<Administrador> cadastrarEndereco(
-            @PathVariable String id,
-            @Valid @RequestBody EnderecoCadRequest request) {
-        Administrador administrador = enderecoService.cadastrarEnderecoAdministrador(id, request);
-        return ResponseEntity.ok(administrador);
-    }
-
-    @PutMapping("/{id}/endereco")
-    public ResponseEntity<Endereco> atualizarEndereco(
-            @PathVariable String id,
-            @Valid @RequestBody Endereco novoEndereco) {
-        Endereco atualizado = enderecoService.atualizarEndereco(id, novoEndereco);
-        return ResponseEntity.ok(atualizado);
-    }
-
-    @GetMapping("/{id}/endereco")
-    public ResponseEntity<Endereco> buscarEndereco(@PathVariable String id) {
-        Endereco endereco = enderecoService.buscarPorId(id);
-        return ResponseEntity.ok(endereco);
-    }
-
 }

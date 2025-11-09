@@ -18,4 +18,11 @@ public class RegiaoResponse {
     private List<Beneficiario> beneficiarios;
     private List<Comerciante> comerciantes;
     private List<Estabelecimento> estabelecimentos;
+
+    public RegiaoResponse(String municipio, String bairro, List<Beneficiario> beneficiarios, List<Estabelecimento> estabelecimentos) {
+        this.municipio = municipio;
+        this.bairro = bairro;
+        this.beneficiarios = beneficiarios;
+        this.estabelecimentos = estabelecimentos;
+    }
 }

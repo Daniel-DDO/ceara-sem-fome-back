@@ -26,10 +26,4 @@ public interface ComercianteRepository extends JpaRepository <Comerciante, Strin
     // Metodo para buscar um usuário por ID ignorando o filtro @Where
     @Query("SELECT p FROM #{#entityName} p WHERE p.id = :id")
     Optional<Comerciante> findByIdIgnoringStatus(@Param("id") String id);
-
-    List<Comerciante> findByEnderecoMunicipio(String municipio);
-    List<Comerciante> findByEnderecoBairro(String bairro);
-    List<Comerciante> findByEnderecoMunicipioAndEnderecoBairro(String municipio, String bairro);
-
-
 }
