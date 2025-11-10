@@ -41,10 +41,10 @@ public class JWTConfiguracao {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   AuthenticationManager authenticationManager,
-                                                   TokenService tokenService,
-                                                   PessoaDetailsService pessoaDetailsService,
-                                                   LoggingLogoutSuccessHandler loggingLogoutSuccessHandler) throws Exception {
+            AuthenticationManager authenticationManager,
+            TokenService tokenService,
+            PessoaDetailsService pessoaDetailsService,
+            LoggingLogoutSuccessHandler loggingLogoutSuccessHandler) throws Exception {
 
         AntPathRequestMatcher[] publicMatchers = JWTValidarFilter.ROTAS_PUBLICAS.stream()
                 .map(AntPathRequestMatcher::antMatcher)
@@ -56,20 +56,20 @@ public class JWTConfiguracao {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/swagger-ui.html")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/logout")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/**", HttpMethod.OPTIONS.name())).permitAll()
                         .requestMatchers(publicMatchers).permitAll()
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .addFilterBefore(
                         new JWTValidarFilter(authenticationManager, tokenService, pessoaDetailsService),
-                        UsernamePasswordAuthenticationFilter.class
-                )
+                        UsernamePasswordAuthenticationFilter.class)
                 .logout(logout -> logout
                         .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-                        .logoutSuccessHandler(loggingLogoutSuccessHandler)
-                );
+                        .logoutSuccessHandler(loggingLogoutSuccessHandler));
 
         return http.build();
     }
@@ -84,8 +84,7 @@ public class JWTConfiguracao {
                 "https://*.ondigitalocean.app",
                 "http://localhost:*",
                 "http://127.0.0.1:*",
-                "https://ceara-raiz-srb9k.ondigitalocean.app"
-        ));
+                "https://ceara-raiz-srb9k.ondigitalocean.app"));
         cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         cors.setAllowedHeaders(List.of("*"));
         cors.setExposedHeaders(List.of("*"));

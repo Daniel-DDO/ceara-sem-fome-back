@@ -1,12 +1,18 @@
 # Etapa 1 - Build do app
-From maven:3.9.9-eclipse-temurin-21 AS build
+FROM maven:3.9.9-eclipse-temurin-21 AS build
+
 WORKDIR /app
+
 COPY pom.xml .
 COPY src ./src
+
 RUN mvn clean package -DskipTests
 
 # Etapa 2 - Executar o app
-From eclipse-temurin:21-jdk-jammy
+FROM eclipse-temurin:21-jdk-jammy
+
 WORKDIR /app
+
 COPY --from=build /app/target/*.jar app.jar
+
 ENTRYPOINT ["java", "-jar", "app.jar"]
