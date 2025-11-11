@@ -16,16 +16,17 @@ public class Beneficiario extends Pessoa {
 
     private String numeroCadastroSocial;
 
-    @OneToOne(cascade = CascadeType.ALL, optional = true)
+    @OneToOne(cascade = CascadeType.ALL, optional = true, orphanRemoval = true)
     @JoinColumn(name = "carrinho_id")
     @JsonManagedReference
     private Carrinho carrinho;
 
-    @OneToOne(cascade = CascadeType.ALL, optional = true)
+    @OneToOne(cascade = CascadeType.ALL, optional = true, orphanRemoval = true)
     @JoinColumn(name = "endereco_id")
     private Endereco endereco;
 
     public Beneficiario(String nome, String cpf, String email, String senha, LocalDate dataNascimento, String telefone, String genero, Boolean lgpdAccepted) {
         super(nome, cpf, email, senha, dataNascimento, telefone, genero, lgpdAccepted);
+        this.carrinho = new Carrinho();
     }
 }
