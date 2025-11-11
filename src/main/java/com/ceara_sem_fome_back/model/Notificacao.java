@@ -1,18 +1,17 @@
-
 package com.ceara_sem_fome_back.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "notificacoes")
-@Data
-@Builder
+@Table(name = "notificacao")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Notificacao {
@@ -21,23 +20,21 @@ public class Notificacao {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "destinatario_id", nullable = false)
-    private Pessoa destinatario;
+    @Column(nullable = false)
+    private String destinatarioId;
 
     @Column(nullable = false)
     private String mensagem;
 
     @Column(nullable = false)
-    private boolean lida = false;
-
-    private String link;
-
-    @Column(nullable = false, updatable = false)
     private LocalDateTime dataCriacao;
 
-    @PrePersist
-    protected void onCreate() {
-        dataCriacao = LocalDateTime.now();
+    private boolean lida;
+
+    public Notificacao(String destinatarioId, String mensagem) {
+        this.destinatarioId = destinatarioId;
+        this.mensagem = mensagem;
+        this.dataCriacao = LocalDateTime.now();
+        this.lida = false;
     }
 }

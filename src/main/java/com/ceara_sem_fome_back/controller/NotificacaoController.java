@@ -1,14 +1,15 @@
-
 package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.model.Notificacao;
 import com.ceara_sem_fome_back.model.Pessoa;
 import com.ceara_sem_fome_back.service.NotificacaoService;
-import com.ceara_sem_fome_back.service.PessoaService; // Assumindo que você tem um serviço para pegar o usuário logado
+import com.ceara_sem_fome_back.service.PessoaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -20,39 +21,23 @@ public class NotificacaoController {
     private NotificacaoService notificacaoService;
 
     @Autowired
-    private PessoaService pessoaService; // Serviço para buscar o usuário
+    private PessoaService pessoaService; // Para identificar o usuário logado
 
     /**
-     * Busca a lista de notificações para o usuário autenticado.
+     * Endpoint para buscar as notificações do usuário autenticado.
+     *
+     * @param authentication Objeto que contém os detalhes do usuário logado.
+     * @return Uma lista de notificações para o usuário.
      */
     @GetMapping
-    public ResponseEntity<List<Notificacao>> getNotificacoesDoUsuario(Authentication authentication) {
-        Pessoa usuarioLogado = pessoaService.getUsuarioLogado(authentication); // Você precisa implementar este método
-        List<Notificacao> notificacoes = notificacaoService.getNotificacoes(usuarioLogado);
+    public ResponseEntity<List<Notificacao>> getNotificacoes(Authentication authentication) {
+        // 1. Identifica o usuário logado
+        Pessoa usuarioLogado = pessoaService.getUsuarioLogado(authentication);
+
+        // 2. Busca as notificações usando o ID do usuário
+        List<Notificacao> notificacoes = notificacaoService.buscarNotificacoesPorPessoa(usuarioLogado.getId());
+
+        // 3. Retorna a lista
         return ResponseEntity.ok(notificacoes);
-    }
-
-    /**
-     * Busca a contagem de notificações não lidas para o usuário autenticado.
-     */
-    @GetMapping("/contagem-nao-lidas")
-    public ResponseEntity<Long> getContagemNaoLidas(Authentication authentication) {
-        Pessoa usuarioLogado = pessoaService.getUsuarioLogado(authentication); // Você precisa implementar este método
-        long contagem = notificacaoService.getContagemNaoLidas(usuarioLogado);
-        return ResponseEntity.ok(contagem);
-    }
-
-    /**
-     * Marca uma notificação específica como lida.
-     */
-    @PostMapping("/{id}/marcar-lida")
-    public ResponseEntity<?> marcarComoLida(@PathVariable Long id, Authentication authentication) {
-        Pessoa usuarioLogado = pessoaService.getUsuarioLogado(authentication); // Você precisa implementar este método
-        Notificacao notificacao = notificacaoService.marcarComoLida(id, usuarioLogado);
-        if (notificacao != null) {
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
     }
 }
