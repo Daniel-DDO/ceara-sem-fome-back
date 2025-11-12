@@ -42,5 +42,5 @@ public class Produto {
     private Comerciante comerciante;
 
     @Enumerated(EnumType.STRING)
-    private CategoriaProduto categoriaProduto;
+    private CategoriaProduto categoria;
 }

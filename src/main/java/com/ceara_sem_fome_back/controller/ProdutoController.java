@@ -2,7 +2,6 @@ package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.dto.PaginacaoDTO;
-import com.ceara_sem_fome_back.dto.ProdutoCadastroRequest;
 import com.ceara_sem_fome_back.dto.ProdutoDTO;
 import com.ceara_sem_fome_back.exception.AcessoNaoAutorizadoException; // Import adicionado
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException; // Import adicionado
@@ -10,11 +9,9 @@ import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.Produto;
 import com.ceara_sem_fome_back.model.ProdutoEstabelecimento;
 import com.ceara_sem_fome_back.service.ProdutoService;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.Valid;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType; // Import adicionado
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,8 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException; // Import adicionado
-import java.net.URI;
-import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -45,13 +40,16 @@ public class ProdutoController {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> cadastrarProduto(
-            @RequestPart("produto") @Valid ProdutoDTO produtoDTO,
+            @RequestPart("produto") String produtoJson,
             @RequestPart(value = "imagem", required = false) MultipartFile imagem,
             @AuthenticationPrincipal ComercianteData comercianteData) {
 
         Comerciante comercianteLogado = comercianteData.getComerciante();
 
         try {
+            ObjectMapper mapper = new ObjectMapper();
+            ProdutoDTO produtoDTO = mapper.readValue(produtoJson, ProdutoDTO.class);
+
             Produto produtoSalvo = produtoService.cadastrarProduto(produtoDTO, comercianteLogado, imagem);
 
             ProdutoDTO dto = new ProdutoDTO(
@@ -62,7 +60,7 @@ public class ProdutoController {
                     produtoSalvo.getPreco(),
                     produtoSalvo.getQuantidadeEstoque(),
                     produtoSalvo.getStatus(),
-                    produtoSalvo.getCategoriaProduto(),
+                    produtoSalvo.getCategoria(),
                     produtoSalvo.getImagem(),
                     produtoSalvo.getTipoImagem(),
                     produtoSalvo.getComerciante() != null ? produtoSalvo.getComerciante().getId() : null
@@ -70,14 +68,10 @@ public class ProdutoController {
 
             return ResponseEntity.status(201).body(dto);
 
-        } catch (RecursoNaoEncontradoException e) {
-            return ResponseEntity.status(404).body(Map.of("erro", e.getMessage()));
-        } catch (AcessoNaoAutorizadoException e) {
-            return ResponseEntity.status(403).body(Map.of("erro", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
-        } catch (IOException e) {
-            return ResponseEntity.status(500).body(Map.of("erro", "Erro ao processar a imagem."));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                    .body(Map.of("erro", "Erro ao processar a imagem ou o JSON do produto."));
         }
     }
 

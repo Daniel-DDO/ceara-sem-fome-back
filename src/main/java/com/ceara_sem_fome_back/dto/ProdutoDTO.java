@@ -20,7 +20,7 @@ public class ProdutoDTO {
     private BigDecimal preco;
     private int quantidadeEstoque;
     private StatusProduto status;
-    private CategoriaProduto categoriaProduto;
+    private CategoriaProduto categoria;
     private String imagem;
     private String tipoImagem;
     private String comercianteId;
