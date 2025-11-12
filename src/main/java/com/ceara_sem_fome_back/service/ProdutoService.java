@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.ProdutoCadastroRequest;
 import com.ceara_sem_fome_back.dto.ProdutoDTO;
 import com.ceara_sem_fome_back.exception.AcessoNaoAutorizadoException;
@@ -184,5 +185,36 @@ public class ProdutoService {
             return produtoEstabelecimentoRepository.findByEstabelecimento_Id(estabelecimentoId, pageable);
         }
     }
+
+    public PaginacaoDTO<Produto> listarComFiltro(
+            String nomeFiltro,
+            int page,
+            int size,
+            String sortBy,
+            String direction
+    ) {
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Produto> pagina;
+
+        if (nomeFiltro != null && !nomeFiltro.isBlank()) {
+            pagina = produtoRepository.findByNomeContainingIgnoreCase(nomeFiltro, pageable);
+        } else {
+            pagina = produtoRepository.findAll(pageable);
+        }
+
+        return new PaginacaoDTO<>(
+                pagina.getContent(),
+                pagina.getNumber(),
+                pagina.getTotalPages(),
+                pagina.getTotalElements(),
+                pagina.getSize(),
+                pagina.isLast()
+        );
+    }
+
 
 }

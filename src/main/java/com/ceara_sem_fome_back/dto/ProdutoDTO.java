@@ -24,7 +24,6 @@ public class ProdutoDTO {
     private String imagem;
     private String tipoImagem;
     private String comercianteId;
-    private String comercianteNome;
 
     public ProdutoDTO(String id, String nome, String lote, String descricao, BigDecimal preco, int quantidadeEstoque, StatusProduto status) {
         this.id = id;

@@ -1,6 +1,7 @@
 package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.ComercianteData;
+import com.ceara_sem_fome_back.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.ProdutoCadastroRequest;
 import com.ceara_sem_fome_back.dto.ProdutoDTO;
 import com.ceara_sem_fome_back.exception.AcessoNaoAutorizadoException; // Import adicionado
@@ -64,8 +65,7 @@ public class ProdutoController {
                     produtoSalvo.getCategoriaProduto(),
                     produtoSalvo.getImagem(),
                     produtoSalvo.getTipoImagem(),
-                    produtoSalvo.getComerciante() != null ? produtoSalvo.getComerciante().getId() : null,
-                    produtoSalvo.getComerciante() != null ? produtoSalvo.getComerciante().getNome() : null
+                    produtoSalvo.getComerciante() != null ? produtoSalvo.getComerciante().getId() : null
             );
 
             return ResponseEntity.status(201).body(dto);
@@ -146,5 +146,18 @@ public class ProdutoController {
 
         return ResponseEntity.ok(prodRespota);
     }
+
+    @GetMapping("/all")
+    public ResponseEntity<PaginacaoDTO<Produto>> listarTodos(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(required = false) String nomeFiltro
+    ) {
+        PaginacaoDTO<Produto> pagina = produtoService.listarComFiltro(nomeFiltro, page, size, sortBy, direction);
+        return ResponseEntity.ok(pagina);
+    }
+
 
 }
