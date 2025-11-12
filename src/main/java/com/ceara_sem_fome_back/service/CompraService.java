@@ -39,6 +39,9 @@ public class CompraService {
     @Autowired
     private ContaRepository contaRepository;
 
+    @Autowired
+    private EventoCompraService eventoCompraService;
+
     @Transactional
     public Compra finalizarCompra(String beneficiarioId, String estabelecimentoId) {
         Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
@@ -103,6 +106,9 @@ public class CompraService {
         }
 
         produtoCarrinhoRepository.deleteAll(produtosCarrinho);
+
+        String descricao = "Pedido confirmado e recebido pelo estabelecimento.";
+        eventoCompraService.criarEvento(compra, StatusCompra.FINALIZADA, descricao);
 
         return compra;
     }

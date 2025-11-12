@@ -5,6 +5,8 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import java.util.ArrayList;
 
 @Getter
 @Setter
@@ -39,6 +41,10 @@ public class Compra {
 
     @Enumerated(EnumType.STRING)
     private StatusCompra status;
+
+    @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<EventoCompra> eventos = new ArrayList<>();
 
     public Compra(Beneficiario beneficiario, Estabelecimento estabelecimento, Endereco endereco, Double valorTotal) {
         this.id = UUID.randomUUID().toString();
