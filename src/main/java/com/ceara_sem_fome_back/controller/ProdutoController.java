@@ -28,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException; // Import adicionado
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RestController
@@ -37,31 +38,48 @@ public class ProdutoController {
     @Autowired
     private ProdutoService produtoService;
 
-    // --- METODO MODIFICADO ---
-    @PostMapping(value = "/cadastrar", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    @PostMapping(
+            value = "/cadastrar",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
     public ResponseEntity<?> cadastrarProduto(
-            @ModelAttribute @Valid ProdutoCadastroRequest request, // Trocado para @ModelAttribute
-            @RequestParam(value = "file", required = false) MultipartFile file, // Recebe o arquivo
+            @RequestPart("produto") @Valid ProdutoDTO produtoDTO,
+            @RequestPart(value = "imagem", required = false) MultipartFile imagem,
             @AuthenticationPrincipal ComercianteData comercianteData) {
 
         Comerciante comercianteLogado = comercianteData.getComerciante();
 
         try {
-            ProdutoEstabelecimento associacaoSalva = produtoService.cadastrarProduto(request, comercianteLogado, file);
-            return ResponseEntity.status(201).body(associacaoSalva);
-        
-        // Adicionando tratamento de exceções que o service pode lançar
+            Produto produtoSalvo = produtoService.cadastrarProduto(produtoDTO, comercianteLogado, imagem);
+
+            ProdutoDTO dto = new ProdutoDTO(
+                    produtoSalvo.getId(),
+                    produtoSalvo.getNome(),
+                    produtoSalvo.getLote(),
+                    produtoSalvo.getDescricao(),
+                    produtoSalvo.getPreco(),
+                    produtoSalvo.getQuantidadeEstoque(),
+                    produtoSalvo.getStatus(),
+                    produtoSalvo.getCategoriaProduto(),
+                    produtoSalvo.getImagem(),
+                    produtoSalvo.getTipoImagem(),
+                    produtoSalvo.getComerciante() != null ? produtoSalvo.getComerciante().getId() : null,
+                    produtoSalvo.getComerciante() != null ? produtoSalvo.getComerciante().getNome() : null
+            );
+
+            return ResponseEntity.status(201).body(dto);
+
         } catch (RecursoNaoEncontradoException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
+            return ResponseEntity.status(404).body(Map.of("erro", e.getMessage()));
         } catch (AcessoNaoAutorizadoException e) {
-            return ResponseEntity.status(403).body(e.getMessage());
-        } catch (IOException e) {
-            return ResponseEntity.status(500).body("Erro ao processar a imagem: " + e.getMessage());
+            return ResponseEntity.status(403).body(Map.of("erro", e.getMessage()));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("erro", e.getMessage()));
+        } catch (IOException e) {
+            return ResponseEntity.status(500).body(Map.of("erro", "Erro ao processar a imagem."));
         }
     }
-    // --- FIM DA MODIFICAÇÃO ---
 
     @GetMapping("/estabelecimento/{estabelecimentoId}")
     public ResponseEntity<Page<ProdutoEstabelecimento>> listarProdutosComFiltro(
@@ -84,7 +102,6 @@ public class ProdutoController {
     }
 
     //sobre o produto
-
     @PostMapping("/aprovar")
     public ResponseEntity<ProdutoDTO> aprovarProduto(@RequestBody ProdutoDTO produtoDTO) {
         String id = produtoDTO.getId();
@@ -128,79 +145,6 @@ public class ProdutoController {
                 produtoRemov.getDescricao(), produtoRemov.getPreco(), produtoRemov.getQuantidadeEstoque(), produtoRemov.getStatus());
 
         return ResponseEntity.ok(prodRespota);
-    }
-
-    //imagens
-
-    @PostMapping(value = "/{id}/imagem", consumes = {"multipart/form-data"})
-    public ResponseEntity<?> uploadImagem(
-            @PathVariable String id,
-            @RequestParam("file") MultipartFile file) {
-        try {
-            Produto atualizado = produtoService.salvarImagem(id, file);
-            //Retorna 200 OK com header Location apontando para endpoint de imagem
-            URI uri = URI.create("/produtos/" + id + "/imagem");
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.LOCATION, uri.toString())
-                    .body("Imagem salva com sucesso.");
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Erro ao salvar imagem: " + e.getMessage());
-        }
-    }
-
-    //imagem: retorna bytes e Content-Type correto
-    @GetMapping("/{id}/imagem")
-    public ResponseEntity<byte[]> getImagem(@PathVariable String id) {
-        try {
-            byte[] imagem = produtoService.buscarImagem(id);
-            if (imagem == null || imagem.length == 0) {
-                return ResponseEntity.notFound().build();
-            }
-            String tipo = produtoService.buscarTipoImagem(id);
-            MediaType mediaType;
-            try {
-                mediaType = (tipo != null) ? MediaType.parseMediaType(tipo) : MediaType.APPLICATION_OCTET_STREAM;
-            } catch (Exception ex) {
-                mediaType = MediaType.APPLICATION_OCTET_STREAM;
-            }
-            return ResponseEntity.ok()
-                    .contentType(mediaType)
-                    .body(imagem);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    //Deleta imagem do produto (mantém produto)
-    @DeleteMapping("/{id}/imagem")
-    public ResponseEntity<?> deleteImagem(@PathVariable String id) {
-        try {
-            produtoService.removerImagem(id);
-            return ResponseEntity.ok("Imagem removida com sucesso.");
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Erro ao remover imagem: " + e.getMessage());
-        }
-    }
-
-    //informa se o produto possui imagem e qual o tipo
-    @GetMapping("/{id}/imagem/metadata")
-    public ResponseEntity<?> metadataImagem(@PathVariable String id) {
-        try {
-            boolean possui = produtoService.possuiImagem(id);
-            String tipo = produtoService.buscarTipoImagem(id);
-            return ResponseEntity.ok(new Object() {
-                public final boolean existe = possui;
-                public final String tipoMime = tipo;
-            });
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
     }
 
 }

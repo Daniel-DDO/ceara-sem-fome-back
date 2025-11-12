@@ -1,6 +1,7 @@
 package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.dto.ProdutoCadastroRequest;
+import com.ceara_sem_fome_back.dto.ProdutoDTO;
 import com.ceara_sem_fome_back.exception.AcessoNaoAutorizadoException;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.*;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException; // Import adicionado
 import java.math.BigDecimal;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import com.ceara_sem_fome_back.model.Produto;
@@ -38,39 +40,29 @@ public class ProdutoService {
     @Autowired
     private ComercianteService comercianteService;
 
-    // --- METODO MODIFICADO ---
     @Transactional
-    public ProdutoEstabelecimento cadastrarProduto(ProdutoCadastroRequest request, Comerciante comerciante, MultipartFile file) throws IOException {
-
-        Estabelecimento estabelecimento = estabelecimentoRepository.findById(request.getEstabelecimentoId())
-                .orElseThrow(() -> new RecursoNaoEncontradoException(request.getEstabelecimentoId()));
-
-        if (!estabelecimento.getComerciante().getCpf().equals(comerciante.getCpf())) {
-            throw new AcessoNaoAutorizadoException(comerciante.getCpf());
-        }
+    public Produto cadastrarProduto(ProdutoDTO produtoDTO, Comerciante comerciante, MultipartFile imagem) throws IOException {
 
         Produto novoProduto = new Produto();
         novoProduto.setId(UUID.randomUUID().toString());
-        novoProduto.setNome(request.getNome());
-        novoProduto.setPreco(BigDecimal.valueOf(request.getPrecoVenda().doubleValue()));
-        novoProduto.setQuantidadeEstoque(request.getEstoque());
+        novoProduto.setNome(produtoDTO.getNome());
+        novoProduto.setLote(produtoDTO.getLote());
+        novoProduto.setDescricao(produtoDTO.getDescricao());
+        novoProduto.setPreco(produtoDTO.getPreco());
+        novoProduto.setQuantidadeEstoque(produtoDTO.getQuantidadeEstoque());
+        novoProduto.setCategoriaProduto(produtoDTO.getCategoriaProduto());
         novoProduto.setComerciante(comerciante);
         novoProduto.setStatus(StatusProduto.PENDENTE);
 
-        novoProduto.setStatus(StatusProduto.PENDENTE);
-
-        Produto produtoSalvo = produtoRepository.save(novoProduto);
-
-        if (file != null && !file.isEmpty()) {
-            this.salvarImagem(produtoSalvo.getId(), file);
+        if (imagem != null && !imagem.isEmpty()) {
+            String base64 = Base64.getEncoder().encodeToString(imagem.getBytes());
+            novoProduto.setImagem(base64);
+            novoProduto.setTipoImagem(imagem.getContentType());
         }
 
-        ProdutoEstabelecimento associacao = new ProdutoEstabelecimento();
-        associacao.setProduto(produtoSalvo);
-        associacao.setEstabelecimento(estabelecimento);
-
-        return produtoEstabelecimentoRepository.save(associacao);
+        return produtoRepository.save(novoProduto);
     }
+
 
     public Produto aprovarProduto(String id) {
         Produto produto = produtoRepository.findByIdIgnoringStatus(id)
@@ -138,23 +130,10 @@ public class ProdutoService {
 
     //imagem:
 
-    @Transactional
-    public Produto salvarImagem(String id, MultipartFile file) throws IOException {
-        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
-                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
-
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Arquivo de imagem inválido ou ausente.");
-        }
-
-        produto.setImagem(file.getBytes());
-        produto.setTipoImagem(file.getContentType()); //pode ser null dependendo do client
-        return produtoRepository.save(produto);
-    }
 
     //retorna bytes da imagem (ou null se não há imagem)
     @Transactional(readOnly = true)
-    public byte[] buscarImagem(String id) {
+    public String buscarImagem(String id) {
         Produto produto = produtoRepository.findByIdIgnoringStatus(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
         return produto.getImagem();
@@ -175,27 +154,6 @@ public class ProdutoService {
         produto.setImagem(null);
         produto.setTipoImagem(null);
         produtoRepository.save(produto);
-    }
-
-    //criar produto com imagem (criar produto + upload na requisição)
-    @Transactional
-    public Produto criarProdutoComImagem(Produto produto, MultipartFile file) throws IOException {
-        if (produto == null || produto.getId() == null) {
-            throw new IllegalArgumentException("Produto ou id ausente.");
-        }
-        if (file != null && !file.isEmpty()) {
-            produto.setImagem(file.getBytes());
-            produto.setTipoImagem(file.getContentType());
-        }
-        return produtoRepository.save(produto);
-    }
-
-    //verifica se tem imagem
-    @Transactional(readOnly = true)
-    public boolean possuiImagem(String id) {
-        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
-                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
-        return produto.getImagem() != null && produto.getImagem().length > 0;
     }
 
     public Page<ProdutoEstabelecimento> listarProdutosComFiltroPorEstabelecimento(

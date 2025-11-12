@@ -103,6 +103,7 @@ CREATE TABLE IF NOT EXISTS produto (
     imagem TEXT,
     tipo_imagem VARCHAR(100),
     comerciante_id VARCHAR(255),
+    categoria VARCHAR(100),
     FOREIGN KEY (comerciante_id) REFERENCES comerciante (id) ON DELETE CASCADE
     );
 
