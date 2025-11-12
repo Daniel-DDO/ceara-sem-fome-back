@@ -172,3 +172,12 @@ CREATE TABLE IF NOT EXISTS item_compra (
     FOREIGN KEY (compra_id) REFERENCES compra (id) ON DELETE CASCADE,
     FOREIGN KEY (produto_id) REFERENCES produto (id)
     );
+
+CREATE TABLE IF NOT EXISTS evento_compra (
+    id VARCHAR(255) PRIMARY KEY,
+    compra_id VARCHAR(255) NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    data_hora_evento TIMESTAMP NOT NULL,
+    descricao VARCHAR(255),
+    FOREIGN KEY (compra_id) REFERENCES compra (id) ON DELETE CASCADE
+    );
