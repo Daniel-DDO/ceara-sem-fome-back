@@ -15,5 +15,6 @@ public enum CategoriaProduto {
     PRATOS_PRONTOS,
     SOBREMESAS,
     SOPAS,
+    CEREAIS,
     OUTROS
 }

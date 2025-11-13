@@ -19,7 +19,10 @@ import org.springframework.stereotype.Service;
 import java.io.IOException; // Import adicionado
 import java.math.BigDecimal;
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 import com.ceara_sem_fome_back.model.Produto;
 import org.springframework.web.multipart.MultipartFile; // Import adicionado
 
@@ -173,5 +176,23 @@ public class ProdutoService {
         );
     }
 
+    public List<ProdutoDTO> listarPorComerciante(String comercianteId) {
+        List<Produto> produtos = produtoRepository.findByComercianteId(comercianteId);
+
+        return produtos.stream().map(
+                p -> new ProdutoDTO(
+                        p.getId(),
+                        p.getNome(),
+                        p.getLote(),
+                        p.getDescricao(),
+                        p.getPreco(),
+                        p.getQuantidadeEstoque(),
+                        p.getStatus(),
+                        p.getCategoria(),
+                        p.getImagem(),
+                        p.getTipoImagem(),
+                        p.getComerciante().getId()
+                )).collect(Collectors.toList());
+    }
 
 }

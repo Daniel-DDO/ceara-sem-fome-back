@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -22,4 +23,7 @@ public interface ProdutoRepository extends JpaRepository<Produto, String> {
     Optional<Produto> findByIdIgnoringStatus(@Param("id") String id);
 
     Page<Produto> findByNomeContainingIgnoreCase(String nome, Pageable pageable);
+
+    @Query("SELECT p FROM Produto p WHERE p.comerciante.id = :comercianteId AND p.status IN ('AUTORIZADO', 'PENDENTE')")
+    List<Produto> findByComercianteId(String comercianteId);
 }

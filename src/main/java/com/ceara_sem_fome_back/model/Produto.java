@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 @Setter
 @NoArgsConstructor
 @Entity
-@Where(clause = "status = 'AUTORIZADO'")
+@Where(clause = "status IN ('AUTORIZADO', 'PENDENTE')")
 public class Produto {
     @Id
     private String id;

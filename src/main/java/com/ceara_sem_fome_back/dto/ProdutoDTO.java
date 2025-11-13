@@ -34,6 +34,7 @@ public class ProdutoDTO {
         this.quantidadeEstoque = quantidadeEstoque;
         this.status = status;
     }
+
 }
 
 
