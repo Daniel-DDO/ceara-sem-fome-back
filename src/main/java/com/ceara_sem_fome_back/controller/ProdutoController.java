@@ -5,10 +5,7 @@ import com.ceara_sem_fome_back.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.ProdutoDTO;
 import com.ceara_sem_fome_back.exception.AcessoNaoAutorizadoException; // Import adicionado
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException; // Import adicionado
-import com.ceara_sem_fome_back.model.CategoriaProduto;
-import com.ceara_sem_fome_back.model.Comerciante;
-import com.ceara_sem_fome_back.model.Produto;
-import com.ceara_sem_fome_back.model.ProdutoEstabelecimento;
+import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.service.ProdutoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -146,6 +143,11 @@ public class ProdutoController {
     @GetMapping("/categorias")
     public ResponseEntity<CategoriaProduto[]> listarCategorias() {
         return ResponseEntity.ok(CategoriaProduto.values());
+    }
+
+    @GetMapping("/unidades")
+    public ResponseEntity<UnidadeProduto[]> listarUnidades() {
+        return ResponseEntity.ok(UnidadeProduto.values());
     }
 
     @GetMapping("/all")
