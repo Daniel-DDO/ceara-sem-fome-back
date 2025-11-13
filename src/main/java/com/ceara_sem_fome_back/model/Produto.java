@@ -43,4 +43,7 @@ public class Produto {
 
     @Enumerated(EnumType.STRING)
     private CategoriaProduto categoria;
+
+    @Enumerated(EnumType.STRING)
+    private UnidadeProduto unidade;
 }

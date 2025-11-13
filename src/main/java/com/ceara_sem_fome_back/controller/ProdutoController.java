@@ -62,6 +62,7 @@ public class ProdutoController {
                     produtoSalvo.getQuantidadeEstoque(),
                     produtoSalvo.getStatus(),
                     produtoSalvo.getCategoria(),
+                    produtoSalvo.getUnidade(),
                     produtoSalvo.getImagem(),
                     produtoSalvo.getTipoImagem(),
                     produtoSalvo.getComerciante() != null ? produtoSalvo.getComerciante().getId() : null

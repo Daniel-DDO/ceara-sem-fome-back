@@ -55,8 +55,8 @@ public class JWTValidarFilter extends BasicAuthenticationFilter {
             "/estabelecimento/municipio/**",
 
             "/produtos/all",
-            "/produtos/**",
-            "/produto/**",
+            "/produtos/categorias",
+            "/produtos/unidades",
 
             "/health",
             "/version",

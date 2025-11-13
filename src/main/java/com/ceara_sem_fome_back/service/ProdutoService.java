@@ -52,6 +52,7 @@ public class ProdutoService {
         novoProduto.setPreco(produtoDTO.getPreco());
         novoProduto.setQuantidadeEstoque(produtoDTO.getQuantidadeEstoque());
         novoProduto.setCategoria(produtoDTO.getCategoria());
+        novoProduto.setUnidade(produtoDTO.getUnidade());
         novoProduto.setComerciante(comerciante);
         novoProduto.setStatus(StatusProduto.PENDENTE);
 
@@ -189,6 +190,7 @@ public class ProdutoService {
                         p.getQuantidadeEstoque(),
                         p.getStatus(),
                         p.getCategoria(),
+                        p.getUnidade(),
                         p.getImagem(),
                         p.getTipoImagem(),
                         p.getComerciante().getId()
