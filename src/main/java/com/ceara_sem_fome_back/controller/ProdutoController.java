@@ -117,16 +117,44 @@ public class ProdutoController {
         return ResponseEntity.ok(prodRespota);
     }
 
-    @PostMapping("/editar")
-    public ResponseEntity<ProdutoDTO> editarProduto(@RequestBody ProdutoDTO produtoDTO) {
-        String id = produtoDTO.getId();
-        Produto produtoEdit = produtoService.editarProduto(id, produtoDTO.getNome(), produtoDTO.getLote(),
-                produtoDTO.getDescricao(), produtoDTO.getPreco(), produtoDTO.getQuantidadeEstoque());
+    @PutMapping(
+            value = "/editar/{id}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<?> editarProduto(
+            @PathVariable String id,
+            @RequestPart("produto") String produtoJson,
+            @RequestPart(value = "imagem", required = false) MultipartFile imagem) {
 
-        ProdutoDTO prodRespota = new ProdutoDTO(produtoEdit.getId(), produtoEdit.getNome(), produtoEdit.getLote(),
-                produtoEdit.getDescricao(), produtoEdit.getPreco(), produtoEdit.getQuantidadeEstoque(), produtoEdit.getStatus());
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            ProdutoDTO produtoDTO = mapper.readValue(produtoJson, ProdutoDTO.class);
+            produtoDTO.setId(id);
 
-        return ResponseEntity.ok(prodRespota);
+            Produto produtoEdit = produtoService.editarProdutoComImagem(produtoDTO, imagem);
+
+            ProdutoDTO dto = new ProdutoDTO(
+                    produtoEdit.getId(),
+                    produtoEdit.getNome(),
+                    produtoEdit.getLote(),
+                    produtoEdit.getDescricao(),
+                    produtoEdit.getPreco(),
+                    produtoEdit.getQuantidadeEstoque(),
+                    produtoEdit.getStatus(),
+                    produtoEdit.getCategoria(),
+                    produtoEdit.getUnidade(),
+                    produtoEdit.getImagem(),
+                    produtoEdit.getTipoImagem(),
+                    produtoEdit.getComerciante() != null ? produtoEdit.getComerciante().getId() : null
+            );
+
+            return ResponseEntity.ok(dto);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                    .body(Map.of("erro", "Erro ao atualizar o produto ou processar a imagem."));
+        }
     }
 
     @PostMapping("/remover")

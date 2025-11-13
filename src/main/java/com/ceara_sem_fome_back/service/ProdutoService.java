@@ -85,23 +85,41 @@ public class ProdutoService {
         return alterarStatusProduto(id, StatusProduto.RECUSADO);
     }
 
-    public Produto editarProduto(String id, String nome, String lote, String descricao, BigDecimal preco, int quantidadeEstoque) {
-        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
-                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
+    @Transactional
+    public Produto editarProdutoComImagem(ProdutoDTO produtoDTO, MultipartFile imagem) throws IOException {
+        if (produtoDTO.getId() == null || produtoDTO.getId().isEmpty()) {
+            throw new IllegalArgumentException("O ID do produto é obrigatório para a edição.");
+        }
 
-        if (!produto.getStatus().equals(StatusProduto.AUTORIZADO)) {
+        Produto produtoExistente = produtoRepository.findByIdIgnoringStatus(produtoDTO.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado para edição."));
+
+        if (!produtoExistente.getStatus().equals(StatusProduto.AUTORIZADO)) {
             throw new IllegalStateException("Produto não autorizado.");
         }
 
-        produto.setNome(nome); produto.setLote(lote); produto.setDescricao(descricao);
-        produto.setPreco(preco); produto.setQuantidadeEstoque(quantidadeEstoque);
+        produtoExistente.setNome(produtoDTO.getNome());
+        produtoExistente.setLote(produtoDTO.getLote());
+        produtoExistente.setDescricao(produtoDTO.getDescricao());
+        produtoExistente.setPreco(produtoDTO.getPreco());
+        produtoExistente.setQuantidadeEstoque(produtoDTO.getQuantidadeEstoque());
 
-        //só uma observação: acho que isso daqui deve mudar, pq dependendo do que o comerciante mudar,
-        //o produto deveria voltar para o status de pendente, necessitando de uma reavaliação.
+        if (produtoDTO.getCategoria() != null) {
+            produtoExistente.setCategoria(produtoDTO.getCategoria());
+        }
+        if (produtoDTO.getUnidade() != null) {
+            produtoExistente.setUnidade(produtoDTO.getUnidade());
+        }
 
-        produtoRepository.save(produto);
+        if (imagem != null && !imagem.isEmpty()) {
+            String base64 = Base64.getEncoder().encodeToString(imagem.getBytes());
+            produtoExistente.setImagem(base64);
+            produtoExistente.setTipoImagem(imagem.getContentType());
+        }
 
-        return produto;
+        produtoExistente.setStatus(StatusProduto.PENDENTE); //para ser avaliado novamente
+
+        return produtoRepository.save(produtoExistente);
     }
 
     public Produto removerProduto(String id) {
