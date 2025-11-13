@@ -5,6 +5,7 @@ import com.ceara_sem_fome_back.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.ProdutoDTO;
 import com.ceara_sem_fome_back.exception.AcessoNaoAutorizadoException; // Import adicionado
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException; // Import adicionado
+import com.ceara_sem_fome_back.model.CategoriaProduto;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.Produto;
 import com.ceara_sem_fome_back.model.ProdutoEstabelecimento;
@@ -139,6 +140,11 @@ public class ProdutoController {
                 produtoRemov.getDescricao(), produtoRemov.getPreco(), produtoRemov.getQuantidadeEstoque(), produtoRemov.getStatus());
 
         return ResponseEntity.ok(prodRespota);
+    }
+
+    @GetMapping("/categorias")
+    public ResponseEntity<CategoriaProduto[]> listarCategorias() {
+        return ResponseEntity.ok(CategoriaProduto.values());
     }
 
     @GetMapping("/all")
