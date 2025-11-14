@@ -21,6 +21,9 @@ public class Notificacao {
     private Long id;
 
     @Column(nullable = false)
+    private String remetenteId;
+
+    @Column(nullable = false)
     private String destinatarioId;
 
     @Column(nullable = false)
@@ -31,7 +34,8 @@ public class Notificacao {
 
     private boolean lida;
 
-    public Notificacao(String destinatarioId, String mensagem) {
+    public Notificacao(String remetenteId, String destinatarioId, String mensagem) {
+        this.remetenteId = remetenteId;
         this.destinatarioId = destinatarioId;
         this.mensagem = mensagem;
         this.dataCriacao = LocalDateTime.now();

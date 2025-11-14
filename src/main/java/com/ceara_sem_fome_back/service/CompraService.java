@@ -39,6 +39,9 @@ public class CompraService {
     @Autowired
     private ContaRepository contaRepository;
 
+    @Autowired
+    private NotificacaoService notificacaoService;
+
     @Transactional
     public Compra finalizarCompra(String beneficiarioId, String estabelecimentoId) {
         Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
@@ -103,6 +106,12 @@ public class CompraService {
         }
 
         produtoCarrinhoRepository.deleteAll(produtosCarrinho);
+
+        String mensagemBeneficiario = "Sua compra de R$ " + valorTotal.toString() + " no estabelecimento " + estabelecimento.getNome() + " foi finalizada com sucesso.";
+        notificacaoService.criarNotificacao(comerciante.getId(), beneficiario.getId(), mensagemBeneficiario);
+
+        String mensagemComerciante = "Você recebeu uma nova venda de R$ " + valorTotal.toString() + " do beneficiário " + beneficiario.getNome() + ".";
+        notificacaoService.criarNotificacao(beneficiario.getId(), comerciante.getId(), mensagemComerciante);
 
         return compra;
     }
