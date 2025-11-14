@@ -26,4 +26,11 @@ public interface ProdutoRepository extends JpaRepository<Produto, String> {
 
     @Query("SELECT p FROM Produto p WHERE p.comerciante.id = :comercianteId AND p.status IN ('AUTORIZADO', 'PENDENTE')")
     List<Produto> findByComercianteId(String comercianteId);
+
+    @Query(value = """
+    SELECT * FROM produto
+    WHERE similarity(unaccent(nome), unaccent(:pesquisa)) > 0.3
+    ORDER BY similarity(unaccent(nome), unaccent(:pesquisa)) DESC""", nativeQuery = true)
+    List<Produto> buscaInteligente(@Param("pesquisa") String pesquisa);
+
 }

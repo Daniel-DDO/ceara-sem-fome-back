@@ -219,4 +219,7 @@ public class ProdutoService {
                 )).collect(Collectors.toList());
     }
 
+    public List<Produto> filtrarProdutosPorNome(String pesquisa) {
+        return produtoRepository.buscaInteligente(pesquisa);
+    }
 }

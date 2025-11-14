@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -230,5 +231,11 @@ public class ProdutoController {
     ) {
         PaginacaoDTO<Produto> pagina = produtoService.listarComFiltro(nomeFiltro, page, size, sortBy, direction);
         return ResponseEntity.ok(pagina);
+    }
+
+    @GetMapping("/produtos/filtrar")
+    public ResponseEntity<List<Produto>> filtrar(@RequestParam String pesquisa) {
+        List<Produto> produtos = produtoService.filtrarProdutosPorNome(pesquisa);
+        return ResponseEntity.ok(produtos);
     }
 }
