@@ -13,30 +13,41 @@ import java.math.BigDecimal;
 @Setter
 @NoArgsConstructor
 @Entity
-@Where(clause = "status = 'AUTORIZADO'")
+@Where(clause = "status IN ('AUTORIZADO', 'PENDENTE')")
 public class Produto {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     @NotBlank
     private String nome;
     private String lote;
+
+    @Column(columnDefinition = "TEXT")
     private String descricao;
+
     @Column(precision = 10, scale = 2)
     private BigDecimal preco;
+
     private int quantidadeEstoque;
 
     @Enumerated(EnumType.STRING)
     private StatusProduto status;
 
-    @Lob
-    @Column(name = "imagem")
-    private byte[] imagem;
+    @Column(name = "imagem", columnDefinition = "TEXT")
+    private String imagem;
     private String tipoImagem;
 
     @ManyToOne
     @JoinColumn(name = "comerciante_id")
     private Comerciante comerciante;
 
+    @Enumerated(EnumType.STRING)
+    private CategoriaProduto categoria;
+
+    @Enumerated(EnumType.STRING)
+    private UnidadeProduto unidade;
+
+    @ManyToOne
+    @JoinColumn(name = "avaliado_por_id")
+    private Administrador avaliadoPorId;
 }

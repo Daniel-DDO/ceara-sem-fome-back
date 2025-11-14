@@ -34,7 +34,7 @@ public class Estabelecimento {
 
     private LocalDateTime dataCadastro;
 
-    @OneToOne(cascade = CascadeType.PERSIST)
+    @OneToOne(cascade = CascadeType.PERSIST, orphanRemoval = true)
     @JoinColumn(name = "endereco_id")
     private Endereco endereco;
 
@@ -42,12 +42,4 @@ public class Estabelecimento {
     @JoinColumn(name = "comerciante_id", nullable = false)
     @JsonBackReference
     private Comerciante comerciante;
-
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
 }

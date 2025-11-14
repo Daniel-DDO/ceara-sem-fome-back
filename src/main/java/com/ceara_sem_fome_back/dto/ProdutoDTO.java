@@ -1,16 +1,20 @@
 package com.ceara_sem_fome_back.dto;
 
+import com.ceara_sem_fome_back.model.Administrador;
+import com.ceara_sem_fome_back.model.CategoriaProduto;
 import com.ceara_sem_fome_back.model.StatusProduto;
+import com.ceara_sem_fome_back.model.UnidadeProduto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-@AllArgsConstructor
-@NoArgsConstructor
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ProdutoDTO {
+
     private String id;
     private String nome;
     private String lote;
@@ -18,7 +22,12 @@ public class ProdutoDTO {
     private BigDecimal preco;
     private int quantidadeEstoque;
     private StatusProduto status;
-    private String imagemUrl; //ex.: "/produto/imagem/{id}"
+    private CategoriaProduto categoria;
+    private UnidadeProduto unidade;
+    private String imagem;
+    private String tipoImagem;
+    private Administrador avaliadoPorId;
+    private String comercianteId;
 
     public ProdutoDTO(String id, String nome, String lote, String descricao, BigDecimal preco, int quantidadeEstoque, StatusProduto status) {
         this.id = id;
@@ -31,3 +40,7 @@ public class ProdutoDTO {
     }
 
 }
+
+
+
+

@@ -7,6 +7,7 @@ import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.ComercianteService;
 import com.ceara_sem_fome_back.service.EstabelecimentoService;
+import com.ceara_sem_fome_back.service.ProdutoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,8 @@ public class ComercianteController {
 
     @Autowired
     private EstabelecimentoService estabelecimentoService;
+    @Autowired
+    private ProdutoService produtoService;
 
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarComerciante(@Valid @RequestBody LoginDTO loginDTO) {
@@ -173,4 +176,10 @@ public class ComercianteController {
         return ResponseEntity.ok(estabelecimentos);
     }
 
+    @GetMapping("/meus-produtos")
+    public ResponseEntity<List<ProdutoDTO>> listarProdutos(@AuthenticationPrincipal ComercianteData comercianteData) {
+        String comercianteId = comercianteData.getComerciante().getId();
+        List<ProdutoDTO> produtos = produtoService.listarPorComerciante(comercianteId);
+        return ResponseEntity.ok(produtos);
+    }
 }

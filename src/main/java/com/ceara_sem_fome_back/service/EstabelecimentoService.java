@@ -2,7 +2,9 @@ package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.dto.EnderecoCadRequest;
 import com.ceara_sem_fome_back.dto.EstabelecimentoRespostaDTO;
+import com.ceara_sem_fome_back.exception.AcessoNaoAutorizadoException;
 import com.ceara_sem_fome_back.exception.EstabelecimentoJaCadastradoException;
+import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.Estabelecimento;
 import com.ceara_sem_fome_back.repository.EstabelecimentoRepository;
@@ -45,6 +47,15 @@ public class EstabelecimentoService {
         comerciante.getEstabelecimentos().add(salvo);
 
         return salvo;
+    }
+
+    public void verificarPropriedade(String estabelecimentoId, String comercianteId) {
+        Estabelecimento estabelecimento = estabelecimentoRepository.findById(estabelecimentoId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Estabelecimento não encontrado com ID: " + estabelecimentoId));
+
+        if (!estabelecimento.getComerciante().getId().equals(comercianteId)) {
+            throw new AcessoNaoAutorizadoException("O estabelecimento não pertence ao comerciante autenticado.");
+        }
     }
 
     public Page<Estabelecimento> listarTodos(int page, int size, String sortBy, String direction) {

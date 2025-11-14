@@ -126,7 +126,7 @@ public class EntregadorController {
 
         Entregador entregador = entregadorService.filtrarPorCpf(cpf);
 
-        // 💡 A senha não retorna no JSON
+        //A senha não retorna no JSON
         entregador.setSenha(null);
 
         return ResponseEntity.ok(entregador);
