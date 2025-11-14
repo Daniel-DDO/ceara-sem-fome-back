@@ -61,7 +61,9 @@ public class ProdutoController {
                     produtoSalvo.getUnidade(),
                     produtoSalvo.getImagem(),
                     produtoSalvo.getTipoImagem(),
+                    produtoSalvo.getDataCadastro(),
                     produtoSalvo.getAvaliadoPorId(),
+                    produtoSalvo.getDataAvaliacao(),
                     produtoSalvo.getComerciante() != null ? produtoSalvo.getComerciante().getId() : null
             );
 
@@ -103,7 +105,9 @@ public class ProdutoController {
                     produtoEdit.getUnidade(),
                     produtoEdit.getImagem(),
                     produtoEdit.getTipoImagem(),
+                    produtoEdit.getDataCadastro(),
                     produtoEdit.getAvaliadoPorId(),
+                    produtoEdit.getDataAvaliacao(),
                     produtoEdit.getComerciante() != null ? produtoEdit.getComerciante().getId() : null
             );
 
@@ -147,7 +151,9 @@ public class ProdutoController {
                 produtoAprov.getUnidade(),
                 produtoAprov.getImagem(),
                 produtoAprov.getTipoImagem(),
+                produtoAprov.getDataCadastro(),
                 produtoAprov.getAvaliadoPorId(),
+                produtoAprov.getDataAvaliacao(),
                 produtoAprov.getComerciante().getId()
         );
 
@@ -175,7 +181,9 @@ public class ProdutoController {
                 produtoRec.getUnidade(),
                 produtoRec.getImagem(),
                 produtoRec.getTipoImagem(),
+                produtoRec.getDataCadastro(),
                 produtoRec.getAvaliadoPorId(),
+                produtoRec.getDataAvaliacao(),
                 produtoRec.getComerciante().getId()
         );
 

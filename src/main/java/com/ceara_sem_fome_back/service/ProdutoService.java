@@ -212,7 +212,9 @@ public class ProdutoService {
                         p.getUnidade(),
                         p.getImagem(),
                         p.getTipoImagem(),
+                        p.getDataCadastro(),
                         p.getAvaliadoPorId(),
+                        p.getDataAvaliacao(),
                         p.getComerciante().getId()
                 )).collect(Collectors.toList());
     }

@@ -48,11 +48,11 @@ INSERT INTO estabelecimento (id, nome, cnpj, telefone, imagem, tipo_imagem, data
 VALUES ('est-1', 'Mercearia da Ana', '9382', '(81) 986092487', null, null, '2025-01-20 09:00:00', 'end-5', 'com-1')
     ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO produto (id, nome, lote, descricao, preco, quantidade_estoque, status, imagem, tipo_imagem, categoria, unidade, avaliado_por_id, comerciante_id)
+INSERT INTO produto (id, nome, lote, descricao, preco, quantidade_estoque, status, imagem, tipo_imagem, categoria, unidade, data_cadastro, avaliado_por_id, data_avaliacao, comerciante_id)
 VALUES
-    ('prod-1', 'Arroz 5kg', 'L001', 'Arroz branco tipo 1', 25.90, 50, 'AUTORIZADO', NULL, NULL, 'OUTROS', 'UNIDADE', 'adm-1', 'com-1'),
-    ('prod-2', 'Feijão 1kg', 'L002', 'Feijão carioca', 8.50, 40, 'AUTORIZADO', NULL, NULL, 'OUTROS', 'UNIDADE', 'adm-1', 'com-1'),
-    ('prod-3', 'Macarrão 500g', 'L003', 'Macarrão espaguete', 6.00, 60, 'AUTORIZADO', NULL, NULL, 'OUTROS', 'UNIDADE', 'adm-1', 'com-1')
+    ('prod-1', 'Arroz 5kg', 'L001', 'Arroz branco tipo 1', 25.90, 50, 'AUTORIZADO', NULL, NULL, 'OUTROS', 'UNIDADE', '2025-01-20 09:00:00','adm-1', '2025-10-20 09:00:00','com-1'),
+    ('prod-2', 'Feijão 1kg', 'L002', 'Feijão carioca', 8.50, 40, 'AUTORIZADO', NULL, NULL, 'OUTROS', 'UNIDADE', '2025-02-13 09:40:00','adm-1', '2025-10-20 09:00:00','com-1'),
+    ('prod-3', 'Macarrão 500g', 'L003', 'Macarrão espaguete', 6.00, 60, 'AUTORIZADO', NULL, NULL, 'OUTROS', 'UNIDADE', '2025-07-19 06:50:00','adm-1', '2025-10-20 09:00:00','com-1')
     ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO produto_estabelecimento (id, produto_id, estabelecimento_id) VALUES

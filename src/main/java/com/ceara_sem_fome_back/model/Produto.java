@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.hibernate.annotations.Where;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -47,7 +48,11 @@ public class Produto {
     @Enumerated(EnumType.STRING)
     private UnidadeProduto unidade;
 
+    private LocalDateTime dataCadastro;
+
     @ManyToOne
     @JoinColumn(name = "avaliado_por_id")
     private Administrador avaliadoPorId;
+
+    private LocalDateTime dataAvaliacao;
 }

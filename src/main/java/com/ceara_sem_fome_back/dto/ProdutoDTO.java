@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -26,7 +27,9 @@ public class ProdutoDTO {
     private UnidadeProduto unidade;
     private String imagem;
     private String tipoImagem;
+    private LocalDateTime dataCadastro;
     private Administrador avaliadoPorId;
+    private LocalDateTime dataAvaliacao;
     private String comercianteId;
 
     public ProdutoDTO(String id, String nome, String lote, String descricao, BigDecimal preco, int quantidadeEstoque, StatusProduto status) {

@@ -99,13 +99,15 @@ CREATE TABLE IF NOT EXISTS produto (
     descricao TEXT,
     preco NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
     quantidade_estoque INTEGER NOT NULL DEFAULT 0,
-    status VARCHAR(50),
+    status VARCHAR(60),
     imagem TEXT,
     tipo_imagem VARCHAR(100),
     comerciante_id VARCHAR(255),
     categoria VARCHAR(100),
     unidade VARCHAR(100),
+    data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     avaliado_por_id VARCHAR(255),
+    data_avaliacao TIMESTAMP,
     FOREIGN KEY (avaliado_por_id) REFERENCES administrador (id),
     FOREIGN KEY (comerciante_id) REFERENCES comerciante (id) ON DELETE CASCADE
     );
