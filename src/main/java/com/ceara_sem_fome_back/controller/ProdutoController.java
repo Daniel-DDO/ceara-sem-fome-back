@@ -1,16 +1,16 @@
 package com.ceara_sem_fome_back.controller;
 
+import com.ceara_sem_fome_back.data.AdministradorData;
 import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.ProdutoDTO;
-import com.ceara_sem_fome_back.exception.AcessoNaoAutorizadoException; // Import adicionado
-import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException; // Import adicionado
+
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.service.ProdutoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.http.MediaType; // Import adicionado
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException; // Import adicionado
 import java.util.Map;
 
 @Controller
@@ -62,6 +61,7 @@ public class ProdutoController {
                     produtoSalvo.getUnidade(),
                     produtoSalvo.getImagem(),
                     produtoSalvo.getTipoImagem(),
+                    produtoSalvo.getAvaliadoPorId(),
                     produtoSalvo.getComerciante() != null ? produtoSalvo.getComerciante().getId() : null
             );
 
@@ -72,49 +72,6 @@ public class ProdutoController {
             return ResponseEntity.status(500)
                     .body(Map.of("erro", "Erro ao processar a imagem ou o JSON do produto."));
         }
-    }
-
-    @GetMapping("/estabelecimento/{estabelecimentoId}")
-    public ResponseEntity<Page<ProdutoEstabelecimento>> listarProdutosComFiltro(
-            @PathVariable String estabelecimentoId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "produto.nome") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction,
-            @RequestParam(defaultValue = "") String nomeFiltro
-    ) {
-        Page<ProdutoEstabelecimento> pagina = produtoService.listarProdutosComFiltroPorEstabelecimento(
-                estabelecimentoId,
-                nomeFiltro,
-                page,
-                size,
-                sortBy,
-                direction
-        );
-        return ResponseEntity.ok(pagina);
-    }
-
-    //sobre o produto
-    @PostMapping("/aprovar")
-    public ResponseEntity<ProdutoDTO> aprovarProduto(@RequestBody ProdutoDTO produtoDTO) {
-        String id = produtoDTO.getId();
-        Produto produtoAprov = produtoService.aprovarProduto(id);
-
-        ProdutoDTO prodRespota = new ProdutoDTO(produtoAprov.getId(), produtoAprov.getNome(), produtoAprov.getLote(),
-                produtoAprov.getDescricao(), produtoAprov.getPreco(), produtoAprov.getQuantidadeEstoque(), produtoAprov.getStatus());
-
-        return ResponseEntity.ok(prodRespota);
-    }
-
-    @PostMapping("/recusar")
-    public ResponseEntity<ProdutoDTO> recusarProduto(@RequestBody ProdutoDTO produtoDTO) {
-        String id = produtoDTO.getId();
-        Produto produtoRec = produtoService.recusarProduto(id);
-
-        ProdutoDTO prodRespota = new ProdutoDTO(produtoRec.getId(), produtoRec.getNome(), produtoRec.getLote(),
-                produtoRec.getDescricao(), produtoRec.getPreco(), produtoRec.getQuantidadeEstoque(), produtoRec.getStatus());
-
-        return ResponseEntity.ok(prodRespota);
     }
 
     @PutMapping(
@@ -146,6 +103,7 @@ public class ProdutoController {
                     produtoEdit.getUnidade(),
                     produtoEdit.getImagem(),
                     produtoEdit.getTipoImagem(),
+                    produtoEdit.getAvaliadoPorId(),
                     produtoEdit.getComerciante() != null ? produtoEdit.getComerciante().getId() : null
             );
 
@@ -168,6 +126,62 @@ public class ProdutoController {
         return ResponseEntity.ok(prodRespota);
     }
 
+    @PatchMapping("/aprovar/{id}")
+    public ResponseEntity<ProdutoDTO> aprovarProduto(
+            @RequestBody ProdutoDTO produtoDTO,
+            @AuthenticationPrincipal AdministradorData administradorData) {
+
+        Administrador administradorLogado = administradorData.getAdministrador();
+
+        String id = produtoDTO.getId();
+        Produto produtoAprov = produtoService.aprovarProduto(id, administradorLogado);
+
+        ProdutoDTO prodRespota = new ProdutoDTO(produtoAprov.getId(),
+                produtoAprov.getNome(),
+                produtoAprov.getLote(),
+                produtoAprov.getDescricao(),
+                produtoAprov.getPreco(),
+                produtoAprov.getQuantidadeEstoque(),
+                produtoAprov.getStatus(),
+                produtoAprov.getCategoria(),
+                produtoAprov.getUnidade(),
+                produtoAprov.getImagem(),
+                produtoAprov.getTipoImagem(),
+                produtoAprov.getAvaliadoPorId(),
+                produtoAprov.getComerciante().getId()
+        );
+
+        return ResponseEntity.ok(prodRespota);
+    }
+
+    @PatchMapping("/recusar/{id}")
+    public ResponseEntity<ProdutoDTO> recusarProduto(
+            @RequestBody ProdutoDTO produtoDTO,
+            @AuthenticationPrincipal AdministradorData administradorData) {
+
+        Administrador administradorLogado = administradorData.getAdministrador();
+
+        String id = produtoDTO.getId();
+        Produto produtoRec = produtoService.recusarProduto(id, administradorLogado);
+
+        ProdutoDTO prodRespota = new ProdutoDTO(produtoRec.getId(),
+                produtoRec.getNome(),
+                produtoRec.getLote(),
+                produtoRec.getDescricao(),
+                produtoRec.getPreco(),
+                produtoRec.getQuantidadeEstoque(),
+                produtoRec.getStatus(),
+                produtoRec.getCategoria(),
+                produtoRec.getUnidade(),
+                produtoRec.getImagem(),
+                produtoRec.getTipoImagem(),
+                produtoRec.getAvaliadoPorId(),
+                produtoRec.getComerciante().getId()
+        );
+
+        return ResponseEntity.ok(prodRespota);
+    }
+
     @GetMapping("/categorias")
     public ResponseEntity<CategoriaProduto[]> listarCategorias() {
         return ResponseEntity.ok(CategoriaProduto.values());
@@ -176,6 +190,26 @@ public class ProdutoController {
     @GetMapping("/unidades")
     public ResponseEntity<UnidadeProduto[]> listarUnidades() {
         return ResponseEntity.ok(UnidadeProduto.values());
+    }
+
+    @GetMapping("/estabelecimento/{estabelecimentoId}")
+    public ResponseEntity<Page<ProdutoEstabelecimento>> listarProdutosComFiltro(
+            @PathVariable String estabelecimentoId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "produto.nome") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(defaultValue = "") String nomeFiltro
+    ) {
+        Page<ProdutoEstabelecimento> pagina = produtoService.listarProdutosComFiltroPorEstabelecimento(
+                estabelecimentoId,
+                nomeFiltro,
+                page,
+                size,
+                sortBy,
+                direction
+        );
+        return ResponseEntity.ok(pagina);
     }
 
     @GetMapping("/all")
@@ -189,6 +223,4 @@ public class ProdutoController {
         PaginacaoDTO<Produto> pagina = produtoService.listarComFiltro(nomeFiltro, page, size, sortBy, direction);
         return ResponseEntity.ok(pagina);
     }
-
-
 }

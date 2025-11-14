@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.dto;
 
+import com.ceara_sem_fome_back.model.Administrador;
 import com.ceara_sem_fome_back.model.CategoriaProduto;
 import com.ceara_sem_fome_back.model.StatusProduto;
 import com.ceara_sem_fome_back.model.UnidadeProduto;
@@ -25,6 +26,7 @@ public class ProdutoDTO {
     private UnidadeProduto unidade;
     private String imagem;
     private String tipoImagem;
+    private Administrador avaliadoPorId;
     private String comercianteId;
 
     public ProdutoDTO(String id, String nome, String lote, String descricao, BigDecimal preco, int quantidadeEstoque, StatusProduto status) {

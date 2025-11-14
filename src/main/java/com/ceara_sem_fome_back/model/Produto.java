@@ -46,4 +46,8 @@ public class Produto {
 
     @Enumerated(EnumType.STRING)
     private UnidadeProduto unidade;
+
+    @ManyToOne
+    @JoinColumn(name = "avaliado_por_id")
+    private Administrador avaliadoPorId;
 }

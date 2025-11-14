@@ -105,6 +105,8 @@ CREATE TABLE IF NOT EXISTS produto (
     comerciante_id VARCHAR(255),
     categoria VARCHAR(100),
     unidade VARCHAR(100),
+    avaliado_por_id VARCHAR(255),
+    FOREIGN KEY (avaliado_por_id) REFERENCES administrador (id),
     FOREIGN KEY (comerciante_id) REFERENCES comerciante (id) ON DELETE CASCADE
     );
 

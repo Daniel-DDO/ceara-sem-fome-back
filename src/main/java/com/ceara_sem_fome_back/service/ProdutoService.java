@@ -54,6 +54,7 @@ public class ProdutoService {
         novoProduto.setCategoria(produtoDTO.getCategoria());
         novoProduto.setUnidade(produtoDTO.getUnidade());
         novoProduto.setComerciante(comerciante);
+        novoProduto.setAvaliadoPorId(null);
         novoProduto.setStatus(StatusProduto.PENDENTE);
 
         if (imagem != null && !imagem.isEmpty()) {
@@ -77,11 +78,11 @@ public class ProdutoService {
         return produtoRepository.save(produto);
     }
 
-    public Produto aprovarProduto(String id) {
+    public Produto aprovarProduto(String id, Administrador administradorLogado) {
         return alterarStatusProduto(id, StatusProduto.AUTORIZADO);
     }
 
-    public Produto recusarProduto(String id) {
+    public Produto recusarProduto(String id, Administrador administradorLogado) {
         return alterarStatusProduto(id, StatusProduto.RECUSADO);
     }
 
@@ -211,6 +212,7 @@ public class ProdutoService {
                         p.getUnidade(),
                         p.getImagem(),
                         p.getTipoImagem(),
+                        p.getAvaliadoPorId(),
                         p.getComerciante().getId()
                 )).collect(Collectors.toList());
     }

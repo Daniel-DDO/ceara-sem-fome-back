@@ -20,6 +20,10 @@ public class AdministradorData implements UserDetails {
         this.administrador = administrador;
     }
 
+    public Administrador getAdministrador() {
+        return administrador.get();
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return new ArrayList<>();
