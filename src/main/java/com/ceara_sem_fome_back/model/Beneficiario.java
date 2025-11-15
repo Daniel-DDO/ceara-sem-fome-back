@@ -10,7 +10,6 @@ import java.util.List;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @EqualsAndHashCode(callSuper = true)
@@ -36,6 +35,13 @@ public class Beneficiario extends Pessoa {
 
     public Beneficiario(String nome, String cpf, String email, String senha, LocalDate dataNascimento, String telefone, String genero, Boolean lgpdAccepted) {
         super(nome, cpf, email, senha, dataNascimento, telefone, genero, lgpdAccepted);
+        this.carrinho = new Carrinho();
+        this.compras = new ArrayList<>();
+        this.conta = new Conta();
+    }
+
+    public Beneficiario() {
+        super();
         this.carrinho = new Carrinho();
         this.compras = new ArrayList<>();
         this.conta = new Conta();

@@ -15,7 +15,6 @@ import java.util.ArrayList;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @EqualsAndHashCode(callSuper = true)
@@ -32,6 +31,11 @@ public class Comerciante extends Pessoa {
 
     public Comerciante(String nome, String cpf, String email, String senha, LocalDate dataNascimento, String telefone, String genero, Boolean lgpdAccepted) {
         super(nome, cpf, email, senha, dataNascimento, telefone, genero, lgpdAccepted);
+        this.conta = new Conta();
+    }
+
+    public Comerciante() {
+        super();
         this.conta = new Conta();
     }
 }
