@@ -52,34 +52,30 @@ public class CompraService {
     @Transactional
     public Compra finalizarCompra(String beneficiarioId, String estabelecimentoId) {
         Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
-                .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado."));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Beneficiario nao encontrado."));
 
         Estabelecimento estabelecimento = estabelecimentoRepository.findById(estabelecimentoId)
-                .orElseThrow(() -> new RuntimeException("Estabelecimento não encontrado."));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Estabelecimento nao encontrado."));
 
         Carrinho carrinho = beneficiario.getCarrinho();
         if (carrinho == null) {
-            throw new RuntimeException("Carrinho não encontrado para este beneficiário.");
+            throw new RecursoNaoEncontradoException("Carrinho nao encontrado para este beneficiario.");
         }
 
-        //Pega TODOS os itens do carrinho
         List<ProdutoCarrinho> todosProdutosCarrinho = produtoCarrinhoRepository.findByCarrinho(carrinho);
         if (todosProdutosCarrinho.isEmpty()) {
-            throw new RuntimeException("O carrinho está vazio.");
+            throw new RecursoNaoEncontradoException("O carrinho esta vazio.");
         }
 
-        //passando os itens que foram selecionados
-        // Filtra apenas os itens que pertencem ao Comerciante do Estabelecimento selecionado
         String comercianteId = estabelecimento.getComerciante().getId();
         List<ProdutoCarrinho> produtosParaComprar = todosProdutosCarrinho.stream()
                 .filter(pc -> pc.getProduto().getComerciante().getId().equals(comercianteId))
                 .collect(Collectors.toList());
 
         if (produtosParaComprar.isEmpty()) {
-            throw new RuntimeException("Nenhum item no carrinho corresponde a este estabelecimento.");
+            throw new RecursoNaoEncontradoException("Nenhum item no carrinho corresponde a este estabelecimento.");
         }
 
-        //não permitir compra de produto com o estoque zerado
         BigDecimal valorTotal = BigDecimal.ZERO;
         List<ItemCompra> itensDaCompra = new ArrayList<>();
 
@@ -89,7 +85,7 @@ public class CompraService {
 
             if (produto.getQuantidadeEstoque() < pc.getQuantidade()) {
                 throw new EstoqueInsuficienteException(
-                    String.format("Estoque insuficiente para %s. Pedido: %d, Disponível: %d",
+                    String.format("Estoque insuficiente para %s. Pedido: %d, Disponivel: %d",
                             produto.getNome(), pc.getQuantidade(), produto.getQuantidadeEstoque())
                 );
             }
@@ -106,12 +102,10 @@ public class CompraService {
             itensDaCompra.add(item);
         }
 
-        //Verifica Saldo e Transfere
         Conta contaBeneficiario = contaRepository.findByBeneficiario(beneficiario)
-                .orElseThrow(() -> new RuntimeException("Conta do beneficiário não encontrada."));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Conta do beneficiario nao encontrada."));
 
         if (contaBeneficiario.getSaldo().compareTo(valorTotal) < 0) {
-            // Lança a exceção de negócio específica
             throw new SaldoInsuficienteException(
                 String.format("Saldo atual: R$ %.2f, Valor da compra: R$ %.2f",
                         contaBeneficiario.getSaldo(), valorTotal)
@@ -120,7 +114,7 @@ public class CompraService {
 
         Comerciante comerciante = estabelecimento.getComerciante();
         Conta contaComerciante = contaRepository.findByComerciante(comerciante)
-                .orElseThrow(() -> new RuntimeException("Conta do comerciante não encontrada."));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Conta do comerciante nao encontrada."));
 
         contaBeneficiario.setSaldo(contaBeneficiario.getSaldo().subtract(valorTotal));
         contaComerciante.setSaldo(contaComerciante.getSaldo().add(valorTotal));
@@ -128,11 +122,8 @@ public class CompraService {
         contaRepository.save(contaBeneficiario);
         contaRepository.save(contaComerciante);
         
-        //Decrementar estoque
-        // (Chamado apos a confirmacao de pagamento, dentro da mesma transacao)
         produtoService.decrementarEstoque(itensDaCompra);
 
-        //Salva a Compra
         Compra compra = new Compra();
         compra.setId(UUID.randomUUID().toString());
         compra.setDataHoraCompra(LocalDateTime.now());
@@ -140,21 +131,23 @@ public class CompraService {
         compra.setBeneficiario(beneficiario);
         compra.setEstabelecimento(estabelecimento);
         
-        //informações do local aonde se deve buscar os produtos
         compra.setEndereco(estabelecimento.getEndereco()); // Salva o endereco DO ESTABELECIMENTO
         
         compra.setValorTotal(valorTotal.doubleValue());
-        compraRepository.save(compra); //Salva a Compra primeiro
+        compraRepository.save(compra); 
 
-        //Salva os Itens da Compra
         for (ItemCompra item : itensDaCompra) {
-            item.setCompra(compra); // Associa ao ID da Compra salva
+            item.setCompra(compra); 
             itemCompraRepository.save(item);
         }
 
-        //transformar uma instância de um carrinho em uma compra
         // Limpa APENAS os itens que foram comprados
         produtoCarrinhoRepository.deleteAll(produtosParaComprar);
+        
+        // Precisamos limpar a colecao na entidade Carrinho que esta na sessao
+        // para que o proximo 'getProdutos()' nao retorne o cache antigo.
+        carrinho.getProdutos().removeAll(produtosParaComprar);
+        carrinhoRepository.save(carrinho); // Salva o carrinho com a colecao atualizada
 
         return compra;
     }
