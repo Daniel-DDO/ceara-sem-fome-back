@@ -46,6 +46,9 @@ public class CadastroService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private NotificacaoService notificacaoService;
+
     //MÉTODOS DE VALIDAÇÃO
 
     /**
@@ -164,8 +167,6 @@ public class CadastroService {
         }
 
         //(Evita race condition)
-        //Verifica de novo ANTES de salvar, caso alguém tenha se cadastrado
-        //com o mesmo CPF/Email enquanto este token estava ativo.
         try {
             validarCpfDisponivelEmTodosOsPerfis(verificationToken.getCpf());
             validarEmailDisponivelEmTodosOsPerfis(verificationToken.getUserEmail());
@@ -174,6 +175,9 @@ public class CadastroService {
             tokenRepository.delete(verificationToken); //Limpa o token inválido
             return false; //Falha na verificação, segue o padrão do metodo
         }
+        
+        String novoUsuarioId = null;
+        String nomeUsuario = verificationToken.getNome().split(" ")[0];
 
         switch (verificationToken.getTipoPessoa()) {
             case ADMINISTRADOR -> {
@@ -187,7 +191,8 @@ public class CadastroService {
                         verificationToken.getGenero(),
                         verificationToken.getLgpdAccepted()
                 );
-                administradorRepository.save(novoAdministrador);
+                Administrador salvo = administradorRepository.save(novoAdministrador);
+                novoUsuarioId = salvo.getId();
             }
             case BENEFICIARIO -> {
                 Beneficiario novoBeneficiario = new Beneficiario(
@@ -200,8 +205,8 @@ public class CadastroService {
                         verificationToken.getGenero(),
                         verificationToken.getLgpdAccepted()
                 );
-
-                beneficiarioRepository.save(novoBeneficiario);
+                Beneficiario salvo = beneficiarioRepository.save(novoBeneficiario);
+                novoUsuarioId = salvo.getId();
             }
             case COMERCIANTE -> {
                 Comerciante novoComerciante = new Comerciante(
@@ -214,7 +219,8 @@ public class CadastroService {
                         verificationToken.getGenero(),
                         verificationToken.getLgpdAccepted()
                 );
-                comercianteRepository.save(novoComerciante);
+                Comerciante salvo = comercianteRepository.save(novoComerciante);
+                novoUsuarioId = salvo.getId();
             }
             case ENTREGADOR -> {
                 Entregador novoEntregador = new Entregador(
@@ -227,7 +233,8 @@ public class CadastroService {
                         verificationToken.getGenero(),
                         verificationToken.getLgpdAccepted()
                 );
-                entregadorRepository.save(novoEntregador);
+                Entregador salvo = entregadorRepository.save(novoEntregador);
+                novoUsuarioId = salvo.getId();
             }
             default -> {
                 log.error("Tipo de pessoa desconhecido no token: {}", verificationToken.getTipoPessoa());
@@ -239,6 +246,16 @@ public class CadastroService {
         //Se chegou até aqui, o usuário foi salvo com sucesso.
         //o token é apagado e o retorno é true.
         tokenRepository.delete(verificationToken);
+
+        if (novoUsuarioId != null) {
+            String mensagemBoasVindas = String.format(
+                    "Seja bem-vindo(a), %s! Seu cadastro foi confirmado com sucesso.",
+                    nomeUsuario
+            );
+            
+            notificacaoService.criarNotificacao(novoUsuarioId, mensagemBoasVindas);
+        }
+
         log.info("SUCESSO: {} salvo após validação de e-mail: {}", verificationToken.getTipoPessoa(), verificationToken.getUserEmail());
         return true;
     }
