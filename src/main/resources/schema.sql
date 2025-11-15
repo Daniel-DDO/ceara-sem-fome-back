@@ -182,7 +182,7 @@ CREATE TABLE IF NOT EXISTS item_compra (
     FOREIGN KEY (produto_id) REFERENCES produto (id)
     );
 
-CREATE TABLE notificacao (
+CREATE TABLE IF NOT EXISTS notificacao (
     id BIGSERIAL PRIMARY KEY,
     destinatario_id VARCHAR(255) NOT NULL,
     mensagem VARCHAR(255) NOT NULL,
