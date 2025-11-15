@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.dto.HistoricoVendasDTO;
 import com.ceara_sem_fome_back.dto.ReciboDTO;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.*;
@@ -10,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -117,6 +119,23 @@ public class CompraService {
         return compraRepository.findByBeneficiario(beneficiario);
     }
 
+    @Transactional(readOnly = true)
+    public List<HistoricoVendasDTO> getHistoricoVendasPorComerciante(String comercianteId) {
+        List<Estabelecimento> estabelecimentos = estabelecimentoRepository.findByComercianteId(comercianteId);
+        List<Compra> comprasDoComerciante = new ArrayList<>();
+        for (Estabelecimento est : estabelecimentos) {
+            comprasDoComerciante.addAll(compraRepository.findByEstabelecimentoId(est.getId()));
+        }
+
+        return comprasDoComerciante.stream().map(compra -> new HistoricoVendasDTO(
+                compra.getId(),
+                compra.getDataHoraCompra(),
+                compra.getValorTotal(),
+                compra.getBeneficiario().getNome(),
+                compra.getEstabelecimento().getNome()
+        )).collect(Collectors.toList());
+    }
+
     public List<ItemCompra> listarItensDaCompra(String compraId) {
         Compra compra = compraRepository.findById(compraId)
                 .orElseThrow(() -> new RuntimeException("Compra não encontrada."));
@@ -132,7 +151,7 @@ public class CompraService {
         StringBuilder sb = new StringBuilder();
         sb.append("=== COMPROVANTE DE COMPRA ===\n");
         sb.append("Beneficiário: ").append(compra.getBeneficiario().getNome()).append("\n");
-        sb.append("Estabelecimento: ").append(compra.getEstabelecimento().getNome()).append("\n"); // Corrigido
+        sb.append("Estabelecimento: ").append(compra.getEstabelecimento().getNome()).append("\n");
         sb.append("Data: ").append(compra.getDataHoraCompra()).append("\n\n");
 
         sb.append("Itens:\n");
@@ -167,7 +186,7 @@ public class CompraService {
                 compra.getBeneficiario().getNome(),
                 compra.getBeneficiario().getId(),
                 compra.getEstabelecimento().getComerciante().getNome(),
-                compra.getEstabelecimento().getNome(), // Corrigido
+                compra.getEstabelecimento().getNome(),
                 itensDTO,
                 BigDecimal.valueOf(compra.getValorTotal())
         );
@@ -176,7 +195,6 @@ public class CompraService {
     public List<Compra> listarPorEstabelecimentoEStatus(String estabelecimentoId, String status) {
         log.info("[SERVIÇO] Buscando compras para Estabelecimento ID: {} com Status: {}", estabelecimentoId, status);
 
-        // Converte a string de status para o Enum
         StatusCompra statusEnum = StatusCompra.valueOf(status.toUpperCase());
 
         return compraRepository.findByEstabelecimentoIdAndStatus(estabelecimentoId, statusEnum);

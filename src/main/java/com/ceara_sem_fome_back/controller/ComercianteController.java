@@ -6,6 +6,7 @@ import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.ComercianteService;
+import com.ceara_sem_fome_back.service.CompraService;
 import com.ceara_sem_fome_back.service.EstabelecimentoService;
 import com.ceara_sem_fome_back.service.ProdutoService;
 import jakarta.validation.Valid;
@@ -31,6 +32,9 @@ public class ComercianteController {
     private EstabelecimentoService estabelecimentoService;
     @Autowired
     private ProdutoService produtoService;
+
+    @Autowired
+    private CompraService compraService;
 
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarComerciante(@Valid @RequestBody LoginDTO loginDTO) {
@@ -174,6 +178,15 @@ public class ComercianteController {
         List<EstabelecimentoRespostaDTO> estabelecimentos =
                 estabelecimentoService.listarPorComerciante(comercianteId);
         return ResponseEntity.ok(estabelecimentos);
+    }
+
+    @GetMapping("/meu-historico-vendas")
+    public ResponseEntity<List<HistoricoVendasDTO>> listarHistoricoVendas(
+            @AuthenticationPrincipal ComercianteData comercianteData) {
+
+        String comercianteId = comercianteData.getComerciante().getId();
+        List<HistoricoVendasDTO> historico = compraService.getHistoricoVendasPorComerciante(comercianteId);
+        return ResponseEntity.ok(historico);
     }
 
     @GetMapping("/meus-produtos")
