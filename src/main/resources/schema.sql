@@ -181,3 +181,11 @@ CREATE TABLE IF NOT EXISTS item_compra (
     FOREIGN KEY (compra_id) REFERENCES compra (id) ON DELETE CASCADE,
     FOREIGN KEY (produto_id) REFERENCES produto (id)
     );
+
+CREATE TABLE notificacao (
+    id BIGSERIAL PRIMARY KEY,
+    destinatario_id VARCHAR(255) NOT NULL,
+    mensagem VARCHAR(255) NOT NULL,
+    data_criacao TIMESTAMP NOT NULL,
+    lida BOOLEAN NOT NULL
+);
