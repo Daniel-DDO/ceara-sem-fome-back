@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.dto.ContaDTO;
 import com.ceara_sem_fome_back.dto.HistoricoVendasDTO;
 import com.ceara_sem_fome_back.dto.ReciboDTO;
 import com.ceara_sem_fome_back.model.*;
@@ -134,6 +135,26 @@ public class CompraService {
                 compra.getBeneficiario().getNome(),
                 compra.getEstabelecimento().getNome()
         )).collect(Collectors.toList());
+    }
+
+     @Transactional(readOnly = true)
+    public ContaDTO calcularSaldoParaComerciante(String comercianteId) {
+        List<Estabelecimento> estabelecimentos = estabelecimentoRepository.findByComercianteId(comercianteId);
+        if (estabelecimentos.isEmpty()) {
+            return new ContaDTO(BigDecimal.ZERO);
+        }
+
+        List<Compra> comprasDoComerciante = new ArrayList<>();
+        for (Estabelecimento est : estabelecimentos) {
+            comprasDoComerciante.addAll(compraRepository.findByEstabelecimentoId(est.getId()));
+        }
+
+        BigDecimal saldo = BigDecimal.ZERO;
+        for (Compra compra : comprasDoComerciante) {
+            saldo = saldo.add(BigDecimal.valueOf(compra.getValorTotal()));
+        }
+
+        return new ContaDTO(saldo);
     }
 
     public List<ItemCompra> listarItensDaCompra(String compraId) {

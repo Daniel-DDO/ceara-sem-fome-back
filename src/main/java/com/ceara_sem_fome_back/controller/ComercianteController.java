@@ -2,6 +2,7 @@ package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.dto.*;
+import com.ceara_sem_fome_back.dto.ContaDTO;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.security.JWTUtil;
@@ -195,4 +196,14 @@ public class ComercianteController {
         List<ProdutoDTO> produtos = produtoService.listarPorComerciante(comercianteId);
         return ResponseEntity.ok(produtos);
     }
+
+    @GetMapping("/meu-extrato")
+    public ResponseEntity<ContaDTO> consultarExtrato(
+            @AuthenticationPrincipal ComercianteData comercianteData) {
+
+        String comercianteId = comercianteData.getComerciante().getId();
+        ContaDTO contaDTO = comercianteService.consultarExtrato(comercianteId);
+        return ResponseEntity.ok(contaDTO);
+    }
 }
+
