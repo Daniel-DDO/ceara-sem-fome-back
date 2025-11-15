@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface ContaRepository extends JpaRepository<Conta, String> {
-    Optional<Conta> findByBeneficiario(Beneficiario beneficiario);
-    Optional<Conta> findByComerciante(Comerciante comerciante);
-    Optional<Conta> findByComerciante_Id(String comercianteId);
+    //Optional<Conta> findByBeneficiario(Beneficiario beneficiario);
+    //Optional<Conta> findByComerciante(Comerciante comerciante);
+    //Optional<Conta> findByComerciante_Id(String comercianteId);
 }

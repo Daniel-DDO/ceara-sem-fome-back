@@ -19,6 +19,16 @@ CREATE TABLE IF NOT EXISTS carrinho (
     subtotal NUMERIC(10, 2) NOT NULL DEFAULT 0.00
     );
 
+CREATE TABLE IF NOT EXISTS conta (
+    id VARCHAR(255) PRIMARY KEY,
+    numero_conta VARCHAR(50),
+    agencia VARCHAR(50),
+    saldo NUMERIC(18, 2) NOT NULL DEFAULT 0.00,
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em TIMESTAMP NOT NULL,
+    ativa BOOLEAN NOT NULL DEFAULT TRUE
+    );
+
 CREATE TABLE IF NOT EXISTS administrador (
     id VARCHAR(255) PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
@@ -42,7 +52,9 @@ CREATE TABLE IF NOT EXISTS comerciante (
     telefone VARCHAR(50),
     genero VARCHAR(50),
     status VARCHAR(50),
-    lgpd_accepted BOOLEAN NOT NULL DEFAULT FALSE
+    conta_id VARCHAR(255),
+    lgpd_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (conta_id) REFERENCES conta (id)
     );
 
 CREATE TABLE IF NOT EXISTS beneficiario (
@@ -58,7 +70,9 @@ CREATE TABLE IF NOT EXISTS beneficiario (
     numero_cadastro_social VARCHAR(255),
     carrinho_id VARCHAR(255),
     endereco_id VARCHAR(255),
+    conta_id VARCHAR(255),
     lgpd_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (conta_id) REFERENCES conta (id),
     FOREIGN KEY (endereco_id) REFERENCES endereco (id),
     FOREIGN KEY (carrinho_id) REFERENCES carrinho (id) ON DELETE SET NULL
     );
@@ -110,17 +124,6 @@ CREATE TABLE IF NOT EXISTS produto (
     data_avaliacao TIMESTAMP,
     FOREIGN KEY (avaliado_por_id) REFERENCES administrador (id),
     FOREIGN KEY (comerciante_id) REFERENCES comerciante (id) ON DELETE CASCADE
-    );
-
-CREATE TABLE IF NOT EXISTS conta (
-    id VARCHAR(255) PRIMARY KEY,
-    numero_conta VARCHAR(50),
-    agencia VARCHAR(50),
-    saldo NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
-    beneficiario_id VARCHAR(255),
-    comerciante_id VARCHAR(255),
-    FOREIGN KEY (beneficiario_id) REFERENCES beneficiario (id),
-    FOREIGN KEY (comerciante_id) REFERENCES comerciante (id)
     );
 
 CREATE TABLE IF NOT EXISTS produto_carrinho (

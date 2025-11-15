@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +18,8 @@ public class Beneficiario extends Pessoa {
 
     private String numeroCadastroSocial;
 
-    @OneToOne(mappedBy = "beneficiario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "conta_id", unique = true)
     private Conta conta;
 
     @OneToOne(cascade = CascadeType.ALL, optional = true, orphanRemoval = true)
@@ -38,5 +38,6 @@ public class Beneficiario extends Pessoa {
         super(nome, cpf, email, senha, dataNascimento, telefone, genero, lgpdAccepted);
         this.carrinho = new Carrinho();
         this.compras = new ArrayList<>();
+        this.conta = new Conta();
     }
 }

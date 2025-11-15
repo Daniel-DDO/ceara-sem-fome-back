@@ -104,19 +104,8 @@ public class CompraService {
             itensDaCompra.add(item);
         }
 
-        Conta contaBeneficiario = contaRepository.findByBeneficiario(beneficiario)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Conta do beneficiario nao encontrada."));
-
-        if (contaBeneficiario.getSaldo().compareTo(valorTotal) < 0) {
-            throw new SaldoInsuficienteException(
-                    String.format("Saldo atual: R$ %.2f, Valor da compra: R$ %.2f",
-                            contaBeneficiario.getSaldo(), valorTotal)
-            );
-        }
-
-        Comerciante comerciante = estabelecimento.getComerciante();
-        Conta contaComerciante = contaRepository.findByComerciante(comerciante)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Conta do comerciante nao encontrada."));
+        Conta contaBeneficiario = beneficiario.getConta();
+        Conta contaComerciante = getConta(contaBeneficiario, valorTotal, estabelecimento);
 
         contaBeneficiario.setSaldo(contaBeneficiario.getSaldo().subtract(valorTotal));
         contaComerciante.setSaldo(contaComerciante.getSaldo().add(valorTotal));
@@ -153,6 +142,27 @@ public class CompraService {
 
         return compra;
     }
+
+    private static Conta getConta(Conta contaBeneficiario, BigDecimal valorTotal, Estabelecimento estabelecimento) {
+        if (contaBeneficiario == null) {
+            throw new RecursoNaoEncontradoException("Conta do beneficiário não encontrada.");
+        }
+
+        if (contaBeneficiario.getSaldo().compareTo(valorTotal) < 0) {
+            throw new SaldoInsuficienteException(
+                    String.format("Saldo atual: R$ %.2f, Valor da compra: R$ %.2f",
+                            contaBeneficiario.getSaldo(), valorTotal)
+            );
+        }
+
+        Comerciante comerciante = estabelecimento.getComerciante();
+        Conta contaComerciante = comerciante.getConta();
+        if (contaComerciante == null) {
+            throw new RecursoNaoEncontradoException("Conta do beneficiário não encontrada.");
+        }
+        return contaComerciante;
+    }
+
     public List<Compra> listarTodas() {
         return compraRepository.findAll();
     }
