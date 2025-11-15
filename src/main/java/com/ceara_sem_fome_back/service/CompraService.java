@@ -217,7 +217,7 @@ public class CompraService {
         Double lon = null;
         
         if (compra.getEndereco() != null) {
-            Endereco end = compra.getEndereco()
+            Endereco end = compra.getEndereco();
             enderecoCompleto = String.format("%s, %s - %s, %s",
                     end.getLogradouro(),
                     end.getNumero(),
