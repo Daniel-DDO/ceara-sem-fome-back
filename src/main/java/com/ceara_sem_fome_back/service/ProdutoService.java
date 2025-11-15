@@ -18,15 +18,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException; // Import adicionado
-import java.math.BigDecimal;
+import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.springframework.web.multipart.MultipartFile; // Import adicionado
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class ProdutoService {
@@ -39,9 +38,6 @@ public class ProdutoService {
 
     @Autowired
     private ProdutoEstabelecimentoRepository produtoEstabelecimentoRepository;
-
-    @Autowired
-    private ComercianteService comercianteService;
 
     @Transactional
     public Produto cadastrarProduto(ProdutoDTO produtoDTO, Comerciante comerciante, MultipartFile imagem) throws IOException {
