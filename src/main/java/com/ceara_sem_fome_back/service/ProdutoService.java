@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.dto.AtualizarEstoqueDTO;
 import com.ceara_sem_fome_back.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.ProdutoDTO;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
@@ -20,6 +21,7 @@ import java.io.IOException; // Import adicionado
 import java.math.BigDecimal;
 import java.util.Base64;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -121,6 +123,28 @@ public class ProdutoService {
         produtoExistente.setStatus(StatusProduto.PENDENTE); //para ser avaliado novamente
 
         return produtoRepository.save(produtoExistente);
+    }
+
+    @Transactional
+    public Produto atualizarEstoque(String produtoId, AtualizarEstoqueDTO dto, Comerciante comerciante) {
+        Produto produto = produtoRepository.findById(produtoId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado com o ID: " + produtoId));
+
+        if (!Objects.equals(produto.getComerciante().getId(), comerciante.getId())) {
+            throw new SecurityException("Este produto não pertence ao comerciante autenticado.");
+        }
+
+        if (produto.getStatus() != StatusProduto.AUTORIZADO) {
+            throw new IllegalStateException("Apenas produtos autorizados podem ter seu estoque atualizado.");
+        }
+
+        if (dto.getNovaQuantidade() < 0) {
+            throw new IllegalArgumentException("A quantidade em estoque não pode ser negativa.");
+        }
+
+        produto.setQuantidadeEstoque(dto.getNovaQuantidade());
+
+        return produtoRepository.save(produto);
     }
 
     public Produto removerProduto(String id) {

@@ -2,6 +2,7 @@ package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.AdministradorData;
 import com.ceara_sem_fome_back.data.ComercianteData;
+import com.ceara_sem_fome_back.dto.AtualizarEstoqueDTO;
 import com.ceara_sem_fome_back.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.ProdutoDTO;
 
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +28,7 @@ import java.util.Map;
 
 @Controller
 @RestController
-@RequestMapping("/produtos")
+@RequestMapping("/api/v1/produtos")
 public class ProdutoController {
 
     @Autowired
@@ -37,6 +39,7 @@ public class ProdutoController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
+    @PreAuthorize("hasRole('ROLE_COMERCIANTE')")
     public ResponseEntity<?> cadastrarProduto(
             @RequestPart("produto") String produtoJson,
             @RequestPart(value = "imagem", required = false) MultipartFile imagem,
@@ -77,11 +80,43 @@ public class ProdutoController {
         }
     }
 
+    @PatchMapping("/{id}/estoque")
+    @PreAuthorize("hasRole('ROLE_COMERCIANTE')")
+    public ResponseEntity<ProdutoDTO> atualizarEstoque(
+            @PathVariable String id,
+            @RequestBody AtualizarEstoqueDTO dto,
+            @AuthenticationPrincipal ComercianteData comercianteData) {
+
+        Comerciante comercianteLogado = comercianteData.getComerciante();
+        Produto produtoAtualizado = produtoService.atualizarEstoque(id, dto, comercianteLogado);
+
+        ProdutoDTO produtoResposta = new ProdutoDTO(
+                produtoAtualizado.getId(),
+                produtoAtualizado.getNome(),
+                produtoAtualizado.getLote(),
+                produtoAtualizado.getDescricao(),
+                produtoAtualizado.getPreco(),
+                produtoAtualizado.getQuantidadeEstoque(),
+                produtoAtualizado.getStatus(),
+                produtoAtualizado.getCategoria(),
+                produtoAtualizado.getUnidade(),
+                produtoAtualizado.getImagem(),
+                produtoAtualizado.getTipoImagem(),
+                produtoAtualizado.getDataCadastro(),
+                produtoAtualizado.getAvaliadoPorId(),
+                produtoAtualizado.getDataAvaliacao(),
+                produtoAtualizado.getComerciante().getId()
+        );
+
+        return ResponseEntity.ok(produtoResposta);
+    }
+
     @PutMapping(
             value = "/editar/{id}",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
+    @PreAuthorize("hasRole('ROLE_COMERCIANTE')")
     public ResponseEntity<?> editarProduto(
             @PathVariable String id,
             @RequestPart("produto") String produtoJson,
@@ -121,6 +156,7 @@ public class ProdutoController {
     }
 
     @PostMapping("/remover")
+    @PreAuthorize("hasRole('ROLE_ADMINISTRADOR')")
     public ResponseEntity<ProdutoDTO> removerProduto(@RequestBody ProdutoDTO produtoDTO) {
         String id = produtoDTO.getId();
         Produto produtoRemov = produtoService.removerProduto(id);
@@ -132,6 +168,7 @@ public class ProdutoController {
     }
 
     @PatchMapping("/aprovar/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMINISTRADOR')")
     public ResponseEntity<ProdutoDTO> aprovarProduto(
             @RequestBody ProdutoDTO produtoDTO,
             @AuthenticationPrincipal AdministradorData administradorData) {
@@ -162,6 +199,7 @@ public class ProdutoController {
     }
 
     @PatchMapping("/recusar/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMINISTRADOR')")
     public ResponseEntity<ProdutoDTO> recusarProduto(
             @RequestBody ProdutoDTO produtoDTO,
             @AuthenticationPrincipal AdministradorData administradorData) {
