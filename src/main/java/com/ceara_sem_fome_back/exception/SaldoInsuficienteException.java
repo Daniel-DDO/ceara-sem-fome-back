@@ -17,4 +17,14 @@ public class SaldoInsuficienteException extends NegocioException {
                 valorTotal
         );
     }
+
+    private static final String MENSAGEM_PADRAO = "Saldo insuficiente para realizar a transação.";
+
+    public SaldoInsuficienteException() {
+        super(MENSAGEM_PADRAO, HttpStatus.PAYMENT_REQUIRED);
+    }
+    
+    public SaldoInsuficienteException(String detalhe) {
+        super(MENSAGEM_PADRAO + " Detalhe: " + detalhe, HttpStatus.PAYMENT_REQUIRED);
+    }
 }

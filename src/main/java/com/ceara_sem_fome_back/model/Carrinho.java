@@ -37,28 +37,6 @@ public class Carrinho {
     @JsonManagedReference
     private List<ProdutoCarrinho> produtos = new ArrayList<>();
 
-    public void adicionarProduto(Produto produto, int quantidade) {
-        for (ProdutoCarrinho item : produtos) {
-            if (item.getProduto().equals(produto)) {
-                item.setQuantidade(item.getQuantidade() + quantidade);
-                atualizarSubtotal();
-                return;
-            }
-        }
-
-        ProdutoCarrinho novoItem = new ProdutoCarrinho();
-        novoItem.setCarrinho(this);
-        novoItem.setProduto(produto);
-        novoItem.setQuantidade(quantidade);
-        produtos.add(novoItem);
-        atualizarSubtotal();
-    }
-
-    public void removerProduto(Produto produto) {
-        produtos.removeIf(item -> item.getProduto().equals(produto));
-        atualizarSubtotal();
-    }
-
     public void atualizarSubtotal() {
         this.subtotal = produtos.stream()
                 .map(item -> item.getProduto().getPreco()
