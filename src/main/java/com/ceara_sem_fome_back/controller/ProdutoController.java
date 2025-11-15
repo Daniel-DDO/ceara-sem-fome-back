@@ -28,7 +28,7 @@ import java.util.Map;
 
 @Controller
 @RestController
-@RequestMapping("/api/v1/produtos")
+@RequestMapping("/produtos")
 public class ProdutoController {
 
     @Autowired
