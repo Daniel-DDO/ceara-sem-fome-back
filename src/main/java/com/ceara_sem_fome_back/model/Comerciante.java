@@ -26,6 +26,9 @@ public class Comerciante extends Pessoa {
     @JsonManagedReference
     private List<Estabelecimento> estabelecimentos = new ArrayList<>();
 
+    @OneToOne(mappedBy = "comerciante", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Conta conta;
+
     public Comerciante(String nome, String cpf, String email, String senha, LocalDate dataNascimento, String telefone, String genero, Boolean lgpdAccepted) {
         super(nome, cpf, email, senha, dataNascimento, telefone, genero, lgpdAccepted);
     }

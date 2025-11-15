@@ -191,17 +191,25 @@ public class BeneficiarioService implements UserDetailsService {
         Beneficiario beneficiario = beneficiarioRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Beneficiário não encontrado."));
 
-        return beneficiario.getSaldo();
+        Conta conta = beneficiario.getConta();
+        if (conta == null) {
+            throw new NegocioException("Conta não encontrada.", HttpStatus.NOT_FOUND);
+        }
+        return conta.getSaldo();
     }
 
     @Transactional(rollbackFor = {NegocioException.class, CarrinhoVazioException.class, SaldoInsuficienteException.class})
     public Compra realizarCompra(String userEmail) {
-
         Beneficiario beneficiario = beneficiarioRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Beneficiário não encontrado."));
 
         Carrinho carrinho = beneficiario.getCarrinho();
         List<ProdutoCarrinho> itensCarrinho = carrinho.getProdutos();
+
+        Conta conta = beneficiario.getConta();
+        if (conta == null) {
+            throw new NegocioException("Conta bancária não encontrada. Não é possível realizar a compra.", HttpStatus.PRECONDITION_REQUIRED);
+        }
 
         if (carrinho == null || itensCarrinho.isEmpty()) {
             throw new CarrinhoVazioException();
@@ -210,11 +218,12 @@ public class BeneficiarioService implements UserDetailsService {
         BigDecimal valorTotalBigDecimal = carrinho.getSubtotal();
         Double valorTotal = valorTotalBigDecimal.doubleValue();
 
-        if (beneficiario.getSaldo().compareTo(valorTotalBigDecimal) < 0) {
-            throw new SaldoInsuficienteException(beneficiario.getSaldo(), valorTotalBigDecimal);
+        if (conta.getSaldo().compareTo(valorTotalBigDecimal) < 0) {
+            throw new SaldoInsuficienteException(conta.getSaldo(), valorTotalBigDecimal);
         }
 
-        Pageable firstOne = PageRequest.of(0, 1); // Pega apenas o primeiro item da primeira página
+
+        Pageable firstOne = PageRequest.of(0, 1);
         List<Estabelecimento> estabelecimentos = estabelecimentoRepository.findAll(firstOne).getContent();
 
         Estabelecimento estabelecimento;
@@ -224,13 +233,12 @@ public class BeneficiarioService implements UserDetailsService {
             estabelecimento = estabelecimentos.get(0);
         }
 
-        // B. Endereço:
         Endereco endereco = beneficiario.getEndereco();
         if (endereco == null) {
             throw new NegocioException("O beneficiário precisa ter um endereço cadastrado para realizar a compra.", HttpStatus.PRECONDITION_REQUIRED);
         }
 
-        beneficiario.setSaldo(beneficiario.getSaldo().subtract(valorTotalBigDecimal));
+        conta.setSaldo(conta.getSaldo().subtract(valorTotalBigDecimal));
 
         Compra novaCompra = new Compra();
         novaCompra.setBeneficiario(beneficiario);
@@ -241,7 +249,6 @@ public class BeneficiarioService implements UserDetailsService {
         novaCompra.setEndereco(endereco);
         novaCompra.setStatus(StatusCompra.FINALIZADA);
 
-        // Converte ProdutoCarrinho para ItemCompra
         List<ItemCompra> itensCompra = new ArrayList<>();
 
         for (ProdutoCarrinho pc : itensCarrinho) {
@@ -259,7 +266,7 @@ public class BeneficiarioService implements UserDetailsService {
         carrinho.esvaziarCarrinho();
         carrinhoRepository.save(carrinho);
 
-        beneficiarioRepository.save(beneficiario);
+        beneficiarioRepository.save(beneficiario); // O Beneficiario salva a Conta em cascata
 
         return compraSalva;
     }

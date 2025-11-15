@@ -19,8 +19,8 @@ public class Beneficiario extends Pessoa {
 
     private String numeroCadastroSocial;
 
-    @Column(precision = 10, scale = 2) // Exemplo: 99.999.999,99
-    private BigDecimal saldo;
+    @OneToOne(mappedBy = "beneficiario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Conta conta;
 
     @OneToOne(cascade = CascadeType.ALL, optional = true, orphanRemoval = true)
     @JoinColumn(name = "carrinho_id")
@@ -37,7 +37,6 @@ public class Beneficiario extends Pessoa {
     public Beneficiario(String nome, String cpf, String email, String senha, LocalDate dataNascimento, String telefone, String genero, Boolean lgpdAccepted) {
         super(nome, cpf, email, senha, dataNascimento, telefone, genero, lgpdAccepted);
         this.carrinho = new Carrinho();
-        this.saldo = BigDecimal.ZERO;
         this.compras = new ArrayList<>();
     }
 }
