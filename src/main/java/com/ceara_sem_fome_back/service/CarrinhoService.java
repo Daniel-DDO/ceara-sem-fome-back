@@ -1,6 +1,7 @@
 package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.dto.ItemCarrinhoRequestDTO;
+import com.ceara_sem_fome_back.exception.EstoqueInsuficienteException;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
@@ -69,6 +70,22 @@ public class CarrinhoService {
         // Busca o produto
         Produto produto = produtoRepository.findById(dto.getProdutoId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado com ID: " + dto.getProdutoId()));
+        int quantidadeRequerida = dto.getQuantidade();
+        
+        // Verifica se o item ja esta no carrinho para somar a quantidade
+        Optional<ProdutoCarrinho> itemExistente = carrinho.getProdutos().stream()
+                .filter(item -> item.getProduto().getId().equals(produto.getId()))
+                .findFirst();
+
+        if (itemExistente.isPresent()) {
+            quantidadeRequerida += itemExistente.get().getQuantidade();
+        }
+
+        if (produto.getQuantidadeEstoque() < quantidadeRequerida) {
+            throw new EstoqueInsuficienteException(
+                String.format("Produto %s possui apenas %d unidades em estoque.", produto.getNome(), produto.getQuantidadeEstoque())
+            );
+        }
 
         carrinho.adicionarProduto(produto, dto.getQuantidade());
 
@@ -83,13 +100,32 @@ public class CarrinhoService {
         // Garante que o carrinho esteja ativo
         Carrinho carrinho = verMeuCarrinho(beneficiarioEmail);
 
+        Produto produto = produtoRepository.findById(produtoId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado com ID: " + produtoId));
+
+        if (produto.getQuantidadeEstoque() < dto.getQuantidade()) {
+            throw new EstoqueInsuficienteException(
+                String.format("Produto %s possui apenas %d unidades em estoque.", produto.getNome(), produto.getQuantidadeEstoque())
+            );
+        }
+
         // Busca o item no carrinho
         Optional<ProdutoCarrinho> itemOptional = carrinho.getProdutos().stream()
                 .filter(item -> item.getProduto().getId().equals(produtoId))
                 .findFirst();
 
+       // Lógica para tratar item não encontrado
         if (itemOptional.isEmpty()) {
-            throw new RecursoNaoEncontradoException("Item não encontrado no carrinho com ID: " + produtoId);
+            // Se o item não está no carrinho E a quantidade é positiva,
+            if (dto.getQuantidade() > 0) {
+
+                log.warn("atualizarItem: Item {} nao encontrado, tratando como adicao.", produtoId);
+                carrinho.adicionarProduto(produto, dto.getQuantidade());
+                return carrinhoRepository.save(carrinho);
+            }
+            // Se o item não está no carrinho E a quantidade é zero,
+            // não há nada a fazer. Apenas retorna o carrinho.
+            return carrinho;
         }
 
         ProdutoCarrinho item = itemOptional.get();
@@ -117,6 +153,7 @@ public class CarrinhoService {
 
         Produto produto = produtoRepository.findById(produtoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado com ID: " + produtoId));
+        
 
         carrinho.removerProduto(produto);
 

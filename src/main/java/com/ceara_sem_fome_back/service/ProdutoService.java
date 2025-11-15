@@ -2,6 +2,7 @@ package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.ProdutoDTO;
+import com.ceara_sem_fome_back.exception.EstoqueInsuficienteException;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.EstabelecimentoRepository;
@@ -23,7 +24,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import com.ceara_sem_fome_back.model.Produto;
 import org.springframework.web.multipart.MultipartFile; // Import adicionado
 
 @Service
@@ -221,5 +221,21 @@ public class ProdutoService {
 
     public List<Produto> filtrarProdutosPorNome(String pesquisa) {
         return produtoRepository.buscaInteligente(pesquisa);
+    }
+    @Transactional
+    public void decrementarEstoque(List<ItemCompra> itens) {
+        for (ItemCompra item : itens) {
+            Produto produto = produtoRepository.findById(item.getProduto().getId())
+                    .orElseThrow(() -> new RecursoNaoEncontradoException("Produto " + item.getProduto().getNome() + " nao encontrado durante a baixa de estoque."));
+            
+            int novoEstoque = produto.getQuantidadeEstoque() - item.getQuantidade();
+            if (novoEstoque < 0) {
+                //falha critica
+                throw new EstoqueInsuficienteException("Falha critica de concorrencia no estoque do produto: " + produto.getNome());
+            }
+            
+            produto.setQuantidadeEstoque(novoEstoque);
+            produtoRepository.save(produto);
+        }
     }
 }
