@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -191,66 +192,56 @@ public class AdministradorController {
         }
     }
 
-    //endpoint para aprovação de produto
     @PatchMapping("/aprovar/{id}")
     public ResponseEntity<ProdutoDTO> aprovarProduto(
             @PathVariable String id,
             @AuthenticationPrincipal AdministradorData administradorData) {
 
+        if (administradorData == null) {
+            throw new AccessDeniedException("Acesso negado. Apenas administradores podem aprovar produtos.");
+        }
+
         Administrador administradorLogado = administradorData.getAdministrador();
+        Produto produtoAprovado = administradorService.aprovarProduto(id, administradorLogado);
 
-        Produto produtoAprov = administradorService.aprovarProduto(id, administradorLogado);
-
-        ProdutoDTO prodRespota = new ProdutoDTO(
-                produtoAprov.getId(),
-                produtoAprov.getNome(),
-                produtoAprov.getLote(),
-                produtoAprov.getDescricao(),
-                produtoAprov.getPreco(),
-                produtoAprov.getQuantidadeEstoque(),
-                produtoAprov.getStatus(),
-                produtoAprov.getCategoria(),
-                produtoAprov.getUnidade(),
-                produtoAprov.getImagem(),
-                produtoAprov.getTipoImagem(),
-                produtoAprov.getDataCadastro(),
-                produtoAprov.getAvaliadoPorId(),
-                produtoAprov.getDataAvaliacao(),
-                produtoAprov.getComerciante().getId()
-        );
-
-        return ResponseEntity.ok(prodRespota);
+        return ResponseEntity.ok(paraDTO(produtoAprovado));
     }
 
-    //endpoint para desaprovação de produto
-    @PatchMapping("/desaprovar/{id}")
-    public ResponseEntity<ProdutoDTO> desaprovarProduto(
+    @PatchMapping("/recusar/{id}")
+    public ResponseEntity<ProdutoDTO> recusarProduto(
             @PathVariable String id,
             @AuthenticationPrincipal AdministradorData administradorData) {
 
+        if (administradorData == null) {
+            throw new AccessDeniedException("Acesso negado. Apenas administradores podem recusar produtos.");
+        }
+
         Administrador administradorLogado = administradorData.getAdministrador();
+        Produto produtoRecusado = administradorService.recusarProduto(id, administradorLogado);
 
-        Produto produtoAprov = administradorService.recusarProduto(id, administradorLogado);
+        return ResponseEntity.ok(paraDTO(produtoRecusado));
+    }
 
-        ProdutoDTO prodRespota = new ProdutoDTO(
-                produtoAprov.getId(),
-                produtoAprov.getNome(),
-                produtoAprov.getLote(),
-                produtoAprov.getDescricao(),
-                produtoAprov.getPreco(),
-                produtoAprov.getQuantidadeEstoque(),
-                produtoAprov.getStatus(),
-                produtoAprov.getCategoria(),
-                produtoAprov.getUnidade(),
-                produtoAprov.getImagem(),
-                produtoAprov.getTipoImagem(),
-                produtoAprov.getDataCadastro(),
-                produtoAprov.getAvaliadoPorId(),
-                produtoAprov.getDataAvaliacao(),
-                produtoAprov.getComerciante().getId()
+    private ProdutoDTO paraDTO(Produto produto) {
+        if (produto == null) return null;
+
+        return new ProdutoDTO(
+                produto.getId(),
+                produto.getNome(),
+                produto.getLote(),
+                produto.getDescricao(),
+                produto.getPreco(),
+                produto.getQuantidadeEstoque(),
+                produto.getStatus(),
+                produto.getCategoria(),
+                produto.getUnidade(),
+                produto.getImagem(),
+                produto.getTipoImagem(),
+                produto.getDataCadastro(),
+                produto.getAvaliadoPorId(),
+                produto.getDataAvaliacao(),
+                produto.getComerciante().getId()
         );
-
-        return ResponseEntity.ok(prodRespota);
     }
 
     // endpoint para listar todos os estabelecimentos

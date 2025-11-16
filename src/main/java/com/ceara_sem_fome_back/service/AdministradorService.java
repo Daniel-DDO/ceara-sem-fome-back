@@ -215,39 +215,47 @@ public class AdministradorService implements UserDetailsService {
         cadastroService.reativarConta(userId);
     }
 
-    // função para um administrador aprovar um produto
     public Produto aprovarProduto(String id, Administrador administradorLogado) {
-
         Produto produto = produtoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado."));
 
-        if (produto.getStatus() == StatusProduto.AUTORIZADO) {
-            throw new RuntimeException("Produto já está autorizado");
-        }
-
-        if (produto.getStatus() == StatusProduto.RECUSADO) {
-            throw new RuntimeException("Produto já foi recusado e não pode ser aprovado");
+        switch (produto.getStatus()) {
+            case AUTORIZADO:
+                throw new RuntimeException("Este produto já está autorizado.");
+            case RECUSADO:
+                throw new RuntimeException("Este produto já foi recusado e não pode ser aprovado.");
+            case PENDENTE:
+                break;
+            default:
+                throw new RuntimeException("O produto está em um estado inválido para aprovação.");
         }
 
         produto.setStatus(StatusProduto.AUTORIZADO);
+        produto.setAvaliadoPorId(administradorLogado);
+        produto.setDataAvaliacao(LocalDateTime.now());
+
         return produtoRepository.save(produto);
     }
 
-    // função para um administrador recusar um produto
     public Produto recusarProduto(String id, Administrador administradorLogado) {
-
         Produto produto = produtoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado."));
 
-        if (produto.getStatus() == StatusProduto.AUTORIZADO) {
-            throw new RuntimeException("Produto já está autorizado");
+        switch (produto.getStatus()) {
+            case AUTORIZADO:
+                throw new RuntimeException("Produto já está autorizado e não pode ser recusado.");
+            case RECUSADO:
+                throw new RuntimeException("Produto já foi recusado anteriormente.");
+            case PENDENTE:
+                break;
+            default:
+                throw new RuntimeException("O produto está em um estado inválido para recusa.");
         }
 
-        if (produto.getStatus() == StatusProduto.DESATIVADO) {
-            throw new RuntimeException("Produto já foi desativado e não pode ser desativado novamente.");
-        }
+        produto.setStatus(StatusProduto.RECUSADO);
+        produto.setAvaliadoPorId(administradorLogado);
+        produto.setDataAvaliacao(LocalDateTime.now());
 
-        produto.setStatus(StatusProduto.DESATIVADO);
         return produtoRepository.save(produto);
     }
 

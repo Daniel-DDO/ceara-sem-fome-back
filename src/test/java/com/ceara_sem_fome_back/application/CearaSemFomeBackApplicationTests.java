@@ -48,7 +48,7 @@ class CearaSemFomeBackApplicationTests {
 		assertFalse(produtoDepois.isPresent(), "Produto NÃO deveria ser encontrado pelo findById padrão após o soft delete");
 
 		//findByIdIgnoringStatus deve encontrar o produto
-		Optional<Produto> produtoIgnorandoStatus = produtoRepository.findByIdIgnoringStatus(produtoId);
+		Optional<Produto> produtoIgnorandoStatus = produtoRepository.findById(produtoId);
 		assertTrue(produtoIgnorandoStatus.isPresent(), "Produto DEVE ser encontrado pelo findByIdIgnoringStatus");
 
 		//O status do produto no banco deve ser DESATIVADO
