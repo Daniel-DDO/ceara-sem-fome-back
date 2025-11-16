@@ -192,7 +192,7 @@ public class AdministradorController {
         }
     }
 
-    @PatchMapping("/aprovar/{id}")
+    @PatchMapping("/aprovar-produto/{id}")
     public ResponseEntity<ProdutoDTO> aprovarProduto(
             @PathVariable String id,
             @AuthenticationPrincipal AdministradorData administradorData) {
@@ -207,7 +207,7 @@ public class AdministradorController {
         return ResponseEntity.ok(paraDTO(produtoAprovado));
     }
 
-    @PatchMapping("/recusar/{id}")
+    @PatchMapping("/recusar-produto/{id}")
     public ResponseEntity<ProdutoDTO> recusarProduto(
             @PathVariable String id,
             @AuthenticationPrincipal AdministradorData administradorData) {
@@ -320,5 +320,19 @@ public class AdministradorController {
     public ResponseEntity<DadosCompletosDTO> obterDadosCompletos() {
         DadosCompletosDTO dados = administradorService.obterDadosCompletos();
         return ResponseEntity.ok(dados);
+    }
+
+    @PatchMapping("/aprovar-comerciante/{id}")
+    public ResponseEntity<Comerciante> aprovarComerciante(
+            @PathVariable String id,
+            @AuthenticationPrincipal AdministradorData administradorData) {
+
+        if (administradorData == null) {
+            throw new AccessDeniedException("Acesso negado. Apenas administradores podem aprovar comerciantes.");
+        }
+
+        Comerciante comercianteAprovado = administradorService.aprovarComerciante(id);
+
+        return ResponseEntity.ok(comercianteAprovado);
     }
 }

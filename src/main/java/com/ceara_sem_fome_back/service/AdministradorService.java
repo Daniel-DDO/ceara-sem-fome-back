@@ -351,12 +351,25 @@ public class AdministradorService implements UserDetailsService {
                 .collect(Collectors.toList());
     }
 
-    // Se quiser um método único que retorne todos os dados juntos
+    // Se quiser um metodo único que retorne todos os dados juntos
     public DadosCompletosDTO obterDadosCompletos() {
         DadosCompletosDTO dto = new DadosCompletosDTO();
         dto.setComerciantes(listarComerciantes());
         dto.setBeneficiarios(listarBeneficiarios());
         // Adicione outros dados aqui
         return dto;
+    }
+
+    public Comerciante aprovarComerciante(String id) {
+        Comerciante comerciante = comercianteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Comerciante não encontrado."));
+
+
+        if (comerciante.getStatus().equals(StatusPessoa.ATIVO)) {
+            throw new RuntimeException("Este comerciante já está ativo.");
+        }
+
+        comerciante.setStatus(StatusPessoa.ATIVO);
+        return comercianteRepository.save(comerciante);
     }
 }
