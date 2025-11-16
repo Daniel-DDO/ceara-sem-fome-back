@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @Entity
-@Where(clause = "status IN ('AUTORIZADO', 'PENDENTE')")
+//@Where(clause = "status IN ('AUTORIZADO', 'PENDENTE')")
 public class Produto {
     @Id
     private String id;

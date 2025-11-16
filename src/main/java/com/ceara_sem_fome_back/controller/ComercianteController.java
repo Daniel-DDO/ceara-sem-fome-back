@@ -2,12 +2,11 @@ package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.dto.*;
+import com.ceara_sem_fome_back.dto.ContaDTO;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.security.JWTUtil;
-import com.ceara_sem_fome_back.service.ComercianteService;
-import com.ceara_sem_fome_back.service.EstabelecimentoService;
-import com.ceara_sem_fome_back.service.ProdutoService;
+import com.ceara_sem_fome_back.service.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -29,8 +28,15 @@ public class ComercianteController {
 
     @Autowired
     private EstabelecimentoService estabelecimentoService;
+
     @Autowired
     private ProdutoService produtoService;
+
+    @Autowired
+    private CompraService compraService;
+
+    @Autowired
+    private ProdutoEstabelecimentoService produtoEstabelecimentoService;
 
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarComerciante(@Valid @RequestBody LoginDTO loginDTO) {
@@ -176,10 +182,56 @@ public class ComercianteController {
         return ResponseEntity.ok(estabelecimentos);
     }
 
+    @GetMapping("/meu-historico-vendas")
+    public ResponseEntity<List<HistoricoVendasDTO>> listarHistoricoVendas(
+            @AuthenticationPrincipal ComercianteData comercianteData) {
+
+        String comercianteId = comercianteData.getComerciante().getId();
+        List<HistoricoVendasDTO> historico = compraService.getHistoricoVendasPorComerciante(comercianteId);
+        return ResponseEntity.ok(historico);
+    }
+
     @GetMapping("/meus-produtos")
     public ResponseEntity<List<ProdutoDTO>> listarProdutos(@AuthenticationPrincipal ComercianteData comercianteData) {
         String comercianteId = comercianteData.getComerciante().getId();
         List<ProdutoDTO> produtos = produtoService.listarPorComerciante(comercianteId);
         return ResponseEntity.ok(produtos);
+    }
+
+    @GetMapping("/meu-extrato")
+    public ResponseEntity<ContaDTO> consultarExtrato(
+            @AuthenticationPrincipal ComercianteData comercianteData) {
+
+        String comercianteId = comercianteData.getComerciante().getId();
+        ContaDTO contaDTO = comercianteService.consultarExtrato(comercianteId);
+        return ResponseEntity.ok(contaDTO);
+    }
+
+    @PostMapping("/adicionar-prod-estab")
+    public ResponseEntity<String> adicionarProduto(
+            @RequestParam String produtoId,
+            @RequestParam String estabelecimentoId
+    ) {
+        produtoEstabelecimentoService.adicionarProdutoEmEstabelecimento(produtoId, estabelecimentoId);
+        return ResponseEntity.ok("Produto vinculado ao estabelecimento com sucesso.");
+    }
+
+    @DeleteMapping("/remover-prod-estab")
+    public ResponseEntity<String> removerProduto(
+            @RequestParam String produtoId,
+            @RequestParam String estabelecimentoId
+    ) {
+        produtoEstabelecimentoService.removerProdutoDeEstabelecimento(produtoId, estabelecimentoId);
+        return ResponseEntity.ok("Produto desvinculado do estabelecimento com sucesso.");
+    }
+
+    @PutMapping("/atualizar-estoque-prod-estab")
+    public ResponseEntity<String> atualizarEstoque(
+            @RequestParam String produtoId,
+            @RequestParam String estabelecimentoId,
+            @RequestParam int quantidade
+    ) {
+        produtoEstabelecimentoService.atualizarEstoque(produtoId, estabelecimentoId, quantidade);
+        return ResponseEntity.ok("Estoque atualizado com sucesso.");
     }
 }

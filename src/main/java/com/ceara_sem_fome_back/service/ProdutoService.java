@@ -1,7 +1,9 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.dto.AtualizarEstoqueDTO;
 import com.ceara_sem_fome_back.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.ProdutoDTO;
+import com.ceara_sem_fome_back.exception.EstoqueInsuficienteException;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.EstabelecimentoRepository;
@@ -16,15 +18,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException; // Import adicionado
-import java.math.BigDecimal;
+import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import com.ceara_sem_fome_back.model.Produto;
-import org.springframework.web.multipart.MultipartFile; // Import adicionado
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class ProdutoService {
@@ -37,9 +39,6 @@ public class ProdutoService {
 
     @Autowired
     private ProdutoEstabelecimentoRepository produtoEstabelecimentoRepository;
-
-    @Autowired
-    private ComercianteService comercianteService;
 
     @Transactional
     public Produto cadastrarProduto(ProdutoDTO produtoDTO, Comerciante comerciante, MultipartFile imagem) throws IOException {
@@ -56,6 +55,7 @@ public class ProdutoService {
         novoProduto.setComerciante(comerciante);
         novoProduto.setAvaliadoPorId(null);
         novoProduto.setStatus(StatusProduto.PENDENTE);
+        novoProduto.setDataCadastro(LocalDateTime.now());
 
         if (imagem != null && !imagem.isEmpty()) {
             String base64 = Base64.getEncoder().encodeToString(imagem.getBytes());
@@ -67,7 +67,7 @@ public class ProdutoService {
     }
 
     private Produto alterarStatusProduto(String id, StatusProduto novoStatus) {
-        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
+        Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
 
         if (!produto.getStatus().equals(StatusProduto.PENDENTE)) {
@@ -92,7 +92,7 @@ public class ProdutoService {
             throw new IllegalArgumentException("O ID do produto é obrigatório para a edição.");
         }
 
-        Produto produtoExistente = produtoRepository.findByIdIgnoringStatus(produtoDTO.getId())
+        Produto produtoExistente = produtoRepository.findById(produtoDTO.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado para edição."));
 
         if (!produtoExistente.getStatus().equals(StatusProduto.AUTORIZADO)) {
@@ -123,8 +123,30 @@ public class ProdutoService {
         return produtoRepository.save(produtoExistente);
     }
 
+    @Transactional
+    public Produto atualizarEstoque(String produtoId, AtualizarEstoqueDTO dto, Comerciante comerciante) {
+        Produto produto = produtoRepository.findById(produtoId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado com o ID: " + produtoId));
+
+        if (!Objects.equals(produto.getComerciante().getId(), comerciante.getId())) {
+            throw new SecurityException("Este produto não pertence ao comerciante autenticado.");
+        }
+
+        if (produto.getStatus() != StatusProduto.AUTORIZADO) {
+            throw new IllegalStateException("Apenas produtos autorizados podem ter seu estoque atualizado.");
+        }
+
+        if (dto.getNovaQuantidade() < 0) {
+            throw new IllegalArgumentException("A quantidade em estoque não pode ser negativa.");
+        }
+
+        produto.setQuantidadeEstoque(dto.getNovaQuantidade());
+
+        return produtoRepository.save(produto);
+    }
+
     public Produto removerProduto(String id) {
-        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
+        Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
 
         if (produto.getStatus().equals(StatusProduto.RECUSADO)) {
@@ -221,5 +243,22 @@ public class ProdutoService {
 
     public List<Produto> filtrarProdutosPorNome(String pesquisa) {
         return produtoRepository.buscaInteligente(pesquisa);
+    }
+
+    @Transactional
+    public void decrementarEstoque(List<ItemCompra> itens) {
+        for (ItemCompra item : itens) {
+            Produto produto = produtoRepository.findById(item.getProduto().getId())
+                    .orElseThrow(() -> new RecursoNaoEncontradoException("Produto " + item.getProduto().getNome() + " nao encontrado durante a baixa de estoque."));
+
+            int novoEstoque = produto.getQuantidadeEstoque() - item.getQuantidade();
+            if (novoEstoque < 0) {
+                //falha critica
+                throw new EstoqueInsuficienteException("Falha critica de concorrencia no estoque do produto: " + produto.getNome());
+            }
+
+            produto.setQuantidadeEstoque(novoEstoque);
+            produtoRepository.save(produto);
+        }
     }
 }

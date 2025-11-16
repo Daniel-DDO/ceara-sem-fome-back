@@ -3,6 +3,8 @@ package com.ceara_sem_fome_back.controller;
 import com.ceara_sem_fome_back.data.BeneficiarioData;
 import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.model.Beneficiario;
+import com.ceara_sem_fome_back.model.Carrinho;
+import com.ceara_sem_fome_back.model.Compra;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.BeneficiarioService;
 import com.ceara_sem_fome_back.service.EnderecoService;
@@ -13,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.List;
 
@@ -185,6 +188,48 @@ public class BeneficiarioController {
         Beneficiario beneficiarioAtualizado = enderecoService.cadastrarEnderecoBenef(beneficiarioId, enderecoCadRequest);
 
         return ResponseEntity.ok(beneficiarioAtualizado);
+    }
+
+    @GetMapping("/conta/balanco")
+    public ResponseEntity<BigDecimal> verBalanco(Principal principal) {
+        String userEmail = principal.getName();
+        BigDecimal saldo = beneficiarioService.verBalanco(userEmail);
+        return ResponseEntity.ok(saldo);
+    }
+
+    @PostMapping("/compra")
+    public ResponseEntity<Compra> realizarCompra(Principal principal) {
+        String userEmail = principal.getName();
+        Compra novaCompra = beneficiarioService.realizarCompra(userEmail);
+        return ResponseEntity.status(201).body(novaCompra);
+    }
+
+    @GetMapping("/compras/historico")
+    public ResponseEntity<List<Compra>> verHistoricoCompras(Principal principal) {
+        String userEmail = principal.getName();
+        List<Compra> historico = beneficiarioService.verHistoricoCompras(userEmail);
+        return ResponseEntity.ok(historico);
+    }
+
+    @GetMapping("/carrinho")
+    public ResponseEntity<Carrinho> verCarrinho(Principal principal) {
+        String userEmail = principal.getName();
+        Carrinho carrinho = beneficiarioService.verCarrinho(userEmail);
+        return ResponseEntity.ok(carrinho);
+    }
+
+    @PostMapping("/carrinho/item")
+    public ResponseEntity<Carrinho> manipularCarrinho(
+            @Valid @RequestBody ManipularCarrinhoDTO dto,
+            Principal principal) {
+
+        String userEmail = principal.getName();
+        Carrinho carrinhoAtualizado = beneficiarioService.manipularCarrinho(
+                userEmail,
+                dto.getProdutoId(),
+                dto.getQuantidade());
+
+        return ResponseEntity.ok(carrinhoAtualizado);
     }
 
 }

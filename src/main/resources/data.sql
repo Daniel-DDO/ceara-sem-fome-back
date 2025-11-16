@@ -19,29 +19,29 @@ VALUES
     ('car-2', 'ABERTO', '2025-01-11 11:00:00', '2025-01-11 11:00:00', 12.00)
     ON CONFLICT (id) DO NOTHING;
 
+INSERT INTO conta (id, numero_conta, agencia, saldo, criado_em, atualizado_em, ativa)
+VALUES
+    ('cont-1', '12345-6', '0001', 250.00, '2025-05-31', '2025-06-10', true),
+    ('cont-2', '78910-1', '0001', 125.50, '2025-05-31', '2025-07-11', true),
+    ('cont-3', '12332-1', '0001', 300.00, '2025-05-31', '2025-08-12', true)
+    ON CONFLICT (id) DO NOTHING;
+
 INSERT INTO administrador (id, nome, cpf, email, senha, data_nascimento, telefone, genero, status, lgpd_accepted)
 VALUES ('adm-1', 'João Almeida', '66230022001', 'joao.admin@csf.gov.br', '123456', '1980-05-10', '(85) 90000-0001', 'MASCULINO', 'ATIVO', true)
     ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO beneficiario (id, nome, cpf, email, senha, data_nascimento, telefone, genero, status, numero_cadastro_social, carrinho_id, endereco_id, lgpd_accepted)
+INSERT INTO beneficiario (id, nome, cpf, email, senha, data_nascimento, telefone, genero, status, numero_cadastro_social, carrinho_id, endereco_id, conta_id, lgpd_accepted)
 VALUES
-    ('ben-1', 'Maria Souza', '36782694000', 'maria.souza@gmail.com', '123456', '1995-07-21', '(85) 91111-1111', 'FEMININO', 'ATIVO', 'NCS-1001', 'car-1', 'end-2', true),
-    ('ben-2', 'Carlos Pereira', '11499696019', 'carlos.pereira@gmail.com', '123456', '1990-04-10', '(85) 92222-2222', 'MASCULINO', 'ATIVO', 'NCS-1002', 'car-2', 'end-3', true)
+    ('ben-1', 'Maria Souza', '36782694000', 'maria.souza@gmail.com', '123456', '1995-07-21', '(85) 91111-1111', 'FEMININO', 'ATIVO', 'NCS-1001', 'car-1', 'end-2', 'cont-1',true),
+    ('ben-2', 'Carlos Pereira', '11499696019', 'carlos.pereira@gmail.com', '123456', '1990-04-10', '(85) 92222-2222', 'MASCULINO', 'ATIVO', 'NCS-1002', 'car-2', 'end-3', 'cont-2',true)
     ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO comerciante (id, nome, cpf, email, senha, data_nascimento, telefone, genero, status, lgpd_accepted)
-VALUES ('com-1', 'Ana Costa', '56007707075', 'ana.mercearia@gmail.com', '123456', '1988-09-10', '(85) 93333-3333', 'FEMININO', 'ATIVO', true)
+INSERT INTO comerciante (id, nome, cpf, email, senha, data_nascimento, telefone, genero, status, conta_id, lgpd_accepted)
+VALUES ('com-1', 'Ana Costa', '56007707075', 'ana.mercearia@gmail.com', '123456', '1988-09-10', '(85) 93333-3333', 'FEMININO', 'ATIVO', 'cont-3',true)
     ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO entregador (id, nome, cpf, email, senha, data_nascimento, telefone, genero, status, endereco_id, lgpd_accepted)
 VALUES ('ent-1', 'Pedro Santos', '01394251017', 'pedro.entregas@gmail.com', '123456', '1992-01-05', '(85) 94444-4444', 'MASCULINO', 'ATIVO', 'end-4', true)
-    ON CONFLICT (id) DO NOTHING;
-
-INSERT INTO conta (id, numero_conta, agencia, saldo, beneficiario_id, comerciante_id)
-VALUES
-    ('cont-1', '12345-6', '0001', 250.00, 'ben-1', null),
-    ('cont-2', '78910-1', '0001', 125.50, 'ben-2', null),
-    ('cont-3', '12332-1', '0001', 300.00, null, 'com-1')
     ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO estabelecimento (id, nome, cnpj, telefone, imagem, tipo_imagem, data_cadastro, endereco_id, comerciante_id)

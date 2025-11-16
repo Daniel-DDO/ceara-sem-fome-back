@@ -2,11 +2,12 @@ package com.ceara_sem_fome_back.model;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 import lombok.*;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 @Entity
 public class Conta {
@@ -16,13 +17,17 @@ public class Conta {
 
     private String numeroConta;
     private String agencia;
+    @Column(precision = 18, scale = 2)
     private BigDecimal saldo;
 
-    @OneToOne
-    @JoinColumn(name = "beneficiario_id", nullable= true)
-    private Beneficiario beneficiario;
+    private LocalDateTime criadoEm;
+    private LocalDateTime atualizadoEm;
+    private boolean ativa;
 
-    @OneToOne
-    @JoinColumn(name = "comerciante_id", nullable= true)
-    private Comerciante comerciante;
+    public Conta() {
+        this.saldo = BigDecimal.valueOf(0.0);
+        this.criadoEm = LocalDateTime.now();
+        this.atualizadoEm = LocalDateTime.now();
+        this.ativa = true;
+    }
 }
