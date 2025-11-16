@@ -1,25 +1,22 @@
 package com.ceara_sem_fome_back.controller;
 
-import com.ceara_sem_fome_back.dto.ErrorDTO;
-import com.ceara_sem_fome_back.dto.LoginDTO;
-import com.ceara_sem_fome_back.dto.PaginacaoDTO;
-import com.ceara_sem_fome_back.dto.PessoaRespostaDTO;
-import com.ceara_sem_fome_back.dto.AdministradorRequest;
-import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
-import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
+import com.ceara_sem_fome_back.data.AdministradorData;
+import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
-import com.ceara_sem_fome_back.model.Administrador;
-import com.ceara_sem_fome_back.model.Pessoa;
-import com.ceara_sem_fome_back.model.StatusPessoa;
+import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.AdministradorService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -195,4 +192,133 @@ public class AdministradorController {
         }
     }
 
+    @PatchMapping("/aprovar/{id}")
+    public ResponseEntity<ProdutoDTO> aprovarProduto(
+            @PathVariable String id,
+            @AuthenticationPrincipal AdministradorData administradorData) {
+
+        if (administradorData == null) {
+            throw new AccessDeniedException("Acesso negado. Apenas administradores podem aprovar produtos.");
+        }
+
+        Administrador administradorLogado = administradorData.getAdministrador();
+        Produto produtoAprovado = administradorService.aprovarProduto(id, administradorLogado);
+
+        return ResponseEntity.ok(paraDTO(produtoAprovado));
+    }
+
+    @PatchMapping("/recusar/{id}")
+    public ResponseEntity<ProdutoDTO> recusarProduto(
+            @PathVariable String id,
+            @AuthenticationPrincipal AdministradorData administradorData) {
+
+        if (administradorData == null) {
+            throw new AccessDeniedException("Acesso negado. Apenas administradores podem recusar produtos.");
+        }
+
+        Administrador administradorLogado = administradorData.getAdministrador();
+        Produto produtoRecusado = administradorService.recusarProduto(id, administradorLogado);
+
+        return ResponseEntity.ok(paraDTO(produtoRecusado));
+    }
+
+    private ProdutoDTO paraDTO(Produto produto) {
+        if (produto == null) return null;
+
+        return new ProdutoDTO(
+                produto.getId(),
+                produto.getNome(),
+                produto.getLote(),
+                produto.getDescricao(),
+                produto.getPreco(),
+                produto.getQuantidadeEstoque(),
+                produto.getStatus(),
+                produto.getCategoria(),
+                produto.getUnidade(),
+                produto.getImagem(),
+                produto.getTipoImagem(),
+                produto.getDataCadastro(),
+                produto.getAvaliadoPorId(),
+                produto.getDataAvaliacao(),
+                produto.getComerciante().getId()
+        );
+    }
+
+    // endpoint para listar todos os estabelecimentos
+    @GetMapping("/estabelecimentos")
+    public ResponseEntity<List<EstabelecimentoRespostaDTO>> listarEstabelecimentos(
+            @AuthenticationPrincipal AdministradorData administradorData) {
+
+        Administrador adminLogado = administradorData.getAdministrador();
+
+        List<Estabelecimento> estabelecimentos =
+                administradorService.listarTodosEstabelecimentos(adminLogado);
+
+        List<EstabelecimentoRespostaDTO> resposta = estabelecimentos.stream()
+                .map(est -> new EstabelecimentoRespostaDTO(
+                        est.getId(),
+                        est.getNome(),
+                        est.getCnpj(),
+                        est.getTelefone(),                  // comércio
+                        est.getEndereco().getLogradouro(),
+                        est.getEndereco().getNumero(),
+                        est.getEndereco().getBairro(),
+                        est.getEndereco().getMunicipio()
+                ))
+                .toList();
+
+        return ResponseEntity.ok(resposta);
+    }
+
+    // endpoints para listagem de compras
+    @GetMapping("/compras")
+    public ResponseEntity<List<CompraRespostaDTO>> listarTodasCompras() {
+        return ResponseEntity.ok(administradorService.listarTodasCompras());
+    }
+
+    @GetMapping("/beneficiario/{id}")
+    public ResponseEntity<List<CompraRespostaDTO>> listarPorBeneficiario(@PathVariable String id) {
+        return ResponseEntity.ok(administradorService.listarComprasPorBeneficiario(id));
+    }
+
+    @GetMapping("/estabelecimento/{id}")
+    public ResponseEntity<List<CompraRespostaDTO>> listarPorEstabelecimento(@PathVariable String id) {
+        return ResponseEntity.ok(administradorService.listarComprasPorEstabelecimento(id));
+    }
+
+    @GetMapping("/periodo")
+    public ResponseEntity<List<CompraRespostaDTO>> listarPorPeriodo(
+            @RequestParam LocalDateTime inicio,
+            @RequestParam LocalDateTime fim
+    ) {
+        return ResponseEntity.ok(administradorService.listarComprasPorPeriodo(inicio, fim));
+    }
+
+    @GetMapping("/estabelecimento/{id}/status/{status}")
+    public ResponseEntity<List<CompraRespostaDTO>> listarPorEstabelecimentoEStatus(
+            @PathVariable String id, @PathVariable StatusCompra status) {
+
+        return ResponseEntity.ok(administradorService.listarComprasPorEstabelecimentoEStatus(id, status));
+    }
+
+    // enpoints para o administrador obter informações do beneficiário e do comerciante
+    @GetMapping("/comerciantes")
+    public ResponseEntity<List<ComercianteRespostaDTO>> listarComerciantes() {
+        List<ComercianteRespostaDTO> comerciantes = administradorService.listarComerciantes();
+        return ResponseEntity.ok(comerciantes);
+    }
+
+    // Endpoint para listar todos os beneficiários
+    @GetMapping("/beneficiarios")
+    public ResponseEntity<List<BeneficiarioRespostaDTO>> listarBeneficiarios() {
+        List<BeneficiarioRespostaDTO> beneficiarios = administradorService.listarBeneficiarios();
+        return ResponseEntity.ok(beneficiarios);
+    }
+
+    // Endpoint único para pegar todos os dados juntos
+    @GetMapping("/dados-completos")
+    public ResponseEntity<DadosCompletosDTO> obterDadosCompletos() {
+        DadosCompletosDTO dados = administradorService.obterDadosCompletos();
+        return ResponseEntity.ok(dados);
+    }
 }

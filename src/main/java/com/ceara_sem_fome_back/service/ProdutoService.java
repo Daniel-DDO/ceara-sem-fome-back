@@ -67,7 +67,7 @@ public class ProdutoService {
     }
 
     private Produto alterarStatusProduto(String id, StatusProduto novoStatus) {
-        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
+        Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
 
         if (!produto.getStatus().equals(StatusProduto.PENDENTE)) {
@@ -92,7 +92,7 @@ public class ProdutoService {
             throw new IllegalArgumentException("O ID do produto é obrigatório para a edição.");
         }
 
-        Produto produtoExistente = produtoRepository.findByIdIgnoringStatus(produtoDTO.getId())
+        Produto produtoExistente = produtoRepository.findById(produtoDTO.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado para edição."));
 
         if (!produtoExistente.getStatus().equals(StatusProduto.AUTORIZADO)) {
@@ -146,7 +146,7 @@ public class ProdutoService {
     }
 
     public Produto removerProduto(String id) {
-        Produto produto = produtoRepository.findByIdIgnoringStatus(id)
+        Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
 
         if (produto.getStatus().equals(StatusProduto.RECUSADO)) {
