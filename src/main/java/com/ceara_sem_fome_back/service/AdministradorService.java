@@ -1,17 +1,13 @@
 package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.data.AdministradorData;
-import com.ceara_sem_fome_back.dto.PaginacaoDTO;
-import com.ceara_sem_fome_back.dto.AdministradorRequest;
-import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
-import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
+import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.exception.*;
+import com.ceara_sem_fome_back.mapper.BeneficiarioMapper;
+import com.ceara_sem_fome_back.mapper.ComercianteMapper;
 import com.ceara_sem_fome_back.model.*;
-import com.ceara_sem_fome_back.repository.AdministradorRepository;
+import com.ceara_sem_fome_back.repository.*;
 
-import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
-import com.ceara_sem_fome_back.repository.ComercianteRepository;
-import com.ceara_sem_fome_back.repository.EntregadorRepository;
 import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +22,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static com.ceara_sem_fome_back.model.TipoPessoa.ADMINISTRADOR;
 
 @Service
 public class AdministradorService implements UserDetailsService {
@@ -43,6 +44,15 @@ public class AdministradorService implements UserDetailsService {
 
     @Autowired
     private EntregadorRepository entregadorRepository;
+
+    @Autowired
+    private EstabelecimentoRepository estabelecimentoRepository;
+
+    @Autowired
+    private ProdutoRepository produtoRepository;
+
+    @Autowired
+    private CompraRepository compraRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -203,5 +213,142 @@ public class AdministradorService implements UserDetailsService {
     public void reativarConta(String userId) {
         // Delega a lógica de busca multi-repositório para o CadastroService
         cadastroService.reativarConta(userId);
+    }
+
+    // função para um administrador aprovar um produto
+    public Produto aprovarProduto(String id, Administrador administradorLogado) {
+
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+
+        if (produto.getStatus() == StatusProduto.AUTORIZADO) {
+            throw new RuntimeException("Produto já está autorizado");
+        }
+
+        if (produto.getStatus() == StatusProduto.RECUSADO) {
+            throw new RuntimeException("Produto já foi recusado e não pode ser aprovado");
+        }
+
+        produto.setStatus(StatusProduto.AUTORIZADO);
+        return produtoRepository.save(produto);
+    }
+
+    // função para um administrador recusar um produto
+    public Produto recusarProduto(String id, Administrador administradorLogado) {
+
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado"));
+
+        if (produto.getStatus() == StatusProduto.AUTORIZADO) {
+            throw new RuntimeException("Produto já está autorizado");
+        }
+
+        if (produto.getStatus() == StatusProduto.DESATIVADO) {
+            throw new RuntimeException("Produto já foi desativado e não pode ser desativado novamente.");
+        }
+
+        produto.setStatus(StatusProduto.DESATIVADO);
+        return produtoRepository.save(produto);
+    }
+
+    // função para listar todos os estabelecimentos
+
+    public List<Estabelecimento> listarTodosEstabelecimentos(Administrador adminLogado) {
+
+        if (adminLogado == null) {
+            throw new RuntimeException("Administrador não autenticado");
+        }
+
+        return estabelecimentoRepository.findAll();
+    }
+
+    // funções de listagem de compras e histórico
+    public List<CompraRespostaDTO> listarTodasCompras() {
+        return compraRepository.findAll().stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    public List<CompraRespostaDTO> listarComprasPorBeneficiario(String beneficiarioId) {
+
+        var beneficiario = beneficiarioRepository.findById(beneficiarioId)
+                .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado"));
+
+        return compraRepository.findByBeneficiario(beneficiario).stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    public List<CompraRespostaDTO> listarComprasPorEstabelecimento(String estabelecimentoId) {
+
+        var estabelecimento = estabelecimentoRepository.findById(estabelecimentoId)
+                .orElseThrow(() -> new RuntimeException("Estabelecimento não encontrado"));
+
+        return compraRepository.findByEstabelecimento(estabelecimento).stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    public List<CompraRespostaDTO> listarComprasPorPeriodo(LocalDateTime inicio, LocalDateTime fim) {
+        return compraRepository.findByDataHoraCompraBetween(inicio, fim).stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    public List<CompraRespostaDTO> listarComprasPorEstabelecimentoEStatus(String estabelecimentoId, StatusCompra status) {
+        return compraRepository.findByEstabelecimentoIdAndStatus(estabelecimentoId, status)
+                .stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    private CompraRespostaDTO toDTO(Compra compra) {
+
+        String enderecoStr = compra.getEndereco() != null ?
+                compra.getEndereco().getLogradouro() + ", " +
+                        compra.getEndereco().getNumero() + " - " +
+                        compra.getEndereco().getBairro() :
+                "Endereço não registrado";
+
+        List<CompraItemDTO> itens = compra.getItens().stream()
+                .map(item -> new CompraItemDTO(
+                        item.getProduto().getNome(),
+                        item.getQuantidade(),
+                        item.getPrecoUnitario()
+                )).toList();
+
+        return new CompraRespostaDTO(
+                compra.getId(),
+                compra.getDataHoraCompra(),
+                compra.getValorTotal(),
+                compra.getBeneficiario().getNome(),
+                compra.getEstabelecimento().getNome(),
+                enderecoStr,
+                itens
+        );
+    }
+
+    // funções para o administrador conseguir informações de Beneficiário e do comerciante
+    public List<ComercianteRespostaDTO> listarComerciantes() {
+        return comercianteRepository.findAll()
+                .stream()
+                .map(ComercianteMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<BeneficiarioRespostaDTO> listarBeneficiarios() {
+        return beneficiarioRepository.findAll()
+                .stream()
+                .map(BeneficiarioMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Se quiser um método único que retorne todos os dados juntos
+    public DadosCompletosDTO obterDadosCompletos() {
+        DadosCompletosDTO dto = new DadosCompletosDTO();
+        dto.setComerciantes(listarComerciantes());
+        dto.setBeneficiarios(listarBeneficiarios());
+        // Adicione outros dados aqui
+        return dto;
     }
 }

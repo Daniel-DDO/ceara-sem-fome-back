@@ -1,10 +1,12 @@
 package com.ceara_sem_fome_back.dto;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@Builder
 public class EstabelecimentoRespostaDTO {
 
     private String id;
