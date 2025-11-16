@@ -6,10 +6,7 @@ import com.ceara_sem_fome_back.dto.ContaDTO;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.security.JWTUtil;
-import com.ceara_sem_fome_back.service.ComercianteService;
-import com.ceara_sem_fome_back.service.CompraService;
-import com.ceara_sem_fome_back.service.EstabelecimentoService;
-import com.ceara_sem_fome_back.service.ProdutoService;
+import com.ceara_sem_fome_back.service.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -31,11 +28,15 @@ public class ComercianteController {
 
     @Autowired
     private EstabelecimentoService estabelecimentoService;
+
     @Autowired
     private ProdutoService produtoService;
 
     @Autowired
     private CompraService compraService;
+
+    @Autowired
+    private ProdutoEstabelecimentoService produtoEstabelecimentoService;
 
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarComerciante(@Valid @RequestBody LoginDTO loginDTO) {
@@ -205,5 +206,32 @@ public class ComercianteController {
         ContaDTO contaDTO = comercianteService.consultarExtrato(comercianteId);
         return ResponseEntity.ok(contaDTO);
     }
-}
 
+    @PostMapping("/adicionar-prod-estab")
+    public ResponseEntity<String> adicionarProduto(
+            @RequestParam String produtoId,
+            @RequestParam String estabelecimentoId
+    ) {
+        produtoEstabelecimentoService.adicionarProdutoEmEstabelecimento(produtoId, estabelecimentoId);
+        return ResponseEntity.ok("Produto vinculado ao estabelecimento com sucesso.");
+    }
+
+    @DeleteMapping("/remover-prod-estab")
+    public ResponseEntity<String> removerProduto(
+            @RequestParam String produtoId,
+            @RequestParam String estabelecimentoId
+    ) {
+        produtoEstabelecimentoService.removerProdutoDeEstabelecimento(produtoId, estabelecimentoId);
+        return ResponseEntity.ok("Produto desvinculado do estabelecimento com sucesso.");
+    }
+
+    @PutMapping("/atualizar-estoque-prod-estab")
+    public ResponseEntity<String> atualizarEstoque(
+            @RequestParam String produtoId,
+            @RequestParam String estabelecimentoId,
+            @RequestParam int quantidade
+    ) {
+        produtoEstabelecimentoService.atualizarEstoque(produtoId, estabelecimentoId, quantidade);
+        return ResponseEntity.ok("Estoque atualizado com sucesso.");
+    }
+}
