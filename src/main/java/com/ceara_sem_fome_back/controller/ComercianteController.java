@@ -3,12 +3,15 @@ package com.ceara_sem_fome_back.controller;
 import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.dto.ContaDTO;
+import com.ceara_sem_fome_back.exception.NegocioException;
+import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +40,9 @@ public class ComercianteController {
 
     @Autowired
     private ProdutoEstabelecimentoService produtoEstabelecimentoService;
+
+    @Autowired
+    private AvaliacaoService avaliacaoService;
 
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarComerciante(@Valid @RequestBody LoginDTO loginDTO) {
@@ -233,5 +239,25 @@ public class ComercianteController {
     ) {
         produtoEstabelecimentoService.atualizarEstoque(produtoId, estabelecimentoId, quantidade);
         return ResponseEntity.ok("Estoque atualizado com sucesso.");
+    }
+
+    @PostMapping("/avaliacao/responder")
+    public ResponseEntity<Void> responderAvaliacao(
+            @Valid @RequestBody RespostaAvaliacaoRequestDTO dto,
+            @AuthenticationPrincipal ComercianteData comercianteData) {
+
+        String comercianteId = comercianteData.getComerciante().getId();
+
+        try {
+            avaliacaoService.registrarRespostaComerciante(comercianteId, dto);
+
+            return ResponseEntity.status(HttpStatus.OK).build();
+
+        } catch (RecursoNaoEncontradoException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+        } catch (NegocioException e) {
+            return ResponseEntity.status(e.getStatus()).build();
+        }
     }
 }

@@ -2,16 +2,21 @@ package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.BeneficiarioData;
 import com.ceara_sem_fome_back.dto.*;
+import com.ceara_sem_fome_back.exception.NegocioException;
+import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.model.Carrinho;
 import com.ceara_sem_fome_back.model.Compra;
 import com.ceara_sem_fome_back.security.JWTUtil;
+import com.ceara_sem_fome_back.service.AvaliacaoService;
 import com.ceara_sem_fome_back.service.BeneficiarioService;
 import com.ceara_sem_fome_back.service.EnderecoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +36,9 @@ public class BeneficiarioController {
 
     @Autowired
     private EnderecoService enderecoService;
+
+    @Autowired
+    private AvaliacaoService avaliacaoService;
 
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarBeneficiario(@Valid @RequestBody LoginDTO loginDTO) {
@@ -230,6 +238,30 @@ public class BeneficiarioController {
                 dto.getQuantidade());
 
         return ResponseEntity.ok(carrinhoAtualizado);
+    }
+
+    @PostMapping("/compra/avaliar")
+    public ResponseEntity<Void> avaliarCompra(
+            @Valid @RequestBody AvaliacaoRequestDTO dto,
+            @AuthenticationPrincipal BeneficiarioData beneficiarioData) {
+
+        String beneficiarioId = beneficiarioData.getId();
+
+        if (beneficiarioId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            avaliacaoService.registrarAvaliacao(dto.getCompraId(), beneficiarioId, dto);
+
+            return ResponseEntity.status(HttpStatus.CREATED).build();
+
+        } catch (RecursoNaoEncontradoException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+        } catch (NegocioException e) {
+            return ResponseEntity.status(e.getStatus()).build();
+        }
     }
 
 }

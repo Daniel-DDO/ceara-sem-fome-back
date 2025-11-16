@@ -42,4 +42,6 @@ public class Estabelecimento {
     @JoinColumn(name = "comerciante_id", nullable = false)
     @JsonBackReference
     private Comerciante comerciante;
+
+    private Double mediaAvaliacoes = 0.0;
 }
