@@ -20,6 +20,10 @@ public class BeneficiarioData implements UserDetails {
         this.beneficiario = beneficiario;
     }
 
+    public Beneficiario getBeneficiario() {
+        return beneficiario.get();
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return new ArrayList<>();

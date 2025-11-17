@@ -1,15 +1,19 @@
 package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.AdministradorData;
+import com.ceara_sem_fome_back.data.BeneficiarioData;
 import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.ProdutoDTO;
 
+import com.ceara_sem_fome_back.dto.ProdutoEstabDTO;
 import com.ceara_sem_fome_back.model.*;
+import com.ceara_sem_fome_back.service.ProdutoEstabelecimentoService;
 import com.ceara_sem_fome_back.service.ProdutoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -31,6 +35,9 @@ public class ProdutoController {
 
     @Autowired
     private ProdutoService produtoService;
+
+    @Autowired
+    private ProdutoEstabelecimentoService produtoEstabelecimentoService;
 
     @PostMapping(
             value = "/cadastrar",
@@ -238,6 +245,26 @@ public class ProdutoController {
         List<Produto> produtos = produtoService.filtrarProdutosPorNome(pesquisa);
         return ResponseEntity.ok(produtos);
     }
+
+    @GetMapping("/estabelecimento/all")
+    public ResponseEntity<PaginacaoDTO<ProdutoEstabDTO>> listarTodosProdEst(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(required = false) String nomeFiltro,
+            @AuthenticationPrincipal BeneficiarioData beneficiarioData
+    ) {
+        if (beneficiarioData == null || beneficiarioData.getBeneficiario() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        PaginacaoDTO<ProdutoEstabDTO> pagina =
+                produtoEstabelecimentoService.listarComFiltro(nomeFiltro, page, size, sortBy, direction);
+
+        return ResponseEntity.ok(pagina);
+    }
+
 }
 /*
 package com.ceara_sem_fome_back.controller;

@@ -1,5 +1,8 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.dto.PaginacaoDTO;
+import com.ceara_sem_fome_back.dto.ProdutoEstabDTO;
+import com.ceara_sem_fome_back.model.Endereco;
 import com.ceara_sem_fome_back.model.Estabelecimento;
 import com.ceara_sem_fome_back.model.Produto;
 import com.ceara_sem_fome_back.model.ProdutoEstabelecimento;
@@ -7,6 +10,10 @@ import com.ceara_sem_fome_back.repository.EstabelecimentoRepository;
 import com.ceara_sem_fome_back.repository.ProdutoEstabelecimentoRepository;
 import com.ceara_sem_fome_back.repository.ProdutoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -73,4 +80,57 @@ public class ProdutoEstabelecimentoService {
 
         produtoEstabelecimentoRepository.save(pe);
     }
+
+    public PaginacaoDTO<ProdutoEstabDTO> listarComFiltro(
+            String nomeFiltro,
+            int page,
+            int size,
+            String sortBy,
+            String direction
+    ) {
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<ProdutoEstabelecimento> pagina;
+
+        if (nomeFiltro != null && !nomeFiltro.trim().isEmpty()) {
+            pagina = produtoEstabelecimentoRepository
+                    .findByProduto_NomeContainingIgnoreCase(nomeFiltro.trim(), pageable);
+        } else {
+            pagina = produtoEstabelecimentoRepository.findAll(pageable);
+        }
+
+        Page<ProdutoEstabDTO> paginaDTO = pagina.map(this::toDTO);
+
+        return new PaginacaoDTO<>(
+                paginaDTO.getContent(),
+                paginaDTO.getNumber(),
+                paginaDTO.getTotalPages(),
+                paginaDTO.getTotalElements(),
+                paginaDTO.getSize(),
+                paginaDTO.isLast()
+        );
+    }
+
+    public ProdutoEstabDTO toDTO(ProdutoEstabelecimento pe) {
+
+        ProdutoEstabDTO dto = new ProdutoEstabDTO();
+
+        dto.setId(pe.getId());
+        dto.setNomeProduto(pe.getProduto().getNome());
+        dto.setPreco(pe.getProduto().getPreco());
+        dto.setQuantidadeEstoque(pe.getProduto().getQuantidadeEstoque());
+        dto.setCategoria(pe.getProduto().getCategoria());
+        dto.setUnidade(pe.getProduto().getUnidade());
+        dto.setImagem(pe.getProduto().getImagem());
+        dto.setTipoImagem(pe.getProduto().getTipoImagem());
+
+        dto.setNomeEstabelecimento(pe.getEstabelecimento().getNome());
+        dto.setEndereco(pe.getEstabelecimento().getEndereco());
+
+        return dto;
+    }
+
 }
