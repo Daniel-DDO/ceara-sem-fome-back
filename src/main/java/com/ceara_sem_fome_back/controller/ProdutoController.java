@@ -324,6 +324,38 @@ public class ProdutoController {
         return ResponseEntity.ok(dto);
     }
 
+    @GetMapping("/estabelecimento/pe/{idProdEstab}")
+    public ResponseEntity<?> buscarPorIdProdEstab(@PathVariable String idProdEstab) {
+
+        ProdutoEstabelecimento pe = produtoEstabelecimentoService.buscarPorId(idProdEstab);
+
+        if (pe == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("ProdutoEstabelecimento não encontrado.");
+        }
+
+        Produto produto = pe.getProduto();
+        Estabelecimento estabelecimento = pe.getEstabelecimento();
+
+        ProdutoEstabDTO dto = new ProdutoEstabDTO();
+        dto.setId(pe.getId());
+        dto.setNomeProduto(produto.getNome());
+        dto.setDescricao(produto.getDescricao());
+        dto.setNomeEstabelecimento(estabelecimento.getNome());
+        dto.setPreco(produto.getPreco());
+        dto.setQuantidadeEstoque(produto.getQuantidadeEstoque());
+        dto.setCategoria(produto.getCategoria());
+        dto.setUnidade(produto.getUnidade());
+        dto.setDataCadastro(produto.getDataCadastro());
+        dto.setImagem(produto.getImagem());
+        dto.setTipoImagem(produto.getTipoImagem());
+        dto.setEndereco(estabelecimento.getEndereco());
+        dto.setComercianteId(estabelecimento.getComerciante().getId());
+
+        return ResponseEntity.ok(dto);
+    }
+
+
 }
 /*
 package com.ceara_sem_fome_back.controller;

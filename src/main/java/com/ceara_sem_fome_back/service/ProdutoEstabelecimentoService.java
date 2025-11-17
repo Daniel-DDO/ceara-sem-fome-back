@@ -144,4 +144,8 @@ public class ProdutoEstabelecimentoService {
     public ProdutoEstabelecimento buscarPorProdutoId(String produtoId) {
         return produtoEstabelecimentoRepository.findByProdutoId(produtoId).orElse(null);
     }
+
+    public ProdutoEstabelecimento buscarPorId(String idProdEstab) {
+        return produtoEstabelecimentoRepository.findById(idProdEstab).orElse(null);
+    }
 }
