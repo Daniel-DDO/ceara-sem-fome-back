@@ -148,4 +148,33 @@ public class ProdutoEstabelecimentoService {
     public ProdutoEstabelecimento buscarPorId(String idProdEstab) {
         return produtoEstabelecimentoRepository.findById(idProdEstab).orElse(null);
     }
+
+    public PaginacaoDTO<ProdutoEstabDTO> listarPorEstabelecimento(
+            String estabelecimentoId,
+            int page,
+            int size,
+            String sortBy,
+            String direction
+    ) {
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<ProdutoEstabelecimento> pagina =
+                produtoEstabelecimentoRepository.findByEstabelecimento_Id(estabelecimentoId, pageable);
+
+        Page<ProdutoEstabDTO> paginaDTO = pagina.map(this::toDTO);
+
+        return new PaginacaoDTO<>(
+                paginaDTO.getContent(),
+                paginaDTO.getNumber(),
+                paginaDTO.getTotalPages(),
+                paginaDTO.getTotalElements(),
+                paginaDTO.getSize(),
+                paginaDTO.isLast()
+        );
+    }
+
 }
