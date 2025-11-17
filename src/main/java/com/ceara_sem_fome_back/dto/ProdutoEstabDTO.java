@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -16,6 +17,8 @@ public class ProdutoEstabDTO {
 
     private String id;
     private String nomeProduto;
+    private String descricao;
+
     private String nomeEstabelecimento;
 
     private BigDecimal preco;
@@ -23,9 +26,11 @@ public class ProdutoEstabDTO {
 
     private CategoriaProduto categoria;
     private UnidadeProduto unidade;
+    private LocalDateTime dataCadastro;
 
     private String imagem;
     private String tipoImagem;
 
     private Endereco endereco;
+    private String comercianteId;
 }

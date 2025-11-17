@@ -261,4 +261,8 @@ public class ProdutoService {
             produtoRepository.save(produto);
         }
     }
+
+    public Produto buscarPorId(String id) {
+        return produtoRepository.findById(id).orElse(null);
+    }
 }

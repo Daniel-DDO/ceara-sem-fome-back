@@ -118,19 +118,30 @@ public class ProdutoEstabelecimentoService {
 
         ProdutoEstabDTO dto = new ProdutoEstabDTO();
 
-        dto.setId(pe.getId());
-        dto.setNomeProduto(pe.getProduto().getNome());
-        dto.setPreco(pe.getProduto().getPreco());
-        dto.setQuantidadeEstoque(pe.getProduto().getQuantidadeEstoque());
-        dto.setCategoria(pe.getProduto().getCategoria());
-        dto.setUnidade(pe.getProduto().getUnidade());
-        dto.setImagem(pe.getProduto().getImagem());
-        dto.setTipoImagem(pe.getProduto().getTipoImagem());
+        Produto p = pe.getProduto();
+        Estabelecimento e = pe.getEstabelecimento();
 
-        dto.setNomeEstabelecimento(pe.getEstabelecimento().getNome());
-        dto.setEndereco(pe.getEstabelecimento().getEndereco());
+        dto.setId(pe.getId());
+        dto.setNomeProduto(p.getNome());
+        dto.setDescricao(p.getDescricao());
+        dto.setNomeEstabelecimento(e.getNome());
+
+        dto.setPreco(p.getPreco());
+        dto.setQuantidadeEstoque(p.getQuantidadeEstoque());
+        dto.setCategoria(p.getCategoria());
+        dto.setUnidade(p.getUnidade());
+        dto.setDataCadastro(p.getDataCadastro());
+
+        dto.setImagem(p.getImagem());
+        dto.setTipoImagem(p.getTipoImagem());
+
+        dto.setEndereco(e.getEndereco());
+        dto.setComercianteId(e.getComerciante().getId());
 
         return dto;
     }
 
+    public ProdutoEstabelecimento buscarPorProdutoId(String produtoId) {
+        return produtoEstabelecimentoRepository.findByProdutoId(produtoId).orElse(null);
+    }
 }

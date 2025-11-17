@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -263,6 +265,63 @@ public class ProdutoController {
                 produtoEstabelecimentoService.listarComFiltro(nomeFiltro, page, size, sortBy, direction);
 
         return ResponseEntity.ok(pagina);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> buscarPorId(@PathVariable String id) {
+        Produto produto = produtoService.buscarPorId(id);
+
+        if (produto == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Produto não encontrado");
+        }
+
+        ProdutoDTO dto = new ProdutoDTO();
+        dto.setId(produto.getId());
+        dto.setNome(produto.getNome());
+        dto.setLote(produto.getLote());
+        dto.setDescricao(produto.getDescricao());
+        dto.setPreco(produto.getPreco());
+        dto.setQuantidadeEstoque(produto.getQuantidadeEstoque());
+        dto.setStatus(produto.getStatus());
+        dto.setCategoria(produto.getCategoria());
+        dto.setUnidade(produto.getUnidade());
+        dto.setImagem(produto.getImagem());
+        dto.setTipoImagem(produto.getTipoImagem());
+        dto.setComercianteId(produto.getComerciante().getId());
+
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/estabelecimento/{idProduto}")
+    public ResponseEntity<?> buscarProdutoEstabelecimentoPorId(@PathVariable String idProduto) {
+
+        ProdutoEstabelecimento pe = produtoEstabelecimentoService.buscarPorProdutoId(idProduto);
+
+        if (pe == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Produto não encontrado ou não vinculado a estabelecimento.");
+        }
+
+        Produto produto = pe.getProduto();
+        Estabelecimento estabelecimento = pe.getEstabelecimento();
+
+        ProdutoEstabDTO dto = new ProdutoEstabDTO();
+        dto.setId(pe.getId());
+        dto.setNomeProduto(produto.getNome());
+        dto.setDescricao(produto.getDescricao());
+        dto.setNomeEstabelecimento(estabelecimento.getNome());
+        dto.setPreco(produto.getPreco());
+        dto.setQuantidadeEstoque(produto.getQuantidadeEstoque());
+        dto.setCategoria(produto.getCategoria());
+        dto.setUnidade(produto.getUnidade());
+        dto.setDataCadastro(produto.getDataCadastro());
+        dto.setImagem(produto.getImagem());
+        dto.setTipoImagem(produto.getTipoImagem());
+        dto.setEndereco(estabelecimento.getEndereco());
+        dto.setComercianteId(estabelecimento.getComerciante().getId());
+
+        return ResponseEntity.ok(dto);
     }
 
 }

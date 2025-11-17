@@ -21,5 +21,5 @@ public interface ProdutoEstabelecimentoRepository extends JpaRepository<ProdutoE
     Optional<ProdutoEstabelecimento> findByProdutoAndEstabelecimento(Produto produto, Estabelecimento estabelecimento);
 
     Page<ProdutoEstabelecimento> findByProduto_NomeContainingIgnoreCase(String nome, Pageable pageable);
-
+    Optional<ProdutoEstabelecimento> findByProdutoId(String produtoId);
 }
