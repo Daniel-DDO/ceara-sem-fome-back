@@ -10,8 +10,10 @@ import com.ceara_sem_fome_back.service.BeneficiarioService;
 import com.ceara_sem_fome_back.service.EnderecoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -230,6 +232,42 @@ public class BeneficiarioController {
                 dto.getQuantidade());
 
         return ResponseEntity.ok(carrinhoAtualizado);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<BeneficiarioRespostaDTO> retornaBeneficiario(
+            @PathVariable String id){
+        Beneficiario beneficiario = beneficiarioService.buscarPorId(id);
+
+        if (beneficiario == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        EnderecoRespostaDTO end = null;
+        if (beneficiario.getEndereco() != null) {
+            end = new EnderecoRespostaDTO();
+            end.setId(beneficiario.getEndereco().getId());
+            end.setCep(beneficiario.getEndereco().getCep());
+            end.setLogradouro(beneficiario.getEndereco().getLogradouro());
+            end.setNumero(beneficiario.getEndereco().getNumero());
+            end.setBairro(beneficiario.getEndereco().getBairro());
+            end.setMunicipio(beneficiario.getEndereco().getMunicipio());
+        }
+
+        BeneficiarioRespostaDTO beneficiarioRespostaDTO = new BeneficiarioRespostaDTO();
+        beneficiarioRespostaDTO.setId(beneficiario.getId());
+        beneficiarioRespostaDTO.setNome(beneficiario.getNome());
+        beneficiarioRespostaDTO.setCpf(beneficiario.getCpf());
+        beneficiarioRespostaDTO.setEmail(beneficiario.getEmail());
+        beneficiarioRespostaDTO.setDataNascimento(beneficiario.getDataNascimento());
+        beneficiarioRespostaDTO.setTelefone(beneficiario.getTelefone());
+        beneficiarioRespostaDTO.setGenero(beneficiario.getGenero());
+        beneficiarioRespostaDTO.setLgpdAccepted(beneficiario.getLgpdAccepted());
+        beneficiarioRespostaDTO.setNumeroCadastroSocial(beneficiario.getNumeroCadastroSocial());
+        beneficiarioRespostaDTO.setConta(beneficiario.getConta());
+        beneficiarioRespostaDTO.setEndereco(end);
+
+        return ResponseEntity.ok(beneficiarioRespostaDTO);
     }
 
 }

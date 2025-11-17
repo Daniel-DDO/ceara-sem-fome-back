@@ -327,4 +327,7 @@ public class BeneficiarioService implements UserDetailsService {
         return carrinhoRepository.save(carrinho);
     }
 
+    public Beneficiario buscarPorId(String id) {
+        return beneficiarioRepository.findById(id).orElse(null);
+    }
 }

@@ -1,12 +1,18 @@
 package com.ceara_sem_fome_back.dto;
 
+import com.ceara_sem_fome_back.model.Conta;
+import jdk.jshell.Snippet;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class BeneficiarioRespostaDTO {
 
     private String id;
@@ -23,4 +29,7 @@ public class BeneficiarioRespostaDTO {
     private String numeroCadastroSocial;
 
     private EnderecoRespostaDTO endereco;  // DTO do endereço
+
+    private Conta conta;
+
 }
