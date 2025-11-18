@@ -28,7 +28,7 @@ public class Estabelecimento {
 
     @Lob
     @Column(name = "imagem")
-    private byte[] imagem;
+    private String imagem;
 
     private String tipoImagem;
 

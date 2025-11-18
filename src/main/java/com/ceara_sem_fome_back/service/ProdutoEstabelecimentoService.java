@@ -1,6 +1,8 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.dto.EstabelecimentoRespostaDTO;
 import com.ceara_sem_fome_back.dto.PaginacaoDTO;
+import com.ceara_sem_fome_back.dto.ProdutoDTO;
 import com.ceara_sem_fome_back.dto.ProdutoEstabDTO;
 import com.ceara_sem_fome_back.model.Endereco;
 import com.ceara_sem_fome_back.model.Estabelecimento;
@@ -121,22 +123,41 @@ public class ProdutoEstabelecimentoService {
         Produto p = pe.getProduto();
         Estabelecimento e = pe.getEstabelecimento();
 
+        ProdutoDTO produtoDto = new ProdutoDTO();
+        EstabelecimentoRespostaDTO estabelecimentoDto = new EstabelecimentoRespostaDTO();
+
+        produtoDto.setId(p.getId());
+        produtoDto.setNome(p.getNome());
+        produtoDto.setLote(p.getLote());
+        produtoDto.setDescricao(p.getDescricao());
+        produtoDto.setPreco(p.getPreco());
+        produtoDto.setQuantidadeEstoque(p.getQuantidadeEstoque());
+        produtoDto.setStatus(p.getStatus());
+        produtoDto.setCategoria(p.getCategoria());
+        produtoDto.setUnidade(p.getUnidade());
+        produtoDto.setImagem(p.getImagem());
+        produtoDto.setTipoImagem(p.getTipoImagem());
+        produtoDto.setDataCadastro(p.getDataCadastro());
+        produtoDto.setAvaliadoPorId(p.getAvaliadoPorId());
+        produtoDto.setDataAvaliacao(p.getDataAvaliacao());
+        produtoDto.setComercianteId(p.getComerciante().getId());
+
+        estabelecimentoDto.setId(e.getId());
+        estabelecimentoDto.setNome(e.getNome());
+        estabelecimentoDto.setCnpj(e.getCnpj());
+        estabelecimentoDto.setTelefone(e.getTelefone());
+        estabelecimentoDto.setImagem(e.getImagem());
+        estabelecimentoDto.setTipoImagem(e.getTipoImagem());
+        estabelecimentoDto.setEnderecoId(e.getEndereco().getId());
+        estabelecimentoDto.setCep(e.getEndereco().getCep());
+        estabelecimentoDto.setLogradouro(e.getEndereco().getLogradouro());
+        estabelecimentoDto.setNumero(e.getEndereco().getNumero());
+        estabelecimentoDto.setBairro(e.getEndereco().getBairro());
+        estabelecimentoDto.setMunicipio(e.getEndereco().getMunicipio());
+
         dto.setId(pe.getId());
-        dto.setNomeProduto(p.getNome());
-        dto.setDescricao(p.getDescricao());
-        dto.setNomeEstabelecimento(e.getNome());
-
-        dto.setPreco(p.getPreco());
-        dto.setQuantidadeEstoque(p.getQuantidadeEstoque());
-        dto.setCategoria(p.getCategoria());
-        dto.setUnidade(p.getUnidade());
-        dto.setDataCadastro(p.getDataCadastro());
-
-        dto.setImagem(p.getImagem());
-        dto.setTipoImagem(p.getTipoImagem());
-
-        dto.setEndereco(e.getEndereco());
-        dto.setComercianteId(e.getComerciante().getId());
+        dto.setProdutoDTO(produtoDto);
+        dto.setEstabelecimentoRespostaDTO(estabelecimentoDto);
 
         return dto;
     }

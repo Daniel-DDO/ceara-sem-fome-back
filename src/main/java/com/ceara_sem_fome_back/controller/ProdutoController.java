@@ -3,6 +3,7 @@ package com.ceara_sem_fome_back.controller;
 import com.ceara_sem_fome_back.data.AdministradorData;
 import com.ceara_sem_fome_back.data.BeneficiarioData;
 import com.ceara_sem_fome_back.data.ComercianteData;
+import com.ceara_sem_fome_back.dto.EstabelecimentoRespostaDTO;
 import com.ceara_sem_fome_back.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.ProdutoDTO;
 
@@ -307,19 +308,8 @@ public class ProdutoController {
         Estabelecimento estabelecimento = pe.getEstabelecimento();
 
         ProdutoEstabDTO dto = new ProdutoEstabDTO();
-        dto.setId(pe.getId());
-        dto.setNomeProduto(produto.getNome());
-        dto.setDescricao(produto.getDescricao());
-        dto.setNomeEstabelecimento(estabelecimento.getNome());
-        dto.setPreco(produto.getPreco());
-        dto.setQuantidadeEstoque(produto.getQuantidadeEstoque());
-        dto.setCategoria(produto.getCategoria());
-        dto.setUnidade(produto.getUnidade());
-        dto.setDataCadastro(produto.getDataCadastro());
-        dto.setImagem(produto.getImagem());
-        dto.setTipoImagem(produto.getTipoImagem());
-        dto.setEndereco(estabelecimento.getEndereco());
-        dto.setComercianteId(estabelecimento.getComerciante().getId());
+
+
 
         return ResponseEntity.ok(dto);
     }
@@ -334,23 +324,46 @@ public class ProdutoController {
                     .body("ProdutoEstabelecimento não encontrado.");
         }
 
-        Produto produto = pe.getProduto();
-        Estabelecimento estabelecimento = pe.getEstabelecimento();
-
         ProdutoEstabDTO dto = new ProdutoEstabDTO();
+
+        Produto p = pe.getProduto();
+        Estabelecimento e = pe.getEstabelecimento();
+
+        ProdutoDTO produtoDto = new ProdutoDTO();
+        EstabelecimentoRespostaDTO estabelecimentoDto = new EstabelecimentoRespostaDTO();
+
+        produtoDto.setId(p.getId());
+        produtoDto.setNome(p.getNome());
+        produtoDto.setLote(p.getLote());
+        produtoDto.setDescricao(p.getDescricao());
+        produtoDto.setPreco(p.getPreco());
+        produtoDto.setQuantidadeEstoque(p.getQuantidadeEstoque());
+        produtoDto.setStatus(p.getStatus());
+        produtoDto.setCategoria(p.getCategoria());
+        produtoDto.setUnidade(p.getUnidade());
+        produtoDto.setImagem(p.getImagem());
+        produtoDto.setTipoImagem(p.getTipoImagem());
+        produtoDto.setDataCadastro(p.getDataCadastro());
+        produtoDto.setAvaliadoPorId(p.getAvaliadoPorId());
+        produtoDto.setDataAvaliacao(p.getDataAvaliacao());
+        produtoDto.setComercianteId(p.getComerciante().getId());
+
+        estabelecimentoDto.setId(e.getId());
+        estabelecimentoDto.setNome(e.getNome());
+        estabelecimentoDto.setCnpj(e.getCnpj());
+        estabelecimentoDto.setTelefone(e.getTelefone());
+        estabelecimentoDto.setImagem(e.getImagem());
+        estabelecimentoDto.setTipoImagem(e.getTipoImagem());
+        estabelecimentoDto.setEnderecoId(e.getEndereco().getId());
+        estabelecimentoDto.setCep(e.getEndereco().getCep());
+        estabelecimentoDto.setLogradouro(e.getEndereco().getLogradouro());
+        estabelecimentoDto.setNumero(e.getEndereco().getNumero());
+        estabelecimentoDto.setBairro(e.getEndereco().getBairro());
+        estabelecimentoDto.setMunicipio(e.getEndereco().getMunicipio());
+
         dto.setId(pe.getId());
-        dto.setNomeProduto(produto.getNome());
-        dto.setDescricao(produto.getDescricao());
-        dto.setNomeEstabelecimento(estabelecimento.getNome());
-        dto.setPreco(produto.getPreco());
-        dto.setQuantidadeEstoque(produto.getQuantidadeEstoque());
-        dto.setCategoria(produto.getCategoria());
-        dto.setUnidade(produto.getUnidade());
-        dto.setDataCadastro(produto.getDataCadastro());
-        dto.setImagem(produto.getImagem());
-        dto.setTipoImagem(produto.getTipoImagem());
-        dto.setEndereco(estabelecimento.getEndereco());
-        dto.setComercianteId(estabelecimento.getComerciante().getId());
+        dto.setProdutoDTO(produtoDto);
+        dto.setEstabelecimentoRespostaDTO(estabelecimentoDto);
 
         return ResponseEntity.ok(dto);
     }
