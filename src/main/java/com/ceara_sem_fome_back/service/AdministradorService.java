@@ -58,7 +58,7 @@ public class AdministradorService implements UserDetailsService {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private CadastroService cadastroService; // <-- Perfeito, já está aqui
+    private CadastroService cadastroService;
 
     public Administrador logarAdm(String email, String senha) {
         Optional<Administrador> administrador = administradorRepository.findByEmail(email);
@@ -364,12 +364,15 @@ public class AdministradorService implements UserDetailsService {
         Comerciante comerciante = comercianteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Comerciante não encontrado."));
 
-
         if (comerciante.getStatus().equals(StatusPessoa.ATIVO)) {
             throw new RuntimeException("Este comerciante já está ativo.");
         }
 
         comerciante.setStatus(StatusPessoa.ATIVO);
         return comercianteRepository.save(comerciante);
+    }
+
+    public Administrador buscarAdmPorId(String id) {
+        return administradorRepository.findById(id).orElse(null);
     }
 }

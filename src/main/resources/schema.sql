@@ -189,3 +189,15 @@ CREATE TABLE IF NOT EXISTS notificacao (
     data_criacao TIMESTAMP NOT NULL,
     lida BOOLEAN NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS comunicado (
+    id VARCHAR(255) PRIMARY KEY,
+    administrador_id VARCHAR(255) NOT NULL,
+    titulo VARCHAR(255) NOT NULL,
+    mensagem TEXT NOT NULL,
+    data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    categoria VARCHAR(100),
+    ativo BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (administrador_id) REFERENCES administrador (id)
+    );
+

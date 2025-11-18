@@ -15,8 +15,10 @@ import com.ceara_sem_fome_back.service.ComercianteService;
 import com.ceara_sem_fome_back.service.EnderecoService;
 import com.ceara_sem_fome_back.service.EstabelecimentoService;
 import com.ceara_sem_fome_back.service.ProdutoEstabelecimentoService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -102,11 +104,13 @@ public class EstabelecimentoController {
             @PathVariable String idEstabelecimento,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "nomeProduto") String sortBy,
+            @RequestParam(defaultValue = "produto.nome") String sortBy,
             @RequestParam(defaultValue = "asc") String direction
     ) {
         PaginacaoDTO<ProdutoEstabDTO> resultado =
-                produtoEstabelecimentoService.listarPorEstabelecimento(idEstabelecimento, page, size, sortBy, direction);
+                produtoEstabelecimentoService.listarPorEstabelecimento(
+                        idEstabelecimento, page, size, sortBy, direction
+                );
 
         return ResponseEntity.ok(resultado);
     }

@@ -6,6 +6,7 @@ import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.AdministradorService;
+import com.ceara_sem_fome_back.service.ComunicadoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -29,9 +30,11 @@ public class AdministradorController {
     @Autowired
     private JWTUtil jwtUtil;
 
+    @Autowired
+    private ComunicadoService comunicadoService;
+
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarAdm(@Valid @RequestBody LoginDTO loginDTO) {
-        //metodo de login
         try {
             if (loginDTO.getEmail() == null || loginDTO.getEmail().isBlank() ||
                     loginDTO.getSenha() == null || loginDTO.getSenha().isBlank()) {
@@ -334,5 +337,11 @@ public class AdministradorController {
         Comerciante comercianteAprovado = administradorService.aprovarComerciante(id);
 
         return ResponseEntity.ok(comercianteAprovado);
+    }
+
+    @PostMapping("/criar-comunicado")
+    public ResponseEntity<ComunicadoDTO> criar(@RequestBody ComunicadoDTO dto) {
+        ComunicadoDTO criado = comunicadoService.criar(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(criado);
     }
 }
