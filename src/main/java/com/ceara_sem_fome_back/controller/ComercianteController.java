@@ -234,4 +234,12 @@ public class ComercianteController {
         produtoEstabelecimentoService.atualizarEstoque(produtoId, estabelecimentoId, quantidade);
         return ResponseEntity.ok("Estoque atualizado com sucesso.");
     }
+
+    @DeleteMapping("/deletar/{idProdEstab}")
+    public ResponseEntity<String> deletarProdEstab(
+            @PathVariable String idProdEstab
+    ) {
+        produtoEstabelecimentoService.deletarProdEstab(idProdEstab);
+        return ResponseEntity.ok("Produto desvinculado do estabelecimento definitivamente.");
+    }
 }

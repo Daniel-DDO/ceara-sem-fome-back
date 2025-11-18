@@ -177,4 +177,7 @@ public class ProdutoEstabelecimentoService {
         );
     }
 
+    public void deletarProdEstab(String idProdEstab) {
+        produtoEstabelecimentoRepository.deletarProdEstab(idProdEstab);
+    }
 }

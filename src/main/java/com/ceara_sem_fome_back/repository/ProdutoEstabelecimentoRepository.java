@@ -6,7 +6,11 @@ import com.ceara_sem_fome_back.model.ProdutoEstabelecimento;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,4 +26,9 @@ public interface ProdutoEstabelecimentoRepository extends JpaRepository<ProdutoE
 
     Page<ProdutoEstabelecimento> findByProduto_NomeContainingIgnoreCase(String nome, Pageable pageable);
     Optional<ProdutoEstabelecimento> findByProdutoId(String produtoId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM ProdutoEstabelecimento pe WHERE pe.id = :idProdEstab")
+    void deletarProdEstab(@Param("idProdEstab") String idProdEstab);
 }
