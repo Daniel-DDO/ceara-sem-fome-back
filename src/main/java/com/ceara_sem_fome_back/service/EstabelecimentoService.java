@@ -110,4 +110,8 @@ public class EstabelecimentoService {
                 ))
                 .collect(Collectors.toList());
     }
+
+    public Estabelecimento buscarPorId(String idEstabelecimento) {
+        return estabelecimentoRepository.findById(idEstabelecimento).orElse(null);
+    }
 }

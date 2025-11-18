@@ -115,4 +115,13 @@ public class EstabelecimentoController {
         return ResponseEntity.ok(resultado);
     }
 
+    @GetMapping("/{idEstabelecimento}")
+    public ResponseEntity<?> retornarEstabelecimentoSelecionado(
+            @PathVariable String idEstabelecimento
+    ) {
+        Estabelecimento estabelecimento = estabelecimentoService.buscarPorId(idEstabelecimento);
+
+        return ResponseEntity.ok(estabelecimento);
+    }
+
 }
