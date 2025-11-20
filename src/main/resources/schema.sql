@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS comerciante (
     genero VARCHAR(50),
     status VARCHAR(50),
     conta_id VARCHAR(255),
+    media_avaliacoes NUMERIC(10, 2),
     lgpd_accepted BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY (conta_id) REFERENCES conta (id)
     );
@@ -102,6 +103,7 @@ CREATE TABLE IF NOT EXISTS estabelecimento (
     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     endereco_id VARCHAR(255),
     comerciante_id VARCHAR(255),
+    media_avaliacoes NUMERIC(10, 2),
     FOREIGN KEY (endereco_id) REFERENCES endereco (id),
     FOREIGN KEY (comerciante_id) REFERENCES comerciante (id) ON DELETE CASCADE
     );
@@ -122,6 +124,7 @@ CREATE TABLE IF NOT EXISTS produto (
     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     avaliado_por_id VARCHAR(255),
     data_avaliacao TIMESTAMP,
+    media_avaliacoes NUMERIC(10, 2),
     FOREIGN KEY (avaliado_por_id) REFERENCES administrador (id),
     FOREIGN KEY (comerciante_id) REFERENCES comerciante (id) ON DELETE CASCADE
     );
@@ -163,10 +166,10 @@ CREATE TABLE IF NOT EXISTS compra (
     id VARCHAR(255) PRIMARY KEY,
     data_hora_compra TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     valor_total NUMERIC(10, 2) NOT NULL,
-    status VARCHAR(50) NOT NULL,
     beneficiario_id VARCHAR(255) NOT NULL,
     estabelecimento_id VARCHAR(255) NOT NULL,
     endereco_id VARCHAR(255),
+    status VARCHAR(50) NOT NULL,
     FOREIGN KEY (beneficiario_id) REFERENCES beneficiario (id),
     FOREIGN KEY (estabelecimento_id) REFERENCES estabelecimento (id),
     FOREIGN KEY (endereco_id) REFERENCES endereco (id)
@@ -199,5 +202,16 @@ CREATE TABLE IF NOT EXISTS comunicado (
     categoria VARCHAR(100),
     ativo BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (administrador_id) REFERENCES administrador (id)
+    );
+
+CREATE TABLE IF NOT EXISTS avaliacao (
+    id VARCHAR(255) PRIMARY KEY,
+    compra_id VARCHAR(255) UNIQUE NOT NULL,
+    estrelas INTEGER NOT NULL,
+    comentario TEXT,
+    data_avaliacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    resposta_comerciante TEXT,
+    data_resposta TIMESTAMP,
+    FOREIGN KEY (compra_id) REFERENCES compra (id)
     );
 

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AvaliacaoRepository extends JpaRepository<Avaliacao, String> {
 
-    @Query("SELECT AVG(a.estrelas) FROM Avaliacao a JOIN a.compra c JOIN c.itensCompra ic WHERE ic.produto.id = :produtoId")
+    @Query("SELECT AVG(a.estrelas) FROM Avaliacao a JOIN a.compra c JOIN c.itens ic WHERE ic.produto.id = :produtoId")
     Double findAverageByProdutoId(String produtoId);
 
     @Query("SELECT AVG(a.estrelas) FROM Avaliacao a JOIN a.compra c WHERE c.estabelecimento.id = :estabelecimentoId")
