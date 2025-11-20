@@ -184,4 +184,24 @@ public class ComercianteService implements UserDetailsService {
         Comerciante comerciante = buscarPorId(id);
         comercianteRepository.delete(comerciante);
     }
+
+    public ComercianteRespostaDTO buscarPorIdDto(String comercianteId) {
+        Comerciante comerciante = comercianteRepository.findById(comercianteId)
+                .orElseThrow(() -> new RuntimeException("Comerciante não encontrado"));
+
+        ComercianteRespostaDTO dto = new ComercianteRespostaDTO();
+
+        dto.setId(comerciante.getId());
+        dto.setNome(comerciante.getNome());
+        dto.setCpf(comerciante.getCpf());
+        dto.setEmail(comerciante.getEmail());
+        dto.setDataNascimento(comerciante.getDataNascimento());
+        dto.setTelefone(comerciante.getTelefone());
+        dto.setGenero(comerciante.getGenero());
+        dto.setLgpdAccepted(comerciante.getLgpdAccepted());
+        dto.setStatus(comerciante.getStatus());
+
+        return dto;
+    }
+
 }

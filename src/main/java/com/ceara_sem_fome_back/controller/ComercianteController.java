@@ -116,7 +116,6 @@ public class ComercianteController {
         return ResponseEntity.status(201).body(comercianteSalvo);
     }
 
-
     // Endpoint para alterar o status ativo/inativo do comerciante
     @PatchMapping("/{id}/alterar-status")
     public ResponseEntity<Comerciante> alterarStatusComerciante(@PathVariable AlterarStatusRequest request) {
@@ -268,4 +267,15 @@ public class ComercianteController {
             return ResponseEntity.status(e.getStatus()).build();
         }
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<ComercianteRespostaDTO> obterComercianteLogado(
+            @AuthenticationPrincipal ComercianteData comercianteData) {
+
+        String comercianteId = comercianteData.getComerciante().getId();
+        ComercianteRespostaDTO dto = comercianteService.buscarPorIdDto(comercianteId);
+
+        return ResponseEntity.ok(dto);
+    }
+
 }
