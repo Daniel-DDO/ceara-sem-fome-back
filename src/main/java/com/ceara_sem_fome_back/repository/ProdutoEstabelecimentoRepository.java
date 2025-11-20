@@ -18,6 +18,7 @@ import java.util.Optional;
 @Repository
 public interface ProdutoEstabelecimentoRepository extends JpaRepository<ProdutoEstabelecimento, String> {
     List<ProdutoEstabelecimento> findByEstabelecimento_Id(String estabelecimentoId);
+    List<ProdutoEstabelecimento> findAllByProdutoId(String produtoId);
     Page<ProdutoEstabelecimento> findByEstabelecimento_Id(String estabelecimentoId, Pageable pageable);
     Page<ProdutoEstabelecimento> findByEstabelecimento_IdAndProduto_NomeContainingIgnoreCase(String estabelecimentoId, String nome, Pageable pageable);
 
@@ -31,4 +32,8 @@ public interface ProdutoEstabelecimentoRepository extends JpaRepository<ProdutoE
     @Transactional
     @Query("DELETE FROM ProdutoEstabelecimento pe WHERE pe.id = :idProdEstab")
     void deletarProdEstab(@Param("idProdEstab") String idProdEstab);
+
+    @Modifying
+    @Query("delete from ProdutoEstabelecimento pe where pe.produto.id = :produtoId")
+    void deleteAllByProdutoId(@Param("produtoId") String produtoId);
 }

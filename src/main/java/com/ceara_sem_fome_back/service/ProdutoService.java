@@ -7,6 +7,7 @@ import com.ceara_sem_fome_back.exception.EstoqueInsuficienteException;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.EstabelecimentoRepository;
+import com.ceara_sem_fome_back.repository.ProdutoCarrinhoRepository;
 import com.ceara_sem_fome_back.repository.ProdutoEstabelecimentoRepository;
 import com.ceara_sem_fome_back.repository.ProdutoRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -40,6 +41,9 @@ public class ProdutoService {
     @Autowired
     private ProdutoEstabelecimentoRepository produtoEstabelecimentoRepository;
 
+    @Autowired
+    private ProdutoCarrinhoRepository produtoCarrinhoRepository;
+
     @Transactional
     public Produto cadastrarProduto(ProdutoDTO produtoDTO, Comerciante comerciante, MultipartFile imagem) throws IOException {
 
@@ -64,26 +68,6 @@ public class ProdutoService {
         }
 
         return produtoRepository.save(novoProduto);
-    }
-
-    private Produto alterarStatusProduto(String id, StatusProduto novoStatus) {
-        Produto produto = produtoRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
-
-        if (!produto.getStatus().equals(StatusProduto.PENDENTE)) {
-            throw new IllegalStateException("Produto já foi autorizado, recusado ou desativado.");
-        }
-
-        produto.setStatus(novoStatus);
-        return produtoRepository.save(produto);
-    }
-
-    public Produto aprovarProduto(String id, Administrador administradorLogado) {
-        return alterarStatusProduto(id, StatusProduto.AUTORIZADO);
-    }
-
-    public Produto recusarProduto(String id, Administrador administradorLogado) {
-        return alterarStatusProduto(id, StatusProduto.RECUSADO);
     }
 
     @Transactional
@@ -119,14 +103,18 @@ public class ProdutoService {
         }
 
         produtoExistente.setStatus(StatusProduto.PENDENTE); //para ser avaliado novamente
+        produtoEstabelecimentoRepository.deleteAllByProdutoId(produtoExistente.getId()); //remove de todos os estabelecimentos
+        produtoCarrinhoRepository.deleteAllByProdutoId(produtoExistente.getId()); //remove de todos os carrinhos
 
         return produtoRepository.save(produtoExistente);
     }
 
     @Transactional
     public Produto atualizarEstoque(String produtoId, AtualizarEstoqueDTO dto, Comerciante comerciante) {
+
         Produto produto = produtoRepository.findById(produtoId)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado com o ID: " + produtoId));
+                .orElseThrow(() -> new RecursoNaoEncontradoException(
+                        "Produto não encontrado com o ID: " + produtoId));
 
         if (!Objects.equals(produto.getComerciante().getId(), comerciante.getId())) {
             throw new SecurityException("Este produto não pertence ao comerciante autenticado.");
@@ -136,8 +124,14 @@ public class ProdutoService {
             throw new IllegalStateException("Apenas produtos autorizados podem ter seu estoque atualizado.");
         }
 
-        if (dto.getNovaQuantidade() < 0) {
-            throw new IllegalArgumentException("A quantidade em estoque não pode ser negativa.");
+        if (dto.getNovaQuantidade() <= 0) {
+            throw new IllegalArgumentException("A nova quantidade não pode ser nula.");
+        }
+
+        if (dto.getNovaQuantidade() < produto.getQuantidadeEstoque()) {
+            throw new IllegalArgumentException(
+                    "Não é permitido reduzir o estoque. A nova quantidade deve ser maior ou igual à atual."
+            );
         }
 
         produto.setQuantidadeEstoque(dto.getNovaQuantidade());
@@ -145,21 +139,25 @@ public class ProdutoService {
         return produtoRepository.save(produto);
     }
 
+    @Transactional
     public Produto removerProduto(String id) {
+
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado."));
 
         if (produto.getStatus().equals(StatusProduto.RECUSADO)) {
             throw new IllegalStateException("Produto já foi recusado.");
         }
-        else if (produto.getStatus().equals(StatusProduto.PENDENTE)) {
+        if (produto.getStatus().equals(StatusProduto.PENDENTE)) {
             throw new IllegalStateException("Produto pendente não pode ser removido.");
         }
 
-        produto.setStatus(StatusProduto.DESATIVADO);
-        produtoRepository.save(produto);
+        produtoEstabelecimentoRepository.deleteAllByProdutoId(produto.getId()); //remove de todos os estabelecimentos
+        produtoCarrinhoRepository.deleteAllByProdutoId(produto.getId()); //remove de todos os carrinhos
 
-        return produto;
+        produto.setStatus(StatusProduto.DESATIVADO);
+
+        return produtoRepository.save(produto);
     }
 
     public Page<ProdutoEstabelecimento> listarProdutosComFiltroPorEstabelecimento(

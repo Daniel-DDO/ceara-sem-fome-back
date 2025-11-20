@@ -3,11 +3,8 @@ package com.ceara_sem_fome_back.controller;
 import com.ceara_sem_fome_back.data.AdministradorData;
 import com.ceara_sem_fome_back.data.BeneficiarioData;
 import com.ceara_sem_fome_back.data.ComercianteData;
-import com.ceara_sem_fome_back.dto.EstabelecimentoRespostaDTO;
-import com.ceara_sem_fome_back.dto.PaginacaoDTO;
-import com.ceara_sem_fome_back.dto.ProdutoDTO;
+import com.ceara_sem_fome_back.dto.*;
 
-import com.ceara_sem_fome_back.dto.ProdutoEstabDTO;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.service.ProdutoEstabelecimentoService;
 import com.ceara_sem_fome_back.service.ProdutoService;
@@ -130,75 +127,75 @@ public class ProdutoController {
         }
     }
 
-    @PostMapping("/remover")
-    public ResponseEntity<ProdutoDTO> removerProduto(@RequestBody ProdutoDTO produtoDTO) {
-        String id = produtoDTO.getId();
-        Produto produtoRemov = produtoService.removerProduto(id);
+    @PatchMapping("/atualizar-estoque/{id}")
+    public ResponseEntity<?> atualizarEstoque(
+            @PathVariable String id,
+            @RequestBody AtualizarEstoqueDTO dto,
+            @AuthenticationPrincipal ComercianteData comercianteData
+    ) {
+        try {
+            Comerciante comercianteAutenticado = comercianteData.getComerciante();
 
-        ProdutoDTO prodRespota = new ProdutoDTO(produtoRemov.getId(), produtoRemov.getNome(), produtoRemov.getLote(),
-                produtoRemov.getDescricao(), produtoRemov.getPreco(), produtoRemov.getQuantidadeEstoque(), produtoRemov.getStatus());
+            Produto produtoAtualizado = produtoService.atualizarEstoque(id, dto, comercianteAutenticado);
 
-        return ResponseEntity.ok(prodRespota);
+            ProdutoDTO resposta = new ProdutoDTO(
+                    produtoAtualizado.getId(),
+                    produtoAtualizado.getNome(),
+                    produtoAtualizado.getLote(),
+                    produtoAtualizado.getDescricao(),
+                    produtoAtualizado.getPreco(),
+                    produtoAtualizado.getQuantidadeEstoque(),
+                    produtoAtualizado.getStatus(),
+                    produtoAtualizado.getCategoria(),
+                    produtoAtualizado.getUnidade(),
+                    produtoAtualizado.getImagem(),
+                    produtoAtualizado.getTipoImagem(),
+                    produtoAtualizado.getDataCadastro(),
+                    produtoAtualizado.getAvaliadoPorId(),
+                    produtoAtualizado.getDataAvaliacao(),
+                    produtoAtualizado.getComerciante() != null ?
+                            produtoAtualizado.getComerciante().getId() : null
+            );
+
+            return ResponseEntity.ok(resposta);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                    .body(Map.of("erro", "Erro ao atualizar o estoque do produto."));
+        }
     }
 
-    @PatchMapping("/aprovar/{id}")
-    public ResponseEntity<ProdutoDTO> aprovarProduto(
-            @RequestBody ProdutoDTO produtoDTO,
-            @AuthenticationPrincipal AdministradorData administradorData) {
+    @DeleteMapping("/remover/{id}")
+    public ResponseEntity<?> removerProduto(@PathVariable String id) {
+        try {
+            Produto produto = produtoService.removerProduto(id);
 
-        Administrador administradorLogado = administradorData.getAdministrador();
+            ProdutoDTO resposta = new ProdutoDTO(
+                    produto.getId(),
+                    produto.getNome(),
+                    produto.getLote(),
+                    produto.getDescricao(),
+                    produto.getPreco(),
+                    produto.getQuantidadeEstoque(),
+                    produto.getStatus(),
+                    produto.getCategoria(),
+                    produto.getUnidade(),
+                    produto.getImagem(),
+                    produto.getTipoImagem(),
+                    produto.getDataCadastro(),
+                    produto.getAvaliadoPorId(),
+                    produto.getDataAvaliacao(),
+                    produto.getComerciante() != null ? produto.getComerciante().getId() : null
+            );
 
-        String id = produtoDTO.getId();
-        Produto produtoAprov = produtoService.aprovarProduto(id, administradorLogado);
+            return ResponseEntity.ok(resposta);
 
-        ProdutoDTO prodRespota = new ProdutoDTO(produtoAprov.getId(),
-                produtoAprov.getNome(),
-                produtoAprov.getLote(),
-                produtoAprov.getDescricao(),
-                produtoAprov.getPreco(),
-                produtoAprov.getQuantidadeEstoque(),
-                produtoAprov.getStatus(),
-                produtoAprov.getCategoria(),
-                produtoAprov.getUnidade(),
-                produtoAprov.getImagem(),
-                produtoAprov.getTipoImagem(),
-                produtoAprov.getDataCadastro(),
-                produtoAprov.getAvaliadoPorId(),
-                produtoAprov.getDataAvaliacao(),
-                produtoAprov.getComerciante().getId()
-        );
-
-        return ResponseEntity.ok(prodRespota);
-    }
-
-    @PatchMapping("/recusar/{id}")
-    public ResponseEntity<ProdutoDTO> recusarProduto(
-            @RequestBody ProdutoDTO produtoDTO,
-            @AuthenticationPrincipal AdministradorData administradorData) {
-
-        Administrador administradorLogado = administradorData.getAdministrador();
-
-        String id = produtoDTO.getId();
-        Produto produtoRec = produtoService.recusarProduto(id, administradorLogado);
-
-        ProdutoDTO prodRespota = new ProdutoDTO(produtoRec.getId(),
-                produtoRec.getNome(),
-                produtoRec.getLote(),
-                produtoRec.getDescricao(),
-                produtoRec.getPreco(),
-                produtoRec.getQuantidadeEstoque(),
-                produtoRec.getStatus(),
-                produtoRec.getCategoria(),
-                produtoRec.getUnidade(),
-                produtoRec.getImagem(),
-                produtoRec.getTipoImagem(),
-                produtoRec.getDataCadastro(),
-                produtoRec.getAvaliadoPorId(),
-                produtoRec.getDataAvaliacao(),
-                produtoRec.getComerciante().getId()
-        );
-
-        return ResponseEntity.ok(prodRespota);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                    .body(Map.of("erro", "Erro ao remover o produto."));
+        }
     }
 
     @GetMapping("/categorias")
