@@ -3,12 +3,15 @@ package com.ceara_sem_fome_back.controller;
 import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.dto.ContaDTO;
+import com.ceara_sem_fome_back.exception.NegocioException;
+import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +40,9 @@ public class ComercianteController {
 
     @Autowired
     private ProdutoEstabelecimentoService produtoEstabelecimentoService;
+
+    @Autowired
+    private AvaliacaoService avaliacaoService;
 
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarComerciante(@Valid @RequestBody LoginDTO loginDTO) {
@@ -94,20 +100,20 @@ public class ComercianteController {
     @PostMapping("/cadastrar")
     public ResponseEntity<Object> cadastrarComerciante(@RequestBody @Valid ComercianteRequest request) {
         //metodo de cadastro existente
-            Comerciante novoComerciante = new Comerciante(
-                    request.getNome(),
-                    request.getCpf(),
-                    request.getEmail(),
-                    request.getSenha(),
-                    request.getDataNascimento(),
-                    request.getTelefone(),
-                    request.getGenero(),
-                    request.getLgpdAccepted()
-            );
+        Comerciante novoComerciante = new Comerciante(
+                request.getNome(),
+                request.getCpf(),
+                request.getEmail(),
+                request.getSenha(),
+                request.getDataNascimento(),
+                request.getTelefone(),
+                request.getGenero(),
+                request.getLgpdAccepted()
+        );
 
-            Comerciante comercianteSalvo = comercianteService.salvarComerciante(novoComerciante);
+        Comerciante comercianteSalvo = comercianteService.salvarComerciante(novoComerciante);
 
-            return ResponseEntity.status(201).body(comercianteSalvo);
+        return ResponseEntity.status(201).body(comercianteSalvo);
     }
 
 
@@ -149,13 +155,13 @@ public class ComercianteController {
             Principal principal) { //Pega o usuário autenticado via token
 
         //1. Pega o e-mail do usuário logado (armazenado no token)
-        String userEmail = principal.getName(); 
-        
+        String userEmail = principal.getName();
+
         //2. Chama o novo serviço de atualização
         Comerciante comercianteAtualizado = comercianteService.atualizarComerciante(userEmail, dto);
-        
+
         //3. A senha não retorna no JSON.
-        comercianteAtualizado.setSenha(null); 
+        comercianteAtualizado.setSenha(null);
 
         // 4. Retorna o objeto atualizado
         return ResponseEntity.ok(comercianteAtualizado);
@@ -241,5 +247,25 @@ public class ComercianteController {
     ) {
         produtoEstabelecimentoService.deletarProdEstab(idProdEstab);
         return ResponseEntity.ok("Produto desvinculado do estabelecimento definitivamente.");
+    }
+
+    @PostMapping("/avaliacao/responder")
+    public ResponseEntity<Void> responderAvaliacao(
+            @Valid @RequestBody RespostaAvaliacaoRequestDTO dto,
+            @AuthenticationPrincipal ComercianteData comercianteData) {
+
+        String comercianteId = comercianteData.getComerciante().getId();
+
+        try {
+            avaliacaoService.registrarRespostaComerciante(comercianteId, dto);
+
+            return ResponseEntity.status(HttpStatus.OK).build();
+
+        } catch (RecursoNaoEncontradoException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+        } catch (NegocioException e) {
+            return ResponseEntity.status(e.getStatus()).build();
+        }
     }
 }

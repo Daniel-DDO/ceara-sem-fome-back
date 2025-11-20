@@ -55,4 +55,5 @@ public class Produto {
     private Administrador avaliadoPorId;
 
     private LocalDateTime dataAvaliacao;
+    private Double mediaAvaliacoes = 0.0;
 }

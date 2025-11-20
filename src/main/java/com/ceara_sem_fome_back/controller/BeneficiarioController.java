@@ -2,10 +2,13 @@ package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.BeneficiarioData;
 import com.ceara_sem_fome_back.dto.*;
+import com.ceara_sem_fome_back.exception.NegocioException;
+import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.model.Carrinho;
 import com.ceara_sem_fome_back.model.Compra;
 import com.ceara_sem_fome_back.security.JWTUtil;
+import com.ceara_sem_fome_back.service.AvaliacaoService;
 import com.ceara_sem_fome_back.service.BeneficiarioService;
 import com.ceara_sem_fome_back.service.EnderecoService;
 import jakarta.validation.Valid;
@@ -33,6 +36,9 @@ public class BeneficiarioController {
 
     @Autowired
     private EnderecoService enderecoService;
+
+    @Autowired
+    private AvaliacaoService avaliacaoService;
 
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarBeneficiario(@Valid @RequestBody LoginDTO loginDTO) {
@@ -236,7 +242,7 @@ public class BeneficiarioController {
 
     @GetMapping("/{id}")
     public ResponseEntity<BeneficiarioRespostaDTO> retornaBeneficiario(
-            @PathVariable String id){
+            @PathVariable String id) {
         Beneficiario beneficiario = beneficiarioService.buscarPorId(id);
 
         if (beneficiario == null) {
@@ -270,4 +276,27 @@ public class BeneficiarioController {
         return ResponseEntity.ok(beneficiarioRespostaDTO);
     }
 
+    @PostMapping("/compra/avaliar")
+    public ResponseEntity<Void> avaliarCompra(
+            @Valid @RequestBody AvaliacaoRequestDTO dto,
+            @AuthenticationPrincipal BeneficiarioData beneficiarioData) {
+
+        String beneficiarioId = beneficiarioData.getId();
+
+        if (beneficiarioId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            avaliacaoService.registrarAvaliacao(dto.getCompraId(), beneficiarioId, dto);
+
+            return ResponseEntity.status(HttpStatus.CREATED).build();
+
+        } catch (RecursoNaoEncontradoException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+        } catch (NegocioException e) {
+            return ResponseEntity.status(e.getStatus()).build();
+        }
+    }
 }
