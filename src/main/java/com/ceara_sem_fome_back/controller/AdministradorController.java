@@ -5,9 +5,7 @@ import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.security.JWTUtil;
-import com.ceara_sem_fome_back.service.AdministradorService;
-import com.ceara_sem_fome_back.service.ComercianteService;
-import com.ceara_sem_fome_back.service.ComunicadoService;
+import com.ceara_sem_fome_back.service.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -36,6 +34,15 @@ public class AdministradorController {
 
     @Autowired
     private ComercianteService comercianteService;
+
+    @Autowired
+    private BeneficiarioService beneficiarioService;
+
+    @Autowired
+    private EntregadorService entregadorService;
+
+    @Autowired
+    private CompraService compraService;
 
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarAdm(@Valid @RequestBody LoginDTO loginDTO) {
@@ -172,7 +179,6 @@ public class AdministradorController {
             @RequestParam(name = "valor") String cpf) {
 
         Administrador administrador = administradorService.filtrarPorCpf(cpf);
-        // 💡 A senha não retorna no JSON
         administrador.setSenha(null);
 
         return ResponseEntity.ok(administrador);
@@ -339,9 +345,48 @@ public class AdministradorController {
         }
 
         Comerciante comercianteAprovado = administradorService.aprovarComerciante(id);
-
         return ResponseEntity.ok(comercianteAprovado);
     }
+
+    @PatchMapping("/recusar-comerciante/{id}")
+    public ResponseEntity<Comerciante> recusarComerciante(
+            @PathVariable String id,
+            @AuthenticationPrincipal AdministradorData administradorData) {
+
+        if (administradorData == null) {
+            throw new AccessDeniedException("Acesso negado. Apenas administradores podem recusar comerciantes.");
+        }
+
+        Comerciante comercianteRecusado = administradorService.recusarComerciante(id);
+        return ResponseEntity.ok(comercianteRecusado);
+    }
+
+    @PatchMapping("/bloquear-comerciante/{id}")
+    public ResponseEntity<Comerciante> bloquearComerciante(
+            @PathVariable String id,
+            @AuthenticationPrincipal AdministradorData administradorData) {
+
+        if (administradorData == null) {
+            throw new AccessDeniedException("Acesso negado. Apenas administradores podem bloquear comerciantes.");
+        }
+
+        Comerciante comercianteBloqueado = administradorService.bloquearComerciante(id);
+        return ResponseEntity.ok(comercianteBloqueado);
+    }
+
+    @PatchMapping("/inativar-comerciante/{id}")
+    public ResponseEntity<Comerciante> inativarComerciante(
+            @PathVariable String id,
+            @AuthenticationPrincipal AdministradorData administradorData) {
+
+        if (administradorData == null) {
+            throw new AccessDeniedException("Acesso negado. Apenas administradores podem inativar comerciantes.");
+        }
+
+        Comerciante comercianteInativado = administradorService.inativarComerciante(id);
+        return ResponseEntity.ok(comercianteInativado);
+    }
+
 
     @PostMapping("/criar-comunicado")
     public ResponseEntity<ComunicadoDTO> criar(@RequestBody ComunicadoDTO dto) {
@@ -375,6 +420,110 @@ public class AdministradorController {
         }).toList();
 
         PaginacaoDTO<ComercianteRespostaDTO> paginaDTO =
+                new PaginacaoDTO<>(
+                        listaDTO,
+                        pagina.getPaginaAtual(),
+                        pagina.getTotalPaginas(),
+                        pagina.getTotalElementos(),
+                        pagina.getTamanhoPagina(),
+                        pagina.isUltimaPagina()
+                );
+
+        return ResponseEntity.ok(paginaDTO);
+    }
+
+    @GetMapping("/beneficiario/all")
+    public ResponseEntity<PaginacaoDTO<BeneficiarioRespostaDTO>> listarTodosBeneficiarios(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(required = false) String nomeFiltro
+    ) {
+        PaginacaoDTO<Beneficiario> pagina = beneficiarioService
+                .listarComFiltro(nomeFiltro, page, size, sortBy, direction);
+
+        List<BeneficiarioRespostaDTO> listaDTO = pagina.getConteudo().stream().map(b -> {
+            BeneficiarioRespostaDTO dto = new BeneficiarioRespostaDTO();
+            dto.setId(b.getId());
+            dto.setNome(b.getNome());
+            dto.setCpf(b.getCpf());
+            dto.setEmail(b.getEmail());
+            dto.setDataNascimento(b.getDataNascimento());
+            dto.setTelefone(b.getTelefone());
+            dto.setGenero(b.getGenero());
+            dto.setLgpdAccepted(b.getLgpdAccepted());
+            dto.setNumeroCadastroSocial(b.getNumeroCadastroSocial());
+            dto.setConta(b.getConta());
+
+            if (b.getEndereco() != null) {
+                EnderecoRespostaDTO e = new EnderecoRespostaDTO();
+                e.setId(b.getEndereco().getId());
+                e.setCep(b.getEndereco().getCep());
+                e.setLogradouro(b.getEndereco().getLogradouro());
+                e.setNumero(b.getEndereco().getNumero());
+                e.setBairro(b.getEndereco().getBairro());
+                e.setMunicipio(b.getEndereco().getMunicipio());
+                dto.setEndereco(e);
+            }
+
+            return dto;
+        }).toList();
+
+        PaginacaoDTO<BeneficiarioRespostaDTO> paginaDTO =
+                new PaginacaoDTO<>(
+                        listaDTO,
+                        pagina.getPaginaAtual(),
+                        pagina.getTotalPaginas(),
+                        pagina.getTotalElementos(),
+                        pagina.getTamanhoPagina(),
+                        pagina.isUltimaPagina()
+                );
+
+        return ResponseEntity.ok(paginaDTO);
+    }
+
+    @GetMapping("/compra/all")
+    public ResponseEntity<PaginacaoDTO<CompraRespostaDTO>> listarTodasCompras(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "dataHoraCompra") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction,
+            @RequestParam(required = false) String beneficiarioFiltro
+    ) {
+        PaginacaoDTO<Compra> pagina = compraService
+                .listarComFiltro(beneficiarioFiltro, page, size, sortBy, direction);
+
+        List<CompraRespostaDTO> listaDTO = pagina.getConteudo().stream().map(compra -> {
+
+            List<CompraItemDTO> itensDTO = compra.getItens().stream().map(item ->
+                    new CompraItemDTO(
+                            item.getProduto().getNome(),
+                            item.getQuantidade(),
+                            item.getPrecoUnitario()
+                    )
+            ).toList();
+
+            CompraRespostaDTO dto = new CompraRespostaDTO(
+                    compra.getId(),
+                    compra.getDataHoraCompra(),
+                    compra.getValorTotal(),
+                    compra.getBeneficiario().getNome(),
+                    compra.getEstabelecimento().getNome(),
+                    compra.getEndereco() != null
+                            ? compra.getEndereco().getLogradouro() + ", " +
+                            compra.getEndereco().getNumero() + " - " +
+                            compra.getEndereco().getBairro()
+                            : null,
+                    itensDTO
+            );
+
+            dto.setAvaliacao(compra.getAvaliacao());
+            return dto;
+
+        }).toList();
+
+        PaginacaoDTO<CompraRespostaDTO> paginaDTO =
                 new PaginacaoDTO<>(
                         listaDTO,
                         pagina.getPaginaAtual(),

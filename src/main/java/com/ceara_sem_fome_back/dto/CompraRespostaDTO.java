@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.dto;
 
+import com.ceara_sem_fome_back.model.Avaliacao;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,6 +17,7 @@ public class CompraRespostaDTO {
     private String estabelecimentoNome;
     private String endereco;
     private List<CompraItemDTO> itens;
+    private Avaliacao avaliacao;
 
     public CompraRespostaDTO(String id, LocalDateTime dataHora, Double valorTotal,
                              String beneficiarioNome, String estabelecimentoNome,

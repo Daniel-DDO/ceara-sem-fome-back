@@ -372,6 +372,42 @@ public class AdministradorService implements UserDetailsService {
         return comercianteRepository.save(comerciante);
     }
 
+    public Comerciante recusarComerciante(String id) {
+        Comerciante comerciante = comercianteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Comerciante não encontrado."));
+
+        if (comerciante.getStatus().equals(StatusPessoa.RECUSADO)) {
+            throw new RuntimeException("Este comerciante já está recusado.");
+        }
+
+        comerciante.setStatus(StatusPessoa.RECUSADO);
+        return comercianteRepository.save(comerciante);
+    }
+
+    public Comerciante bloquearComerciante(String id) {
+        Comerciante comerciante = comercianteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Comerciante não encontrado."));
+
+        if (comerciante.getStatus().equals(StatusPessoa.BLOQUEADO)) {
+            throw new RuntimeException("Este comerciante já está bloqueado.");
+        }
+
+        comerciante.setStatus(StatusPessoa.BLOQUEADO);
+        return comercianteRepository.save(comerciante);
+    }
+
+    public Comerciante inativarComerciante(String id) {
+        Comerciante comerciante = comercianteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Comerciante não encontrado."));
+
+        if (comerciante.getStatus().equals(StatusPessoa.INATIVO)) {
+            throw new RuntimeException("Este comerciante já está inativo.");
+        }
+
+        comerciante.setStatus(StatusPessoa.INATIVO);
+        return comercianteRepository.save(comerciante);
+    }
+
     public Administrador buscarAdmPorId(String id) {
         return administradorRepository.findById(id).orElse(null);
     }
