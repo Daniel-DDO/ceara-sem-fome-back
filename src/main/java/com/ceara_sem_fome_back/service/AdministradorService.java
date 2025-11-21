@@ -269,7 +269,7 @@ public class AdministradorService implements UserDetailsService {
 
         return estabelecimentoRepository.findAll();
     }
-
+    /*
     // funções de listagem de compras e histórico
     public List<CompraRespostaDTO> listarTodasCompras() {
         return compraRepository.findAll().stream()
@@ -309,7 +309,7 @@ public class AdministradorService implements UserDetailsService {
                 .map(this::toDTO)
                 .toList();
     }
-
+    /*
     private CompraRespostaDTO toDTO(Compra compra) {
 
         String enderecoStr = compra.getEndereco() != null ?
@@ -335,6 +335,7 @@ public class AdministradorService implements UserDetailsService {
                 itens
         );
     }
+     */
 
     // funções para o administrador conseguir informações de Beneficiário e do comerciante
     public List<ComercianteRespostaDTO> listarComerciantes() {

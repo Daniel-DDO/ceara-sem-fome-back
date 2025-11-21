@@ -10,7 +10,7 @@ import lombok.Data;
  * um item no carrinho.
  */
 @Data
-public class ItemCarrinhoRequestDTO {
+public class ProdutoCarrinhoRequestDTO {
 
     @NotBlank(message = "O ID do produto_estabelecimento é obrigatório.")
     private String produtoEstabelecimentoId;

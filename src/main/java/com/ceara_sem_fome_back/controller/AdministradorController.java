@@ -282,7 +282,7 @@ public class AdministradorController {
 
         return ResponseEntity.ok(resposta);
     }
-
+    /*
     // endpoints para listagem de compras
     @GetMapping("/compras")
     public ResponseEntity<List<CompraRespostaDTO>> listarTodasCompras() {
@@ -313,7 +313,7 @@ public class AdministradorController {
 
         return ResponseEntity.ok(administradorService.listarComprasPorEstabelecimentoEStatus(id, status));
     }
-
+     */
     // enpoints para o administrador obter informações do beneficiário e do comerciante
     @GetMapping("/comerciantes")
     public ResponseEntity<List<ComercianteRespostaDTO>> listarComerciantes() {
@@ -484,6 +484,7 @@ public class AdministradorController {
         return ResponseEntity.ok(paginaDTO);
     }
 
+    /*
     @GetMapping("/compra/all")
     public ResponseEntity<PaginacaoDTO<CompraRespostaDTO>> listarTodasCompras(
             @RequestParam(defaultValue = "0") int page,
@@ -536,6 +537,7 @@ public class AdministradorController {
 
         return ResponseEntity.ok(paginaDTO);
     }
+     */
 
     @GetMapping("/me")
     public ResponseEntity<AdministradorRespostaDTO> obterAdministradorLogado(

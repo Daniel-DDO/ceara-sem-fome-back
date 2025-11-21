@@ -32,7 +32,7 @@ public class ReciboService {
         document.add(new Paragraph("ID da Compra: " + compra.getId()));
         document.add(new Paragraph("Data: " + compra.getDataHoraCompra()));
         document.add(new Paragraph("Beneficiário: " + compra.getBeneficiario().getNome()));
-        document.add(new Paragraph("Estabelecimento: " + compra.getEstabelecimento().getNome())); // Corrigido
+        //document.add(new Paragraph("Estabelecimento: " + compra.getEstabelecimento().getNome())); // Corrigido
         document.add(new Paragraph("\nItens da Compra:"));
 
         compra.getItens().forEach(item -> {

@@ -1,6 +1,6 @@
 package com.ceara_sem_fome_back.service;
 
-import com.ceara_sem_fome_back.dto.ItemCarrinhoRequestDTO;
+import com.ceara_sem_fome_back.dto.ProdutoCarrinhoRequestDTO;
 import com.ceara_sem_fome_back.exception.EstoqueInsuficienteException;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.*;
@@ -62,7 +62,7 @@ public class CarrinhoService {
     }
 
     @Transactional
-    public Carrinho adicionarItem(String beneficiarioEmail, ItemCarrinhoRequestDTO dto) {
+    public Carrinho adicionarItem(String beneficiarioEmail, ProdutoCarrinhoRequestDTO dto) {
         log.info("[SERVICO] Adicionando item {} (Qtd: {}) ao carrinho de {}", dto.getProdutoEstabelecimentoId(), dto.getQuantidade(), beneficiarioEmail);
 
         Carrinho carrinho = verMeuCarrinho(beneficiarioEmail);
@@ -106,7 +106,7 @@ public class CarrinhoService {
     }
 
     @Transactional
-    public Carrinho atualizarItem(String beneficiarioEmail, String produtoId, ItemCarrinhoRequestDTO dto) {
+    public Carrinho atualizarItem(String beneficiarioEmail, String produtoId, ProdutoCarrinhoRequestDTO dto) {
         log.info("[SERVICO] Atualizando item {} (Nova Qtd: {}) no carrinho de {}", produtoId, dto.getQuantidade(), beneficiarioEmail);
 
         Carrinho carrinho = verMeuCarrinho(beneficiarioEmail);

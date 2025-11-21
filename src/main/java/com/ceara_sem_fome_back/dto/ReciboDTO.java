@@ -1,6 +1,5 @@
 package com.ceara_sem_fome_back.dto;
 
-import com.ceara_sem_fome_back.model.ItemCompra;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

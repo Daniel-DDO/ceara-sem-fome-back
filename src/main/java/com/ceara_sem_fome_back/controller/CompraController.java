@@ -5,7 +5,7 @@ import com.ceara_sem_fome_back.dto.ReciboDTO;
 import com.ceara_sem_fome_back.exception.AcessoNaoAutorizadoException;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Compra;
-import com.ceara_sem_fome_back.model.ItemCompra;
+import com.ceara_sem_fome_back.model.ProdutoCompra;
 import com.ceara_sem_fome_back.service.CompraService;
 import com.ceara_sem_fome_back.service.EstabelecimentoService;
 import com.ceara_sem_fome_back.service.ReciboService;
@@ -67,7 +67,7 @@ public class CompraController {
     @GetMapping("/{compraId}/itens")
     public ResponseEntity<?> listarItensDaCompra(@PathVariable String compraId) {
         try {
-            List<ItemCompra> itens = compraService.listarItensDaCompra(compraId);
+            List<ProdutoCompra> itens = compraService.listarItensDaCompra(compraId);
             return ResponseEntity.ok(itens);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -107,6 +107,7 @@ public class CompraController {
         }
     }
 
+    /*
     @GetMapping("/estabelecimento/{estabelecimentoId}")
     public ResponseEntity<?> listarComprasPorEstabelecimentoEStatus(
             @AuthenticationPrincipal ComercianteData comercianteData,
@@ -133,4 +134,6 @@ public class CompraController {
             return ResponseEntity.internalServerError().body("Erro inesperado ao listar compras.");
         }
     }
+
+     */
 }

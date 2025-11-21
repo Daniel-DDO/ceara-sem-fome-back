@@ -205,12 +205,15 @@ public class BeneficiarioController {
         return ResponseEntity.ok(saldo);
     }
 
+    /*
     @PostMapping("/compra")
     public ResponseEntity<Compra> realizarCompra(Principal principal) {
         String userEmail = principal.getName();
         Compra novaCompra = beneficiarioService.realizarCompra(userEmail);
         return ResponseEntity.status(201).body(novaCompra);
     }
+
+     */
 
     @GetMapping("/compras/historico")
     public ResponseEntity<List<Compra>> verHistoricoCompras(Principal principal) {
