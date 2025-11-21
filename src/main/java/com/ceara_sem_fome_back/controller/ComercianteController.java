@@ -46,7 +46,6 @@ public class ComercianteController {
 
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarComerciante(@Valid @RequestBody LoginDTO loginDTO) {
-        //metodo de login
         try {
             if (loginDTO.getEmail() == null || loginDTO.getEmail().isBlank() ||
                     loginDTO.getSenha() == null || loginDTO.getSenha().isBlank()) {
@@ -84,7 +83,6 @@ public class ComercianteController {
 
     @PostMapping("/iniciar-cadastro")
     public ResponseEntity<Object> iniciarCadastroComerciante(@RequestBody @Valid ComercianteRequest request) {
-        //metodo de iniciar-cadastro
         try {
             comercianteService.iniciarCadastro(request);
             return ResponseEntity.status(202).body("Verifique seu e-mail para continuar o cadastro.");
@@ -139,7 +137,6 @@ public class ComercianteController {
             @RequestParam(defaultValue = "asc") String direction,
             @RequestParam(required = false) String nomeFiltro
     ) {
-        //metodo de listagem
         PaginacaoDTO<Comerciante> pagina = comercianteService.listarComFiltro(nomeFiltro, page, size, sortBy, direction);
         return ResponseEntity.ok(pagina);
     }

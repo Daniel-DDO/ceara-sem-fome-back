@@ -6,6 +6,7 @@ import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.AdministradorService;
+import com.ceara_sem_fome_back.service.ComercianteService;
 import com.ceara_sem_fome_back.service.ComunicadoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,9 @@ public class AdministradorController {
 
     @Autowired
     private ComunicadoService comunicadoService;
+
+    @Autowired
+    private ComercianteService comercianteService;
 
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarAdm(@Valid @RequestBody LoginDTO loginDTO) {
@@ -344,4 +348,43 @@ public class AdministradorController {
         ComunicadoDTO criado = comunicadoService.criar(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(criado);
     }
+
+    @GetMapping("/comerciante/all")
+    public ResponseEntity<PaginacaoDTO<ComercianteRespostaDTO>> listarTodosComerciantes(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(required = false) String nomeFiltro
+    ) {
+        PaginacaoDTO<Comerciante> pagina = comercianteService
+                .listarComFiltro(nomeFiltro, page, size, sortBy, direction);
+
+        List<ComercianteRespostaDTO> listaDTO = pagina.getConteudo().stream().map(c -> {
+            ComercianteRespostaDTO dto = new ComercianteRespostaDTO();
+            dto.setId(c.getId());
+            dto.setNome(c.getNome());
+            dto.setCpf(c.getCpf());
+            dto.setEmail(c.getEmail());
+            dto.setDataNascimento(c.getDataNascimento());
+            dto.setTelefone(c.getTelefone());
+            dto.setGenero(c.getGenero());
+            dto.setLgpdAccepted(c.getLgpdAccepted());
+            dto.setStatus(c.getStatus());
+            return dto;
+        }).toList();
+
+        PaginacaoDTO<ComercianteRespostaDTO> paginaDTO =
+                new PaginacaoDTO<>(
+                        listaDTO,
+                        pagina.getPaginaAtual(),
+                        pagina.getTotalPaginas(),
+                        pagina.getTotalElementos(),
+                        pagina.getTamanhoPagina(),
+                        pagina.isUltimaPagina()
+                );
+
+        return ResponseEntity.ok(paginaDTO);
+    }
+
 }
