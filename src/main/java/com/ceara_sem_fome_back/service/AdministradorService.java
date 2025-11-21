@@ -320,7 +320,7 @@ public class AdministradorService implements UserDetailsService {
 
         List<CompraItemDTO> itens = compra.getItens().stream()
                 .map(item -> new CompraItemDTO(
-                        item.getProduto().getNome(),
+                        item.getProdutoEstabelecimento().getProduto().getNome(),
                         item.getQuantidade(),
                         item.getPrecoUnitario()
                 )).toList();

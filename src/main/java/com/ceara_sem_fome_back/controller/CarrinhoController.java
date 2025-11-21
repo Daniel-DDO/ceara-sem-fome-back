@@ -82,13 +82,13 @@ public class CarrinhoController {
         }
     }
 
-    @DeleteMapping("/item/{produtoId}")
+    @DeleteMapping("/item/{produtoEstabelecimentoId}")
     public ResponseEntity<?> removerItem(
             @AuthenticationPrincipal BeneficiarioData beneficiarioData,
-            @PathVariable String produtoId) {
+            @PathVariable String produtoEstabelecimentoId) {
         try {
             String email = beneficiarioData.getUsername();
-            Carrinho carrinho = carrinhoService.removerItem(email, produtoId);
+            Carrinho carrinho = carrinhoService.removerItem(email, produtoEstabelecimentoId);
             return ResponseEntity.ok(carrinho);
         } catch (RecursoNaoEncontradoException e) {
             // Produto não encontrado

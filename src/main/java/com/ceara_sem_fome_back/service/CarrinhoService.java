@@ -4,10 +4,7 @@ import com.ceara_sem_fome_back.dto.ItemCarrinhoRequestDTO;
 import com.ceara_sem_fome_back.exception.EstoqueInsuficienteException;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.*;
-import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
-import com.ceara_sem_fome_back.repository.CarrinhoRepository;
-import com.ceara_sem_fome_back.repository.ProdutoRepository;
-import com.ceara_sem_fome_back.repository.ProdutoCarrinhoRepository;
+import com.ceara_sem_fome_back.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,6 +26,9 @@ public class CarrinhoService {
 
     @Autowired
     private ProdutoRepository produtoRepository;
+
+    @Autowired
+    private ProdutoEstabelecimentoRepository produtoEstabelecimentoRepository;
 
     @Autowired
     private ProdutoCarrinhoRepository produtoCarrinhoRepository;
@@ -63,14 +63,14 @@ public class CarrinhoService {
 
     @Transactional
     public Carrinho adicionarItem(String beneficiarioEmail, ItemCarrinhoRequestDTO dto) {
-        log.info("[SERVICO] Adicionando item {} (Qtd: {}) ao carrinho de {}", dto.getProdutoId(), dto.getQuantidade(), beneficiarioEmail);
+        log.info("[SERVICO] Adicionando item {} (Qtd: {}) ao carrinho de {}", dto.getProdutoEstabelecimentoId(), dto.getQuantidade(), beneficiarioEmail);
 
         Carrinho carrinho = verMeuCarrinho(beneficiarioEmail);
-        Produto produto = produtoRepository.findById(dto.getProdutoId())
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado com ID: " + dto.getProdutoId()));
+        ProdutoEstabelecimento produtoEstabelecimento = produtoEstabelecimentoRepository.findById(dto.getProdutoEstabelecimentoId())
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto_Estabelecimento não encontrado com ID: " + dto.getProdutoEstabelecimentoId()));
 
         // Procura se o item JA EXISTE no repositorio
-        Optional<ProdutoCarrinho> itemExistenteOpt = produtoCarrinhoRepository.findByCarrinhoIdAndProdutoId(carrinho.getId(), produto.getId());
+        Optional<ProdutoCarrinho> itemExistenteOpt = produtoCarrinhoRepository.findByCarrinhoIdAndProdutoEstabelecimentoId(carrinho.getId(), produtoEstabelecimento.getId());
 
         int quantidadeRequerida = dto.getQuantidade(); // Declaracao UNICA
         ProdutoCarrinho itemParaSalvar;
@@ -83,13 +83,13 @@ public class CarrinhoService {
             // Se nao existe, cria um novo
             itemParaSalvar = new ProdutoCarrinho();
             itemParaSalvar.setCarrinho(carrinho);
-            itemParaSalvar.setProduto(produto);
+            itemParaSalvar.setProdutoEstabelecimento(produtoEstabelecimento);
         }
 
         // VERIFICACAO DE ESTOQUE
-        if (produto.getQuantidadeEstoque() < quantidadeRequerida) {
+        if (produtoEstabelecimento.getProduto().getQuantidadeEstoque() < quantidadeRequerida) {
             throw new EstoqueInsuficienteException(
-                String.format("Produto %s possui apenas %d unidades em estoque.", produto.getNome(), produto.getQuantidadeEstoque())
+                String.format("Produto %s possui apenas %d unidades em estoque.", produtoEstabelecimento.getProduto().getNome(), produtoEstabelecimento.getProduto().getQuantidadeEstoque())
             );
         }
         
@@ -110,18 +110,18 @@ public class CarrinhoService {
         log.info("[SERVICO] Atualizando item {} (Nova Qtd: {}) no carrinho de {}", produtoId, dto.getQuantidade(), beneficiarioEmail);
 
         Carrinho carrinho = verMeuCarrinho(beneficiarioEmail);
-        Produto produto = produtoRepository.findById(produtoId)
+        ProdutoEstabelecimento produtoEstabelecimento = produtoEstabelecimentoRepository.findById(produtoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado com ID: " + produtoId));
 
         // Validacao de estoque (correta)
-        if (produto.getQuantidadeEstoque() < dto.getQuantidade()) {
+        if (produtoEstabelecimento.getProduto().getQuantidadeEstoque() < dto.getQuantidade()) {
             throw new EstoqueInsuficienteException(
-                String.format("Produto %s possui apenas %d unidades em estoque.", produto.getNome(), produto.getQuantidadeEstoque())
+                String.format("Produto %s possui apenas %d unidades em estoque.", produtoEstabelecimento.getProduto().getNome(), produtoEstabelecimento.getProduto().getQuantidadeEstoque())
             );
         }
 
         // Buscar item no repositorio, nao no cache
-        Optional<ProdutoCarrinho> itemOptional = produtoCarrinhoRepository.findByCarrinhoIdAndProdutoId(carrinho.getId(), produtoId);
+        Optional<ProdutoCarrinho> itemOptional = produtoCarrinhoRepository.findByCarrinhoIdAndProdutoEstabelecimentoId(carrinho.getId(), produtoId);
 
         if (dto.getQuantidade() <= 0) {
             // Se a quantidade for zero, remove o item (se existir)
@@ -142,7 +142,7 @@ public class CarrinhoService {
             log.warn("atualizarItem: Item {} nao encontrado, tratando como adicao.", produtoId);
             itemParaSalvar = new ProdutoCarrinho();
             itemParaSalvar.setCarrinho(carrinho);
-            itemParaSalvar.setProduto(produto);
+            itemParaSalvar.setProdutoEstabelecimento(produtoEstabelecimento);
             carrinho.getProdutos().add(itemParaSalvar); // Adiciona na colecao em memoria
         } else {
             // Se existe, pega a referencia
@@ -158,19 +158,19 @@ public class CarrinhoService {
     }
 
     @Transactional
-    public Carrinho removerItem(String beneficiarioEmail, String produtoId) {
-        log.info("[SERVICO] Removendo item {} do carrinho de {}", produtoId, beneficiarioEmail);
+    public Carrinho removerItem(String beneficiarioEmail, String produtoEstabelecimentoId) {
+        log.info("[SERVICO] Removendo item {} do carrinho de {}", produtoEstabelecimentoId, beneficiarioEmail);
 
         Carrinho carrinho = verMeuCarrinho(beneficiarioEmail);
 
         // Deleta o item direto do repositorio pela chave
-        produtoCarrinhoRepository.deleteByCarrinhoIdAndProdutoId(carrinho.getId(), produtoId);
+        produtoCarrinhoRepository.deleteByCarrinhoIdAndProdutoEstabelecimentoId(carrinho.getId(), produtoEstabelecimentoId);
 
         // Remove da colecao em memoria
         carrinho.getProdutos().removeIf(item -> {
             // Evita NullPointerException se o getProduto() for nulo na colecao
-            if (item.getProduto() == null) return false; 
-            return item.getProduto().getId().equals(produtoId);
+            if (item.getProdutoEstabelecimento() == null) return false;
+            return item.getProdutoEstabelecimento().getId().equals(produtoEstabelecimentoId);
         });
 
         carrinho.atualizarSubtotal();

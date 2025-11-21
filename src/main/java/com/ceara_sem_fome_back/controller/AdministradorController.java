@@ -499,7 +499,7 @@ public class AdministradorController {
 
             List<CompraItemDTO> itensDTO = compra.getItens().stream().map(item ->
                     new CompraItemDTO(
-                            item.getProduto().getNome(),
+                            item.getProdutoEstabelecimento().getProduto().getNome(),
                             item.getQuantidade(),
                             item.getPrecoUnitario()
                     )

@@ -56,6 +56,9 @@ public class CompraService {
     @Autowired
     private ProdutoRepository produtoRepository;
 
+    @Autowired
+    private ProdutoEstabelecimentoRepository produtoEstabelecimentoRepository;
+
     @Transactional
     public Compra finalizarCompra(String beneficiarioId, String estabelecimentoId) {
         Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
@@ -76,7 +79,7 @@ public class CompraService {
 
         String comercianteId = estabelecimento.getComerciante().getId();
         List<ProdutoCarrinho> produtosParaComprar = todosProdutosCarrinho.stream()
-                .filter(pc -> pc.getProduto().getComerciante().getId().equals(comercianteId))
+                .filter(pc -> pc.getProdutoEstabelecimento().getProduto().getComerciante().getId().equals(comercianteId))
                 .collect(Collectors.toList());
 
         if (produtosParaComprar.isEmpty()) {
@@ -87,25 +90,25 @@ public class CompraService {
         List<ItemCompra> itensDaCompra = new ArrayList<>();
 
         for (ProdutoCarrinho pc : produtosParaComprar) {
-            Produto produto = produtoRepository.findById(pc.getProduto().getId())
-                    .orElseThrow(() -> new RecursoNaoEncontradoException("Produto " + pc.getProduto().getNome() + " nao encontrado."));
+            ProdutoEstabelecimento produtoEstabelecimento = produtoEstabelecimentoRepository.findById(pc.getProdutoEstabelecimento().getId())
+                    .orElseThrow(() -> new RecursoNaoEncontradoException("Produto " + pc.getProdutoEstabelecimento().getProduto().getNome() + " nao encontrado."));
 
-            if (produto.getQuantidadeEstoque() < pc.getQuantidade()) {
+            if (produtoEstabelecimento.getProduto().getQuantidadeEstoque() < pc.getQuantidade()) {
                 throw new EstoqueInsuficienteException(
                         String.format("Estoque insuficiente para %s. Pedido: %d, Disponivel: %d",
-                                produto.getNome(), pc.getQuantidade(), produto.getQuantidadeEstoque())
+                                produtoEstabelecimento.getProduto().getNome(), pc.getQuantidade(), produtoEstabelecimento.getProduto().getQuantidadeEstoque())
                 );
             }
 
-            BigDecimal subtotalItem = produto.getPreco()
+            BigDecimal subtotalItem = produtoEstabelecimento.getProduto().getPreco()
                     .multiply(BigDecimal.valueOf(pc.getQuantidade()));
             valorTotal = valorTotal.add(subtotalItem);
 
             ItemCompra item = new ItemCompra();
             item.setId(UUID.randomUUID().toString());
-            item.setProduto(produto);
+            item.setProdutoEstabelecimento(produtoEstabelecimento);
             item.setQuantidade(pc.getQuantidade());
-            item.setPrecoUnitario(produto.getPreco());
+            item.setPrecoUnitario(produtoEstabelecimento.getProduto().getPreco());
             itensDaCompra.add(item);
         }
 
@@ -235,7 +238,7 @@ public class CompraService {
 
         sb.append("Itens:\n");
         for (ItemCompra item : itens) {
-            sb.append("- ").append(item.getProduto().getNome())
+            sb.append("- ").append(item.getProdutoEstabelecimento().getProduto().getNome())
                     .append(" | Qtd: ").append(item.getQuantidade())
                     .append(" | Preço: R$ ").append(item.getPrecoUnitario()).append("\n");
         }
@@ -253,7 +256,7 @@ public class CompraService {
 
         List<ReciboDTO.ItemCompraDTO> itensDTO = compra.getItens().stream()
                 .map(item -> new ReciboDTO.ItemCompraDTO(
-                        item.getProduto().getNome(),
+                        item.getProdutoEstabelecimento().getProduto().getNome(),
                         item.getQuantidade(),
                         item.getPrecoUnitario(),
                         item.getValorTotalItem()

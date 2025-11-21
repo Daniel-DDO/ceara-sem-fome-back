@@ -55,6 +55,9 @@ public class BeneficiarioService implements UserDetailsService {
     @Autowired
     private EstabelecimentoRepository estabelecimentoRepository;
 
+    @Autowired
+    private ProdutoEstabelecimentoRepository produtoEstabelecimentoRepository;
+
     public Beneficiario logarBeneficiario(String email, String senha) {
         Optional<Beneficiario> optionalBeneficiario = beneficiarioRepository.findByEmail(email);
 
@@ -254,9 +257,9 @@ public class BeneficiarioService implements UserDetailsService {
         for (ProdutoCarrinho pc : itensCarrinho) {
             ItemCompra ic = new ItemCompra();
             ic.setCompra(novaCompra);
-            ic.setProduto(pc.getProduto());
+            ic.setProdutoEstabelecimento(pc.getProdutoEstabelecimento());
             ic.setQuantidade(pc.getQuantidade());
-            ic.setPrecoUnitario(pc.getProduto().getPreco());
+            ic.setPrecoUnitario(pc.getProdutoEstabelecimento().getProduto().getPreco());
             itensCompra.add(ic);
         }
         novaCompra.setItens(itensCompra);
@@ -286,7 +289,7 @@ public class BeneficiarioService implements UserDetailsService {
     }
 
     @Transactional
-    public Carrinho manipularCarrinho(String userEmail, String produtoId, int quantidade) {
+    public Carrinho manipularCarrinho(String userEmail, String produtoEstabelecimentoId, int quantidade) {
         if (quantidade < 0) {
             throw new IllegalArgumentException("A quantidade deve ser maior ou igual a zero.");
         }
@@ -294,7 +297,7 @@ public class BeneficiarioService implements UserDetailsService {
         Beneficiario beneficiario = beneficiarioRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Beneficiário não encontrado."));
 
-        Produto produto = produtoRepository.findById(produtoId)
+        ProdutoEstabelecimento produtoEstabelecimento = produtoEstabelecimentoRepository.findById(produtoEstabelecimentoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado."));
 
         Carrinho carrinho = beneficiario.getCarrinho();
@@ -306,19 +309,19 @@ public class BeneficiarioService implements UserDetailsService {
         }
 
         Optional<ProdutoCarrinho> itemExistenteOpt = carrinho.getProdutos().stream()
-                .filter(pc -> pc.getProduto().getId().equals(produtoId))
+                .filter(pc -> pc.getProdutoEstabelecimento().getId().equals(produtoEstabelecimentoId))
                 .findFirst();
 
         if (quantidade == 0) {
             if (itemExistenteOpt.isPresent()) {
-                carrinho.removerProduto(produto);
+                carrinho.removerProduto(produtoEstabelecimento);
             }
         } else {
             if (itemExistenteOpt.isPresent()) {
                 ProdutoCarrinho item = itemExistenteOpt.get();
                 item.setQuantidade(quantidade);
             } else {
-                carrinho.adicionarProduto(produto, quantidade);
+                carrinho.adicionarProduto(produtoEstabelecimento, quantidade);
             }
         }
 

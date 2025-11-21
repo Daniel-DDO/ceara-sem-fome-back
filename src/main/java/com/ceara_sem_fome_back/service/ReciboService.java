@@ -37,7 +37,7 @@ public class ReciboService {
 
         compra.getItens().forEach(item -> {
             document.add(new Paragraph(
-                "- " + item.getProduto().getNome() +
+                "- " + item.getProdutoEstabelecimento().getProduto().getNome() +
                 " | Qtd: " + item.getQuantidade() +
                 " | Vl. Unit.: R$ " + item.getPrecoUnitario() +
                 " | Subtotal: R$ " + item.getValorTotalItem()

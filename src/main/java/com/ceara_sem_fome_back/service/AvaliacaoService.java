@@ -137,9 +137,9 @@ public class AvaliacaoService {
 
 
         compra.getItens().forEach(item -> {
-            Produto produto = item.getProduto();
+            Produto produto = item.getProdutoEstabelecimento().getProduto();
 
-            Double novaMediaProduto = avaliacaoRepository.findAverageByProdutoId(produto.getId());
+            Double novaMediaProduto = avaliacaoRepository.findAverageByProdutoEstabelecimentoId(produto.getId());
 
             produto.setMediaAvaliacoes(novaMediaProduto);
             produtoRepository.save(produto);

@@ -205,7 +205,7 @@ class CearaSemFomeBackApplicationTests {
 
         //Adiciona o item ao carrinho
         ItemCarrinhoRequestDTO dto = new ItemCarrinhoRequestDTO();
-        dto.setProdutoId(produtoId);
+        dto.setProdutoEstabelecimentoId(produtoId);
         dto.setQuantidade(qtdComprada);
         carrinhoService.adicionarItem(beneficiarioEmail, dto);
 
@@ -245,7 +245,7 @@ class CearaSemFomeBackApplicationTests {
     void testFinalizarCompra_FalhaEstoqueRaceCondition() {
         //Adiciona 2 itens (Estoque inicial e 50, entao passa)
         ItemCarrinhoRequestDTO dto = new ItemCarrinhoRequestDTO();
-        dto.setProdutoId("prod-1");
+        dto.setProdutoEstabelecimentoId("prod-1");
         dto.setQuantidade(2);
         carrinhoService.adicionarItem("maria.souza@gmail.com", dto);
 
@@ -277,7 +277,7 @@ class CearaSemFomeBackApplicationTests {
 
         //Adiciona 10 itens
         ItemCarrinhoRequestDTO dto = new ItemCarrinhoRequestDTO();
-        dto.setProdutoId("prod-1");
+        dto.setProdutoEstabelecimentoId("prod-1");
         dto.setQuantidade(10);
         carrinhoService.adicionarItem("maria.souza@gmail.com", dto);
 

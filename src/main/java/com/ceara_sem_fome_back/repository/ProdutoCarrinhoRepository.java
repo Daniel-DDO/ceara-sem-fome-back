@@ -13,13 +13,23 @@ import java.util.Optional;
 
 @Repository
 public interface ProdutoCarrinhoRepository extends JpaRepository<ProdutoCarrinho, String> {
-    List<ProdutoCarrinho> findByCarrinho(Carrinho carrinho);
-    Optional<ProdutoCarrinho> findByCarrinhoIdAndProdutoId(String carrinhoId, String produtoId);
-    void deleteByCarrinhoIdAndProdutoId(String carrinhoId, String produtoId);
 
-    List<ProdutoCarrinho> findAllByProdutoId(String produtoId);
+    List<ProdutoCarrinho> findByCarrinho(Carrinho carrinho);
+
+    Optional<ProdutoCarrinho> findByCarrinhoIdAndProdutoEstabelecimentoId(
+            String carrinhoId,
+            String produtoEstabelecimentoId
+    );
+
+    void deleteByCarrinhoIdAndProdutoEstabelecimentoId(
+            String carrinhoId,
+            String produtoEstabelecimentoId
+    );
+
+    List<ProdutoCarrinho> findAllByProdutoEstabelecimentoId(String produtoEstabelecimentoId);
 
     @Modifying
-    @Query("delete from ProdutoCarrinho pc where pc.produto.id = :produtoId")
-    void deleteAllByProdutoId(@Param("produtoId") String produtoId);
+    @Query("delete from ProdutoCarrinho pc where pc.produtoEstabelecimento.id = :produtoEstabelecimentoId")
+    void deleteAllByProdutoId(@Param("produtoEstabelecimentoId") String produtoId);
 }
+
