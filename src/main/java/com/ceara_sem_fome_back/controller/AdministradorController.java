@@ -455,6 +455,7 @@ public class AdministradorController {
             dto.setLgpdAccepted(b.getLgpdAccepted());
             dto.setNumeroCadastroSocial(b.getNumeroCadastroSocial());
             dto.setConta(b.getConta());
+            dto.setStatus(b.getStatus());
 
             if (b.getEndereco() != null) {
                 EnderecoRespostaDTO e = new EnderecoRespostaDTO();
