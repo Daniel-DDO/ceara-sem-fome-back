@@ -28,7 +28,7 @@ public class ComercianteService implements UserDetailsService {
     private ComercianteRepository comercianteRepository;
 
     @Autowired
-    private CompraService compraService; // Adicionado
+    private CompraService compraService;
 
     @Autowired
     @Lazy
@@ -36,6 +36,9 @@ public class ComercianteService implements UserDetailsService {
 
     @Autowired
     private CadastroService cadastroService;
+
+    @Autowired
+    private ContaService contaService;
 
     public Comerciante logarComerciante(String email, String senha) {
         Optional<Comerciante> comerciante = comercianteRepository.findByEmail(email);
@@ -45,10 +48,6 @@ public class ComercianteService implements UserDetailsService {
         }
 
         throw new ContaNaoExisteException(email);
-    }
-
-    public boolean verificarCpf(String cpf) {
-        return PessoaUtils.verificarCpf(cpf);
     }
 
     @Transactional

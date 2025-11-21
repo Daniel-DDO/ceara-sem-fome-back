@@ -58,6 +58,9 @@ public class BeneficiarioService implements UserDetailsService {
     @Autowired
     private ProdutoEstabelecimentoRepository produtoEstabelecimentoRepository;
 
+    @Autowired
+    private ContaService contaService;
+
     public Beneficiario logarBeneficiario(String email, String senha) {
         Optional<Beneficiario> optionalBeneficiario = beneficiarioRepository.findByEmail(email);
 
@@ -72,11 +75,8 @@ public class BeneficiarioService implements UserDetailsService {
 
     @Transactional
     public void iniciarCadastro(BeneficiarioRequest request) {
-        //1. CHAMA A VALIDAÇÃO CORRETA (pública, que checa todos os perfis)
         cadastroService.validarCpfDisponivelEmTodosOsPerfis(request.getCpf());
         cadastroService.validarEmailDisponivelEmTodosOsPerfis(request.getEmail());
-
-        //2. Delega a criação do token
         cadastroService.criarTokenDeCadastroEVenviarEmailBenef(request);
     }
 

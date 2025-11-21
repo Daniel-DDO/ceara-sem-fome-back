@@ -37,6 +37,9 @@ public class CadastroService {
     @Autowired
     private EntregadorRepository entregadorRepository;
 
+    @Autowired
+    private ContaService contaService;
+
     // --- CORREÇÃO DA DEPENDÊNCIA CIRCULAR ---
     @Autowired
     @Lazy // Adiciona esta anotação
@@ -205,6 +208,9 @@ public class CadastroService {
                         verificationToken.getGenero(),
                         verificationToken.getLgpdAccepted()
                 );
+                if (novoBeneficiario.getConta() != null) {
+                    contaService.gerarNumeroEAgencia(novoBeneficiario.getConta());
+                }
                 Beneficiario salvo = beneficiarioRepository.save(novoBeneficiario);
                 novoUsuarioId = salvo.getId();
             }
@@ -219,6 +225,9 @@ public class CadastroService {
                         verificationToken.getGenero(),
                         verificationToken.getLgpdAccepted()
                 );
+                if (novoComerciante.getConta() != null) {
+                    contaService.gerarNumeroEAgencia(novoComerciante.getConta());
+                }
                 Comerciante salvo = comercianteRepository.save(novoComerciante);
                 novoUsuarioId = salvo.getId();
             }
@@ -233,6 +242,7 @@ public class CadastroService {
                         verificationToken.getGenero(),
                         verificationToken.getLgpdAccepted()
                 );
+                //contaService.gerarNumeroEAgencia(novoEntregador.getConta());
                 Entregador salvo = entregadorRepository.save(novoEntregador);
                 novoUsuarioId = salvo.getId();
             }
