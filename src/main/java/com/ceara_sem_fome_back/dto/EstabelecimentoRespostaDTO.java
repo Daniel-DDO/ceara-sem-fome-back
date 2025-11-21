@@ -1,16 +1,22 @@
 package com.ceara_sem_fome_back.dto;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class EstabelecimentoRespostaDTO {
 
     private String id;
     private String nome;
     private String cnpj;
     private String telefone;
+    private String imagem;
+    private String tipoImagem;
+    private String enderecoId;
+    private String cep;
     private String logradouro;
     private String numero;
     private String bairro;

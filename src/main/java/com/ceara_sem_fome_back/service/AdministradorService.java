@@ -1,17 +1,13 @@
 package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.data.AdministradorData;
-import com.ceara_sem_fome_back.dto.PaginacaoDTO;
-import com.ceara_sem_fome_back.dto.AdministradorRequest;
-import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
-import com.ceara_sem_fome_back.dto.PessoaUpdateDto;
+import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.exception.*;
+import com.ceara_sem_fome_back.mapper.BeneficiarioMapper;
+import com.ceara_sem_fome_back.mapper.ComercianteMapper;
 import com.ceara_sem_fome_back.model.*;
-import com.ceara_sem_fome_back.repository.AdministradorRepository;
+import com.ceara_sem_fome_back.repository.*;
 
-import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
-import com.ceara_sem_fome_back.repository.ComercianteRepository;
-import com.ceara_sem_fome_back.repository.EntregadorRepository;
 import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +22,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static com.ceara_sem_fome_back.model.TipoPessoa.ADMINISTRADOR;
 
 @Service
 public class AdministradorService implements UserDetailsService {
@@ -45,10 +46,19 @@ public class AdministradorService implements UserDetailsService {
     private EntregadorRepository entregadorRepository;
 
     @Autowired
+    private EstabelecimentoRepository estabelecimentoRepository;
+
+    @Autowired
+    private ProdutoRepository produtoRepository;
+
+    @Autowired
+    private CompraRepository compraRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private CadastroService cadastroService; // <-- Perfeito, já está aqui
+    private CadastroService cadastroService;
 
     public Administrador logarAdm(String email, String senha) {
         Optional<Administrador> administrador = administradorRepository.findByEmail(email);
@@ -204,4 +214,220 @@ public class AdministradorService implements UserDetailsService {
         // Delega a lógica de busca multi-repositório para o CadastroService
         cadastroService.reativarConta(userId);
     }
+
+    public Produto aprovarProduto(String id, Administrador administradorLogado) {
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado."));
+
+        switch (produto.getStatus()) {
+            case AUTORIZADO:
+                throw new RuntimeException("Este produto já está autorizado.");
+            case RECUSADO:
+                throw new RuntimeException("Este produto já foi recusado e não pode ser aprovado.");
+            case PENDENTE:
+                break;
+            default:
+                throw new RuntimeException("O produto está em um estado inválido para aprovação.");
+        }
+
+        produto.setStatus(StatusProduto.AUTORIZADO);
+        produto.setAvaliadoPorId(administradorLogado);
+        produto.setDataAvaliacao(LocalDateTime.now());
+
+        return produtoRepository.save(produto);
+    }
+
+    public Produto recusarProduto(String id, Administrador administradorLogado) {
+        Produto produto = produtoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produto não encontrado."));
+
+        switch (produto.getStatus()) {
+            case AUTORIZADO:
+                throw new RuntimeException("Produto já está autorizado e não pode ser recusado.");
+            case RECUSADO:
+                throw new RuntimeException("Produto já foi recusado anteriormente.");
+            case PENDENTE:
+                break;
+            default:
+                throw new RuntimeException("O produto está em um estado inválido para recusa.");
+        }
+
+        produto.setStatus(StatusProduto.RECUSADO);
+        produto.setAvaliadoPorId(administradorLogado);
+        produto.setDataAvaliacao(LocalDateTime.now());
+
+        return produtoRepository.save(produto);
+    }
+
+    // função para listar todos os estabelecimentos
+
+    public List<Estabelecimento> listarTodosEstabelecimentos(Administrador adminLogado) {
+
+        if (adminLogado == null) {
+            throw new RuntimeException("Administrador não autenticado");
+        }
+
+        return estabelecimentoRepository.findAll();
+    }
+
+    // funções de listagem de compras e histórico
+    public List<CompraRespostaDTO> listarTodasCompras() {
+        return compraRepository.findAll().stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    public List<CompraRespostaDTO> listarComprasPorBeneficiario(String beneficiarioId) {
+
+        var beneficiario = beneficiarioRepository.findById(beneficiarioId)
+                .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado"));
+
+        return compraRepository.findByBeneficiario(beneficiario).stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    public List<CompraRespostaDTO> listarComprasPorEstabelecimento(String estabelecimentoId) {
+
+        var estabelecimento = estabelecimentoRepository.findById(estabelecimentoId)
+                .orElseThrow(() -> new RuntimeException("Estabelecimento não encontrado"));
+
+        return compraRepository.findByEstabelecimento(estabelecimento).stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    public List<CompraRespostaDTO> listarComprasPorPeriodo(LocalDateTime inicio, LocalDateTime fim) {
+        return compraRepository.findByDataHoraCompraBetween(inicio, fim).stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    public List<CompraRespostaDTO> listarComprasPorEstabelecimentoEStatus(String estabelecimentoId, StatusCompra status) {
+        return compraRepository.findByEstabelecimentoIdAndStatus(estabelecimentoId, status)
+                .stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    private CompraRespostaDTO toDTO(Compra compra) {
+
+        String enderecoStr = compra.getEndereco() != null ?
+                compra.getEndereco().getLogradouro() + ", " +
+                        compra.getEndereco().getNumero() + " - " +
+                        compra.getEndereco().getBairro() :
+                "Endereço não registrado";
+
+        List<CompraItemDTO> itens = compra.getItens().stream()
+                .map(item -> new CompraItemDTO(
+                        item.getProduto().getNome(),
+                        item.getQuantidade(),
+                        item.getPrecoUnitario()
+                )).toList();
+
+        return new CompraRespostaDTO(
+                compra.getId(),
+                compra.getDataHoraCompra(),
+                compra.getValorTotal(),
+                compra.getBeneficiario().getNome(),
+                compra.getEstabelecimento().getNome(),
+                enderecoStr,
+                itens
+        );
+    }
+
+    // funções para o administrador conseguir informações de Beneficiário e do comerciante
+    public List<ComercianteRespostaDTO> listarComerciantes() {
+        return comercianteRepository.findAll()
+                .stream()
+                .map(ComercianteMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<BeneficiarioRespostaDTO> listarBeneficiarios() {
+        return beneficiarioRepository.findAll()
+                .stream()
+                .map(BeneficiarioMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Se quiser um metodo único que retorne todos os dados juntos
+    public DadosCompletosDTO obterDadosCompletos() {
+        DadosCompletosDTO dto = new DadosCompletosDTO();
+        dto.setComerciantes(listarComerciantes());
+        dto.setBeneficiarios(listarBeneficiarios());
+        // Adicione outros dados aqui
+        return dto;
+    }
+
+    public Comerciante aprovarComerciante(String id) {
+        Comerciante comerciante = comercianteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Comerciante não encontrado."));
+
+        if (comerciante.getStatus().equals(StatusPessoa.ATIVO)) {
+            throw new RuntimeException("Este comerciante já está ativo.");
+        }
+
+        comerciante.setStatus(StatusPessoa.ATIVO);
+        return comercianteRepository.save(comerciante);
+    }
+
+    public Comerciante recusarComerciante(String id) {
+        Comerciante comerciante = comercianteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Comerciante não encontrado."));
+
+        if (comerciante.getStatus().equals(StatusPessoa.RECUSADO)) {
+            throw new RuntimeException("Este comerciante já está recusado.");
+        }
+
+        comerciante.setStatus(StatusPessoa.RECUSADO);
+        return comercianteRepository.save(comerciante);
+    }
+
+    public Comerciante bloquearComerciante(String id) {
+        Comerciante comerciante = comercianteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Comerciante não encontrado."));
+
+        if (comerciante.getStatus().equals(StatusPessoa.BLOQUEADO)) {
+            throw new RuntimeException("Este comerciante já está bloqueado.");
+        }
+
+        comerciante.setStatus(StatusPessoa.BLOQUEADO);
+        return comercianteRepository.save(comerciante);
+    }
+
+    public Comerciante inativarComerciante(String id) {
+        Comerciante comerciante = comercianteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Comerciante não encontrado."));
+
+        if (comerciante.getStatus().equals(StatusPessoa.INATIVO)) {
+            throw new RuntimeException("Este comerciante já está inativo.");
+        }
+
+        comerciante.setStatus(StatusPessoa.INATIVO);
+        return comercianteRepository.save(comerciante);
+    }
+
+    public Administrador buscarAdmPorId(String id) {
+        return administradorRepository.findById(id).orElse(null);
+    }
+
+    public AdministradorRespostaDTO buscarPorIdDto(String administradorId) {
+        Administrador admin = administradorRepository.findById(administradorId)
+                .orElseThrow(() -> new RuntimeException("Administrador não encontrado"));
+
+        AdministradorRespostaDTO dto = new AdministradorRespostaDTO();
+
+        dto.setId(admin.getId());
+        dto.setNome(admin.getNome());
+        dto.setCpf(admin.getCpf());
+        dto.setEmail(admin.getEmail());
+        dto.setDataNascimento(admin.getDataNascimento());
+        dto.setTelefone(admin.getTelefone());
+        dto.setGenero(admin.getGenero());
+        dto.setLgpdAccepted(admin.getLgpdAccepted());
+
+        return dto;
+    }
+
 }

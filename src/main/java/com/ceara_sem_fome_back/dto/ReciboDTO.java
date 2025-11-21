@@ -21,6 +21,9 @@ public class ReciboDTO {
     private String beneficiarioId;
     private String nomeComerciante;
     private String nomeEstabelecimento;
+    private String enderecoEstabelecimentoCompleto;
+    private Double latitude;
+    private Double longitude;
     private List<ItemCompraDTO> itens;
     private BigDecimal valorTotal;
 

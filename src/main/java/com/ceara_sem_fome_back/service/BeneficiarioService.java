@@ -2,12 +2,9 @@ package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.data.BeneficiarioData;
 import com.ceara_sem_fome_back.dto.*;
-import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
-import com.ceara_sem_fome_back.exception.CpfInvalidoException;
-import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
-import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
-import com.ceara_sem_fome_back.model.Beneficiario;
-import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
+import com.ceara_sem_fome_back.exception.*;
+import com.ceara_sem_fome_back.model.*;
+import com.ceara_sem_fome_back.repository.*;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -22,6 +20,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -38,6 +39,21 @@ public class BeneficiarioService implements UserDetailsService {
 
     @Autowired
     private CadastroService cadastroService;
+
+    @Autowired
+    private CarrinhoRepository carrinhoRepository;
+
+    @Autowired
+    private CompraRepository compraRepository;
+
+    @Autowired
+    private ProdutoCarrinhoRepository produtoCarrinhoRepository;
+
+    @Autowired
+    private ProdutoRepository produtoRepository;
+
+    @Autowired
+    private EstabelecimentoRepository estabelecimentoRepository;
 
     public Beneficiario logarBeneficiario(String email, String senha) {
         Optional<Beneficiario> optionalBeneficiario = beneficiarioRepository.findByEmail(email);
@@ -171,4 +187,190 @@ public class BeneficiarioService implements UserDetailsService {
 
     }
 
+    public BigDecimal verBalanco(String userEmail) {
+        Beneficiario beneficiario = beneficiarioRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Beneficiário não encontrado."));
+
+        Conta conta = beneficiario.getConta();
+        if (conta == null) {
+            throw new NegocioException("Conta não encontrada.", HttpStatus.NOT_FOUND);
+        }
+        return conta.getSaldo();
+    }
+
+    @Transactional(rollbackFor = {NegocioException.class, CarrinhoVazioException.class, SaldoInsuficienteException.class})
+    public Compra realizarCompra(String userEmail) {
+        Beneficiario beneficiario = beneficiarioRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Beneficiário não encontrado."));
+
+        Carrinho carrinho = beneficiario.getCarrinho();
+        List<ProdutoCarrinho> itensCarrinho = carrinho.getProdutos();
+
+        Conta conta = beneficiario.getConta();
+        if (conta == null) {
+            throw new NegocioException("Conta bancária não encontrada. Não é possível realizar a compra.", HttpStatus.PRECONDITION_REQUIRED);
+        }
+
+        if (carrinho == null || itensCarrinho.isEmpty()) {
+            throw new CarrinhoVazioException();
+        }
+
+        BigDecimal valorTotalBigDecimal = carrinho.getSubtotal();
+        Double valorTotal = valorTotalBigDecimal.doubleValue();
+
+        if (conta.getSaldo().compareTo(valorTotalBigDecimal) < 0) {
+            throw new SaldoInsuficienteException(conta.getSaldo(), valorTotalBigDecimal);
+        }
+
+
+        Pageable firstOne = PageRequest.of(0, 1);
+        List<Estabelecimento> estabelecimentos = estabelecimentoRepository.findAll(firstOne).getContent();
+
+        Estabelecimento estabelecimento;
+        if (estabelecimentos.isEmpty()) {
+            throw new RecursoNaoEncontradoException("Nenhum estabelecimento disponível para compra.");
+        } else {
+            estabelecimento = estabelecimentos.get(0);
+        }
+
+        Endereco endereco = beneficiario.getEndereco();
+        if (endereco == null) {
+            throw new NegocioException("O beneficiário precisa ter um endereço cadastrado para realizar a compra.", HttpStatus.PRECONDITION_REQUIRED);
+        }
+
+        conta.setSaldo(conta.getSaldo().subtract(valorTotalBigDecimal));
+
+        Compra novaCompra = new Compra();
+        novaCompra.setBeneficiario(beneficiario);
+
+        novaCompra.setDataHoraCompra(LocalDateTime.now());
+        novaCompra.setValorTotal(valorTotal);
+        novaCompra.setEstabelecimento(estabelecimento);
+        novaCompra.setEndereco(endereco);
+        novaCompra.setStatus(StatusCompra.FINALIZADA);
+
+        List<ItemCompra> itensCompra = new ArrayList<>();
+
+        for (ProdutoCarrinho pc : itensCarrinho) {
+            ItemCompra ic = new ItemCompra();
+            ic.setCompra(novaCompra);
+            ic.setProduto(pc.getProduto());
+            ic.setQuantidade(pc.getQuantidade());
+            ic.setPrecoUnitario(pc.getProduto().getPreco());
+            itensCompra.add(ic);
+        }
+        novaCompra.setItens(itensCompra);
+
+        Compra compraSalva = compraRepository.save(novaCompra);
+
+        carrinho.esvaziarCarrinho();
+        carrinhoRepository.save(carrinho);
+
+        beneficiarioRepository.save(beneficiario); // O Beneficiario salva a Conta em cascata
+
+        return compraSalva;
+    }
+
+    public List<Compra> verHistoricoCompras(String userEmail) {
+        Beneficiario beneficiario = beneficiarioRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Beneficiário não encontrado."));
+
+        return beneficiario.getCompras();
+    }
+
+    public Carrinho verCarrinho(String userEmail) {
+        Beneficiario beneficiario = beneficiarioRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Beneficiário não encontrado."));
+
+        return beneficiario.getCarrinho();
+    }
+
+    @Transactional
+    public Carrinho manipularCarrinho(String userEmail, String produtoId, int quantidade) {
+        if (quantidade < 0) {
+            throw new IllegalArgumentException("A quantidade deve ser maior ou igual a zero.");
+        }
+
+        Beneficiario beneficiario = beneficiarioRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Beneficiário não encontrado."));
+
+        Produto produto = produtoRepository.findById(produtoId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado."));
+
+        Carrinho carrinho = beneficiario.getCarrinho();
+        if (carrinho == null) {
+            carrinho = new Carrinho();
+            carrinho.setBeneficiario(beneficiario);
+            carrinho = carrinhoRepository.save(carrinho);
+            beneficiario.setCarrinho(carrinho);
+        }
+
+        Optional<ProdutoCarrinho> itemExistenteOpt = carrinho.getProdutos().stream()
+                .filter(pc -> pc.getProduto().getId().equals(produtoId))
+                .findFirst();
+
+        if (quantidade == 0) {
+            if (itemExistenteOpt.isPresent()) {
+                carrinho.removerProduto(produto);
+            }
+        } else {
+            if (itemExistenteOpt.isPresent()) {
+                ProdutoCarrinho item = itemExistenteOpt.get();
+                item.setQuantidade(quantidade);
+            } else {
+                carrinho.adicionarProduto(produto, quantidade);
+            }
+        }
+
+        carrinho.atualizarSubtotal();
+
+        return carrinhoRepository.save(carrinho);
+    }
+
+    public Beneficiario buscarPorId(String id) {
+        return beneficiarioRepository.findById(id).orElse(null);
+    }
+
+    public BeneficiarioRespostaDTO buscarPorIdDto(String beneficiarioId) {
+        Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
+                .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado"));
+
+        BeneficiarioRespostaDTO dto = new BeneficiarioRespostaDTO();
+
+        dto.setId(beneficiario.getId());
+        dto.setNome(beneficiario.getNome());
+        dto.setCpf(beneficiario.getCpf());
+        dto.setEmail(beneficiario.getEmail());
+        dto.setDataNascimento(beneficiario.getDataNascimento());
+        dto.setTelefone(beneficiario.getTelefone());
+        dto.setGenero(beneficiario.getGenero());
+        dto.setLgpdAccepted(beneficiario.getLgpdAccepted());
+        dto.setNumeroCadastroSocial(beneficiario.getNumeroCadastroSocial());
+        dto.setStatus(beneficiario.getStatus());
+
+        if (beneficiario.getEndereco() != null) {
+            EnderecoRespostaDTO enderecoDto = new EnderecoRespostaDTO();
+            enderecoDto.setId(beneficiario.getEndereco().getId());
+            enderecoDto.setCep(beneficiario.getEndereco().getCep());
+            enderecoDto.setLogradouro(beneficiario.getEndereco().getLogradouro());
+            enderecoDto.setNumero(beneficiario.getEndereco().getNumero());
+            enderecoDto.setBairro(beneficiario.getEndereco().getBairro());
+            enderecoDto.setMunicipio(beneficiario.getEndereco().getMunicipio());
+            dto.setEndereco(enderecoDto);
+        }
+
+        if (beneficiario.getConta() != null) {
+            Conta contaDto = new Conta();
+            contaDto.setId(beneficiario.getConta().getId());
+            contaDto.setNumeroConta(beneficiario.getConta().getNumeroConta());
+            contaDto.setAgencia(beneficiario.getConta().getAgencia());
+            contaDto.setSaldo(beneficiario.getConta().getSaldo());
+            contaDto.setCriadoEm(beneficiario.getConta().getCriadoEm());
+            contaDto.setAtualizadoEm(beneficiario.getConta().getAtualizadoEm());
+            contaDto.setAtiva(beneficiario.getConta().isAtiva());
+            dto.setConta(contaDto);
+        }
+
+        return dto;
+    }
 }

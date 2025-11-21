@@ -28,7 +28,7 @@ public class Estabelecimento {
 
     @Lob
     @Column(name = "imagem")
-    private byte[] imagem;
+    private String imagem;
 
     private String tipoImagem;
 
@@ -42,4 +42,6 @@ public class Estabelecimento {
     @JoinColumn(name = "comerciante_id", nullable = false)
     @JsonBackReference
     private Comerciante comerciante;
+
+    private Double mediaAvaliacoes = 0.0;
 }

@@ -8,12 +8,13 @@ import lombok.Setter;
 import org.hibernate.annotations.Where;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @Entity
-@Where(clause = "status IN ('AUTORIZADO', 'PENDENTE')")
+//@Where(clause = "status IN ('AUTORIZADO', 'PENDENTE')")
 public class Produto {
     @Id
     private String id;
@@ -47,7 +48,12 @@ public class Produto {
     @Enumerated(EnumType.STRING)
     private UnidadeProduto unidade;
 
+    private LocalDateTime dataCadastro;
+
     @ManyToOne
     @JoinColumn(name = "avaliado_por_id")
     private Administrador avaliadoPorId;
+
+    private LocalDateTime dataAvaliacao;
+    private Double mediaAvaliacoes = 0.0;
 }

@@ -16,7 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @MappedSuperclass
-@Where(clause = "pessoa.status = 'ATIVO'")
+//@Where(clause = "pessoa.status = 'ATIVO'")
 public abstract class Pessoa {
 
     @Id

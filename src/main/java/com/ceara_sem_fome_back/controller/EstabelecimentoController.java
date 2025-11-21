@@ -5,6 +5,8 @@ import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.dto.EnderecoCadRequest;
 import com.ceara_sem_fome_back.dto.EstabelecimentoRequest;
 //import com.ceara_sem_fome_back.model.Entregador;
+import com.ceara_sem_fome_back.dto.PaginacaoDTO;
+import com.ceara_sem_fome_back.dto.ProdutoEstabDTO;
 import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.Estabelecimento;
@@ -12,8 +14,11 @@ import com.ceara_sem_fome_back.model.Estabelecimento;
 import com.ceara_sem_fome_back.service.ComercianteService;
 import com.ceara_sem_fome_back.service.EnderecoService;
 import com.ceara_sem_fome_back.service.EstabelecimentoService;
+import com.ceara_sem_fome_back.service.ProdutoEstabelecimentoService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +41,9 @@ public class EstabelecimentoController {
 
     @Autowired
     private EnderecoService enderecoService;
+
+    @Autowired
+    private ProdutoEstabelecimentoService produtoEstabelecimentoService;
 
     @PostMapping("/cadastrar")
     public ResponseEntity<Estabelecimento> cadastrarEstabelecimento(@Valid @RequestBody EstabelecimentoRequest request) {
@@ -89,6 +97,31 @@ public class EstabelecimentoController {
 
         Estabelecimento estabelecimentoAtualizado = enderecoService.cadastrarEnderecoEstab(id, enderecoCadRequest);
         return ResponseEntity.ok(estabelecimentoAtualizado);
+    }
+
+    @GetMapping("/{idEstabelecimento}/produtos")
+    public ResponseEntity<?> listarProdutosPorEstabelecimento(
+            @PathVariable String idEstabelecimento,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "produto.nome") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction
+    ) {
+        PaginacaoDTO<ProdutoEstabDTO> resultado =
+                produtoEstabelecimentoService.listarPorEstabelecimento(
+                        idEstabelecimento, page, size, sortBy, direction
+                );
+
+        return ResponseEntity.ok(resultado);
+    }
+
+    @GetMapping("/{idEstabelecimento}")
+    public ResponseEntity<?> retornarEstabelecimentoSelecionado(
+            @PathVariable String idEstabelecimento
+    ) {
+        Estabelecimento estabelecimento = estabelecimentoService.buscarPorId(idEstabelecimento);
+
+        return ResponseEntity.ok(estabelecimento);
     }
 
 }

@@ -37,6 +37,9 @@ public class Compra {
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL)
     private List<ItemCompra> itens;
 
+    @OneToOne(mappedBy = "compra", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Avaliacao avaliacao;
+
     @Enumerated(EnumType.STRING)
     private StatusCompra status;
 
