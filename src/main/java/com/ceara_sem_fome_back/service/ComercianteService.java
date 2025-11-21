@@ -199,6 +199,7 @@ public class ComercianteService implements UserDetailsService {
         dto.setGenero(comerciante.getGenero());
         dto.setLgpdAccepted(comerciante.getLgpdAccepted());
         dto.setStatus(comerciante.getStatus());
+        dto.setConta(comerciante.getConta());
 
         return dto;
     }

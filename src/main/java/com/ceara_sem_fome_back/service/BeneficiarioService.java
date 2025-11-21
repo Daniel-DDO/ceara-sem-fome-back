@@ -350,6 +350,7 @@ public class BeneficiarioService implements UserDetailsService {
         dto.setLgpdAccepted(beneficiario.getLgpdAccepted());
         dto.setNumeroCadastroSocial(beneficiario.getNumeroCadastroSocial());
         dto.setStatus(beneficiario.getStatus());
+        dto.setConta(beneficiario.getConta());
 
         if (beneficiario.getEndereco() != null) {
             EnderecoRespostaDTO enderecoDto = new EnderecoRespostaDTO();
@@ -360,18 +361,6 @@ public class BeneficiarioService implements UserDetailsService {
             enderecoDto.setBairro(beneficiario.getEndereco().getBairro());
             enderecoDto.setMunicipio(beneficiario.getEndereco().getMunicipio());
             dto.setEndereco(enderecoDto);
-        }
-
-        if (beneficiario.getConta() != null) {
-            Conta contaDto = new Conta();
-            contaDto.setId(beneficiario.getConta().getId());
-            contaDto.setNumeroConta(beneficiario.getConta().getNumeroConta());
-            contaDto.setAgencia(beneficiario.getConta().getAgencia());
-            contaDto.setSaldo(beneficiario.getConta().getSaldo());
-            contaDto.setCriadoEm(beneficiario.getConta().getCriadoEm());
-            contaDto.setAtualizadoEm(beneficiario.getConta().getAtualizadoEm());
-            contaDto.setAtiva(beneficiario.getConta().isAtiva());
-            dto.setConta(contaDto);
         }
 
         return dto;
