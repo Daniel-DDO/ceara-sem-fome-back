@@ -299,4 +299,15 @@ public class BeneficiarioController {
             return ResponseEntity.status(e.getStatus()).build();
         }
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<BeneficiarioRespostaDTO> obterBeneficiarioLogado(
+            @AuthenticationPrincipal BeneficiarioData beneficiarioData) {
+
+        String beneficiarioId = beneficiarioData.getBeneficiario().getId();
+        BeneficiarioRespostaDTO dto = beneficiarioService.buscarPorIdDto(beneficiarioId);
+
+        return ResponseEntity.ok(dto);
+    }
+
 }

@@ -537,4 +537,14 @@ public class AdministradorController {
         return ResponseEntity.ok(paginaDTO);
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<AdministradorRespostaDTO> obterAdministradorLogado(
+            @AuthenticationPrincipal AdministradorData administradorData) {
+
+        String adminId = administradorData.getAdministrador().getId();
+        AdministradorRespostaDTO dto = administradorService.buscarPorIdDto(adminId);
+
+        return ResponseEntity.ok(dto);
+    }
+
 }

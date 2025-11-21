@@ -411,4 +411,23 @@ public class AdministradorService implements UserDetailsService {
     public Administrador buscarAdmPorId(String id) {
         return administradorRepository.findById(id).orElse(null);
     }
+
+    public AdministradorRespostaDTO buscarPorIdDto(String administradorId) {
+        Administrador admin = administradorRepository.findById(administradorId)
+                .orElseThrow(() -> new RuntimeException("Administrador não encontrado"));
+
+        AdministradorRespostaDTO dto = new AdministradorRespostaDTO();
+
+        dto.setId(admin.getId());
+        dto.setNome(admin.getNome());
+        dto.setCpf(admin.getCpf());
+        dto.setEmail(admin.getEmail());
+        dto.setDataNascimento(admin.getDataNascimento());
+        dto.setTelefone(admin.getTelefone());
+        dto.setGenero(admin.getGenero());
+        dto.setLgpdAccepted(admin.getLgpdAccepted());
+
+        return dto;
+    }
+
 }

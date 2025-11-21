@@ -330,4 +330,47 @@ public class BeneficiarioService implements UserDetailsService {
     public Beneficiario buscarPorId(String id) {
         return beneficiarioRepository.findById(id).orElse(null);
     }
+
+    public BeneficiarioRespostaDTO buscarPorIdDto(String beneficiarioId) {
+        Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
+                .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado"));
+
+        BeneficiarioRespostaDTO dto = new BeneficiarioRespostaDTO();
+
+        dto.setId(beneficiario.getId());
+        dto.setNome(beneficiario.getNome());
+        dto.setCpf(beneficiario.getCpf());
+        dto.setEmail(beneficiario.getEmail());
+        dto.setDataNascimento(beneficiario.getDataNascimento());
+        dto.setTelefone(beneficiario.getTelefone());
+        dto.setGenero(beneficiario.getGenero());
+        dto.setLgpdAccepted(beneficiario.getLgpdAccepted());
+        dto.setNumeroCadastroSocial(beneficiario.getNumeroCadastroSocial());
+        dto.setStatus(beneficiario.getStatus());
+
+        if (beneficiario.getEndereco() != null) {
+            EnderecoRespostaDTO enderecoDto = new EnderecoRespostaDTO();
+            enderecoDto.setId(beneficiario.getEndereco().getId());
+            enderecoDto.setCep(beneficiario.getEndereco().getCep());
+            enderecoDto.setLogradouro(beneficiario.getEndereco().getLogradouro());
+            enderecoDto.setNumero(beneficiario.getEndereco().getNumero());
+            enderecoDto.setBairro(beneficiario.getEndereco().getBairro());
+            enderecoDto.setMunicipio(beneficiario.getEndereco().getMunicipio());
+            dto.setEndereco(enderecoDto);
+        }
+
+        if (beneficiario.getConta() != null) {
+            Conta contaDto = new Conta();
+            contaDto.setId(beneficiario.getConta().getId());
+            contaDto.setNumeroConta(beneficiario.getConta().getNumeroConta());
+            contaDto.setAgencia(beneficiario.getConta().getAgencia());
+            contaDto.setSaldo(beneficiario.getConta().getSaldo());
+            contaDto.setCriadoEm(beneficiario.getConta().getCriadoEm());
+            contaDto.setAtualizadoEm(beneficiario.getConta().getAtualizadoEm());
+            contaDto.setAtiva(beneficiario.getConta().isAtiva());
+            dto.setConta(contaDto);
+        }
+
+        return dto;
+    }
 }
