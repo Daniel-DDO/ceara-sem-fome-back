@@ -5,6 +5,7 @@ import com.ceara_sem_fome_back.model.Administrador;
 import com.ceara_sem_fome_back.model.Comunicado;
 import com.ceara_sem_fome_back.repository.ComunicadoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -50,8 +51,19 @@ public class ComunicadoService {
         comunicadoRepository.deleteById(id);
     }
 
+    public Comunicado desativarPorId(String id) {
+        Comunicado comunicado = comunicadoRepository.findById(id).orElseThrow();
+        comunicado.setAtivo(false);
+        comunicadoRepository.save(comunicado);
+        return comunicado;
+    }
+
     public Comunicado atualizar(Comunicado comunicado) {
         return comunicadoRepository.save(comunicado);
+    }
+
+    public List<Comunicado> listarAtivos() {
+        return comunicadoRepository.findByAtivo(true);
     }
 }
 

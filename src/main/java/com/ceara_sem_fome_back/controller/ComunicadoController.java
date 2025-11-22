@@ -14,16 +14,26 @@ public class ComunicadoController {
     @Autowired
     private ComunicadoService comunicadoService;
 
-    @GetMapping("/listar")
+    @GetMapping("/listar-todos")
     public ResponseEntity<List<Comunicado>> listar() {
         return ResponseEntity.ok(comunicadoService.listarTodos());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/listar-ativos")
+    public ResponseEntity<List<Comunicado>> listarAtivos() {
+        return ResponseEntity.ok(comunicadoService.listarAtivos());
+    }
+
+    @GetMapping("buscar/{id}")
     public ResponseEntity<?> buscarPorId(@PathVariable String id) {
         return comunicadoService.buscarPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(null);
+    }
+
+    @GetMapping("desativar/{id}")
+    public ResponseEntity<?> desativarPorId(@PathVariable String id) {
+        return ResponseEntity.ok(comunicadoService.desativarPorId(id));
     }
 
     @DeleteMapping("/{id}")
