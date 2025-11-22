@@ -20,6 +20,8 @@ public interface CompraRepository extends JpaRepository<Compra, String> {
     List<Compra> findByStatus(StatusCompra status);
     List<Compra> findByDataHoraCompraAfter(LocalDateTime data);
     List<Compra> findByDataHoraCompraBetween(LocalDateTime inicio, LocalDateTime fim);
+
+    List<Compra> findByBeneficiarioOrderByDataHoraCompraDesc(Beneficiario beneficiario);
     //List<Compra> findByEstabelecimentoIdAndStatus(String estabelecimentoId, StatusCompra status);
     //List<Compra> findByEstabelecimentoId(String estabelecimentoId);
     //List<Compra> findByEstabelecimentoComercianteId(String comercianteId);
