@@ -7,6 +7,7 @@ import com.ceara_sem_fome_back.model.ProdutoCompra;
 import com.ceara_sem_fome_back.model.StatusCompra;
 import com.ceara_sem_fome_back.service.CompraService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +18,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CompraController {
 
-    private final CompraService compraService;
+    @Autowired
+    private CompraService compraService;
 
     @PostMapping("/finalizar/{beneficiarioId}")
     public ResponseEntity<List<Compra>> finalizarCompra(@PathVariable String beneficiarioId) {
@@ -84,4 +86,11 @@ public class CompraController {
         List<Compra> compras = compraService.listarTodas();
         return ResponseEntity.ok(compras);
     }
+
+    @GetMapping("/comerciante/{comercianteId}")
+    public ResponseEntity<List<Compra>> listarComprasDoComerciante(@PathVariable String comercianteId) {
+        List<Compra> compras = compraService.listarComprasDoComerciante(comercianteId);
+        return ResponseEntity.ok(compras);
+    }
+
 }

@@ -91,12 +91,21 @@ public class CompraService {
             List<ProdutoCompra> produtoCompras = new ArrayList<>();
 
             for (ProdutoCarrinho pcCarrinho : itensEstab) {
+                ProdutoEstabelecimento pe = pcCarrinho.getProdutoEstabelecimento();
+
+                if (pe.getProduto().getQuantidadeEstoque() < pcCarrinho.getQuantidade()) {
+                    throw new RuntimeException("Estoque insuficiente para o produto: " + pe.getProduto().getNome());
+                }
+
                 ProdutoCompra pc = new ProdutoCompra();
                 pc.setId(UUID.randomUUID().toString());
                 pc.setCompra(compra);
-                pc.setProdutoEstabelecimento(pcCarrinho.getProdutoEstabelecimento());
+                pc.setProdutoEstabelecimento(pe);
                 pc.setQuantidade(pcCarrinho.getQuantidade());
-                pc.setPrecoUnitario(pcCarrinho.getProdutoEstabelecimento().getProduto().getPreco());
+                pc.setPrecoUnitario(pe.getProduto().getPreco());
+
+                pe.getProduto().setQuantidadeEstoque(pe.getProduto().getQuantidadeEstoque() - pcCarrinho.getQuantidade());
+                produtoEstabelecimentoRepository.save(pe);
 
                 valorTotalCompra = valorTotalCompra.add(pc.getValorTotalItem());
                 produtoCompras.add(pc);
@@ -273,5 +282,27 @@ public class CompraService {
                 .orElseThrow(() -> new RuntimeException("Compra não encontrada."));
         return produtoCompraRepository.findByCompra(compra);
     }
+
+    @Transactional
+    public List<Compra> listarComprasDoComerciante(String comercianteId) {
+        List<Estabelecimento> estabelecimentos = estabelecimentoRepository.findByComercianteId(comercianteId);
+
+        List<Compra> comprasDoComerciante = new ArrayList<>();
+
+        for (Estabelecimento est : estabelecimentos) {
+            List<ProdutoCompra> vendas = produtoCompraRepository.findByProdutoEstabelecimento_Estabelecimento(est);
+            for (ProdutoCompra pc : vendas) {
+                Compra compra = pc.getCompra();
+                if (!comprasDoComerciante.contains(compra)) {
+                    comprasDoComerciante.add(compra);
+                }
+            }
+        }
+
+        comprasDoComerciante.sort((c1, c2) -> c2.getDataHoraCompra().compareTo(c1.getDataHoraCompra()));
+
+        return comprasDoComerciante;
+    }
+
 
 }
