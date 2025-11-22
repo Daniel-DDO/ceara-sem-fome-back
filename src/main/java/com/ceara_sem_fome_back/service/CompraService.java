@@ -86,6 +86,7 @@ public class CompraService {
             compra.setStatus(StatusCompra.ABERTA);
 
             List<ProdutoCompra> produtoCompras = new ArrayList<>();
+            Estabelecimento estabelecimento = itensEstab.get(0).getProdutoEstabelecimento().getEstabelecimento();
 
             for (ProdutoCarrinho pcCarrinho : itensEstab) {
                 ProdutoEstabelecimento pe = pcCarrinho.getProdutoEstabelecimento();
@@ -108,10 +109,14 @@ public class CompraService {
                 produtoCompras.add(pc);
             }
 
+            beneficiario.getConta().setSaldo(beneficiario.getConta().getSaldo().subtract(valorTotalCompra));
+
+            Conta contaComerciante = estabelecimento.getComerciante().getConta();
+            contaComerciante.setSaldo(contaComerciante.getSaldo().add(valorTotalCompra));
+            contaRepository.save(contaComerciante);
+
             compra.setItens(produtoCompras);
             compra.setValorTotal(valorTotalCompra.doubleValue());
-
-            beneficiario.getConta().setSaldo(beneficiario.getConta().getSaldo().subtract(valorTotalCompra));
 
             compraRepository.save(compra);
             produtoCompraRepository.saveAll(produtoCompras);
@@ -125,6 +130,7 @@ public class CompraService {
 
         return comprasCriadas;
     }
+
 
     @Transactional
     public List<CompraDTO> listarComprasBeneficiario(String beneficiarioId) {
