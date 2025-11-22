@@ -21,6 +21,8 @@ public class EstabelecimentoRespostaDTO {
     private String numero;
     private String bairro;
     private String municipio;
+    private String comercianteId;
+    private String comercianteNome;
 
     public EstabelecimentoRespostaDTO(String id, String nome, String cnpj, String telefone,
                                       String logradouro, String numero, String bairro, String municipio) {

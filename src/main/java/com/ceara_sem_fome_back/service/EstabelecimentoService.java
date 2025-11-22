@@ -111,7 +111,43 @@ public class EstabelecimentoService {
                 .collect(Collectors.toList());
     }
 
-    public Estabelecimento buscarPorId(String idEstabelecimento) {
-        return estabelecimentoRepository.findById(idEstabelecimento).orElse(null);
+    public List<EstabelecimentoRespostaDTO> listarTodos() {
+        return estabelecimentoRepository.findAll()
+                .stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    public EstabelecimentoRespostaDTO buscarPorId(String id) {
+        Estabelecimento estabelecimento = estabelecimentoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Estabelecimento não encontrado"));
+        return toDTO(estabelecimento);
+    }
+
+    private EstabelecimentoRespostaDTO toDTO(Estabelecimento e) {
+        EstabelecimentoRespostaDTO dto = new EstabelecimentoRespostaDTO();
+
+        dto.setId(e.getId());
+        dto.setNome(e.getNome());
+        dto.setCnpj(e.getCnpj());
+        dto.setTelefone(e.getTelefone());
+        dto.setImagem(e.getImagem());
+        dto.setTipoImagem(e.getTipoImagem());
+
+        if (e.getEndereco() != null) {
+            dto.setEnderecoId(e.getEndereco().getId());
+            dto.setCep(e.getEndereco().getCep());
+            dto.setLogradouro(e.getEndereco().getLogradouro());
+            dto.setNumero(e.getEndereco().getNumero());
+            dto.setBairro(e.getEndereco().getBairro());
+            dto.setMunicipio(e.getEndereco().getMunicipio());
+        }
+
+        if (e.getComerciante() != null) {
+            dto.setComercianteId(e.getComerciante().getId());
+            dto.setComercianteNome(e.getComerciante().getNome());
+        }
+
+        return dto;
     }
 }

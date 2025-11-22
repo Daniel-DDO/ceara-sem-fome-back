@@ -2,11 +2,8 @@ package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.BeneficiarioData;
 import com.ceara_sem_fome_back.data.ComercianteData;
-import com.ceara_sem_fome_back.dto.EnderecoCadRequest;
-import com.ceara_sem_fome_back.dto.EstabelecimentoRequest;
+import com.ceara_sem_fome_back.dto.*;
 //import com.ceara_sem_fome_back.model.Entregador;
-import com.ceara_sem_fome_back.dto.PaginacaoDTO;
-import com.ceara_sem_fome_back.dto.ProdutoEstabDTO;
 import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.Estabelecimento;
@@ -119,9 +116,18 @@ public class EstabelecimentoController {
     public ResponseEntity<?> retornarEstabelecimentoSelecionado(
             @PathVariable String idEstabelecimento
     ) {
-        Estabelecimento estabelecimento = estabelecimentoService.buscarPorId(idEstabelecimento);
+        EstabelecimentoRespostaDTO estabelecimento = estabelecimentoService.buscarPorId(idEstabelecimento);
 
         return ResponseEntity.ok(estabelecimento);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<EstabelecimentoRespostaDTO> buscarPorId(@PathVariable String id) {
+        return ResponseEntity.ok(estabelecimentoService.buscarPorId(id));
+    }
+
+    @GetMapping("/dto/all")
+    public ResponseEntity<List<EstabelecimentoRespostaDTO>> listarTodosEstab() {
+        return ResponseEntity.ok(estabelecimentoService.listarTodos());
+    }
 }
