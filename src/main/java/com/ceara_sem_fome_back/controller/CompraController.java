@@ -1,136 +1,87 @@
 package com.ceara_sem_fome_back.controller;
 
-import com.ceara_sem_fome_back.data.ComercianteData;
+import com.ceara_sem_fome_back.dto.HistoricoVendasDTO;
 import com.ceara_sem_fome_back.dto.ReciboDTO;
-import com.ceara_sem_fome_back.exception.AcessoNaoAutorizadoException;
-import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Compra;
-import com.ceara_sem_fome_back.model.ItemCompra;
+import com.ceara_sem_fome_back.model.ProdutoCompra;
+import com.ceara_sem_fome_back.model.StatusCompra;
 import com.ceara_sem_fome_back.service.CompraService;
-import com.ceara_sem_fome_back.service.EstabelecimentoService;
-import com.ceara_sem_fome_back.service.ReciboService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/compra")
-@CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class CompraController {
 
-    @Autowired
-    private CompraService compraService;
+    private final CompraService compraService;
 
-    @Autowired
-    private ReciboService reciboService;
-
-    @Autowired
-    private EstabelecimentoService estabelecimentoService;
-
-    @PostMapping("/finalizar/{beneficiarioId}/{estabelecimentoId}")
-    public ResponseEntity<?> finalizarCompra(
-            @PathVariable String beneficiarioId,
-            @PathVariable String estabelecimentoId) {
-
-        try {
-            Compra compra = compraService.finalizarCompra(beneficiarioId, estabelecimentoId);
-            return ResponseEntity.ok(compra);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body("Erro: " + e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Erro inesperado ao finalizar compra.");
-        }
-    }
-
-    @GetMapping
-    public ResponseEntity<List<Compra>> listarTodas() {
-        List<Compra> compras = compraService.listarTodas();
+    @PostMapping("/finalizar/{beneficiarioId}")
+    public ResponseEntity<List<Compra>> finalizarCompra(@PathVariable String beneficiarioId) {
+        List<Compra> compras = compraService.finalizarCompra(beneficiarioId);
         return ResponseEntity.ok(compras);
     }
 
     @GetMapping("/beneficiario/{beneficiarioId}")
-    public ResponseEntity<?> listarPorBeneficiario(@PathVariable String beneficiarioId) {
-        try {
-            List<Compra> compras = compraService.listarPorBeneficiario(beneficiarioId);
-            return ResponseEntity.ok(compras);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<List<Compra>> listarComprasPorBeneficiario(@PathVariable String beneficiarioId) {
+        List<Compra> compras = compraService.listarComprasBeneficiario(beneficiarioId);
+        return ResponseEntity.ok(compras);
+    }
+
+    @GetMapping("/{compraId}")
+    public ResponseEntity<Compra> obterCompra(@PathVariable String compraId) {
+        Compra compra = compraService.obterCompraPorId(compraId);
+        return ResponseEntity.ok(compra);
+    }
+
+    @PutMapping("/{compraId}/status")
+    public ResponseEntity<Compra> atualizarStatus(@PathVariable String compraId, @RequestParam StatusCompra status) {
+        Compra compra = compraService.atualizarStatusCompra(compraId, status);
+        return ResponseEntity.ok(compra);
+    }
+
+    @PostMapping("/{compraId}/retirada")
+    public ResponseEntity<Compra> marcarComoRetirada(@PathVariable String compraId) {
+        Compra compra = compraService.marcarComoRetirada(compraId);
+        return ResponseEntity.ok(compra);
+    }
+
+    @PostMapping("/{compraId}/entregue")
+    public ResponseEntity<Compra> marcarComoEntregue(@PathVariable String compraId) {
+        Compra compra = compraService.marcarComoEntregue(compraId);
+        return ResponseEntity.ok(compra);
+    }
+
+    @PostMapping("/{compraId}/reembolso")
+    public ResponseEntity<Compra> reembolsarCompra(@PathVariable String compraId) {
+        Compra compra = compraService.reembolsarCompra(compraId);
+        return ResponseEntity.ok(compra);
     }
 
     @GetMapping("/{compraId}/itens")
-    public ResponseEntity<?> listarItensDaCompra(@PathVariable String compraId) {
-        try {
-            List<ItemCompra> itens = compraService.listarItensDaCompra(compraId);
-            return ResponseEntity.ok(itens);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<List<ProdutoCompra>> listarItensDaCompra(@PathVariable String compraId) {
+        List<ProdutoCompra> itens = compraService.listarItensDaCompra(compraId);
+        return ResponseEntity.ok(itens);
     }
 
-    @GetMapping("/{compraId}/comprovante")
-    public ResponseEntity<?> gerarComprovante(@PathVariable String compraId) {
-        try {
-            String comprovante = compraService.gerarComprovante(compraId);
-            return ResponseEntity.ok(comprovante);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body("Erro: " + e.getMessage());
-        }
+    @GetMapping("/recibos/{beneficiarioId}")
+    public ResponseEntity<List<ReciboDTO>> gerarRecibos(@PathVariable String beneficiarioId) {
+        List<ReciboDTO> recibos = compraService.gerarRecibosPorComprao(beneficiarioId);
+        return ResponseEntity.ok(recibos);
     }
 
-    @GetMapping("/{compraId}/recibo-pdf")
-    public ResponseEntity<byte[]> gerarReciboPDF(@PathVariable String compraId) {
-        try {
-            byte[] recibo = reciboService.gerarReciboPDF(compraId);
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDispositionFormData("attachment", "recibo_" + compraId + ".pdf");
-            return new ResponseEntity<>(recibo, headers, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    @GetMapping("/vendas/{estabelecimentoId}")
+    public ResponseEntity<List<HistoricoVendasDTO>> listarVendas(@PathVariable String estabelecimentoId) {
+        List<HistoricoVendasDTO> vendas = compraService.listarVendasEstabelecimento(estabelecimentoId);
+        return ResponseEntity.ok(vendas);
     }
 
-    @GetMapping("/{compraId}/recibo-dados")
-    public ResponseEntity<ReciboDTO> obterReciboDados(@PathVariable String compraId) {
-        try {
-            ReciboDTO reciboDTO = compraService.obterReciboDTO(compraId);
-            return ResponseEntity.ok(reciboDTO);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @GetMapping("/estabelecimento/{estabelecimentoId}")
-    public ResponseEntity<?> listarComprasPorEstabelecimentoEStatus(
-            @AuthenticationPrincipal ComercianteData comercianteData,
-            @PathVariable String estabelecimentoId,
-            @RequestParam String status) {
-
-        try {
-            String comercianteId = comercianteData.getComerciante().getId();
-
-            estabelecimentoService.verificarPropriedade(estabelecimentoId, comercianteId);
-
-            List<Compra> compras = compraService.listarPorEstabelecimentoEStatus(estabelecimentoId, status);
-            return ResponseEntity.ok(compras);
-
-        } catch (AcessoNaoAutorizadoException e) {
-            return ResponseEntity.status(e.getStatus()).body("Erro: " + e.getMessage());
-        } catch (RecursoNaoEncontradoException e) {
-            return ResponseEntity.status(e.getStatus()).body("Erro: " + e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Erro: Status inválido ou mal formatado.");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body("Erro: " + e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Erro inesperado ao listar compras.");
-        }
+    @GetMapping("/all")
+    public ResponseEntity<List<Compra>> listarTodas() {
+        List<Compra> compras = compraService.listarTodas();
+        return ResponseEntity.ok(compras);
     }
 }

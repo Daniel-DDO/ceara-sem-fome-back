@@ -10,8 +10,8 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "item_compra")
-public class ItemCompra {
+@Table(name = "produto_compra")
+public class ProdutoCompra {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -29,11 +29,6 @@ public class ItemCompra {
 
     private BigDecimal precoUnitario;
 
-    /**
-     * Calcula o valor total do item (quantidade * preço unitário).
-     * Este método não corresponde a uma coluna no banco de dados.
-     * @return O valor total do item.
-     */
     public BigDecimal getValorTotalItem() {
         if (precoUnitario == null || quantidade == null) {
             return BigDecimal.ZERO;

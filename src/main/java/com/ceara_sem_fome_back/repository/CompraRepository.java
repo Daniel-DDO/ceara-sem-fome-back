@@ -16,12 +16,14 @@ import java.util.List;
 public interface CompraRepository extends JpaRepository<Compra, String> {
 
     List<Compra> findByBeneficiario(Beneficiario beneficiario);
-    List<Compra> findByEstabelecimento(Estabelecimento estabelecimento);
+    //List<Compra> findByEstabelecimento(Estabelecimento estabelecimento);
     List<Compra> findByStatus(StatusCompra status);
     List<Compra> findByDataHoraCompraAfter(LocalDateTime data);
     List<Compra> findByDataHoraCompraBetween(LocalDateTime inicio, LocalDateTime fim);
-    List<Compra> findByEstabelecimentoIdAndStatus(String estabelecimentoId, StatusCompra status);
-    List<Compra> findByEstabelecimentoId(String estabelecimentoId);
-    List<Compra> findByEstabelecimentoComercianteId(String comercianteId);
-    Page<Compra> findByBeneficiarioNomeContainingIgnoreCase(String nome, Pageable pageable);
+
+    List<Compra> findByBeneficiarioOrderByDataHoraCompraDesc(Beneficiario beneficiario);
+    //List<Compra> findByEstabelecimentoIdAndStatus(String estabelecimentoId, StatusCompra status);
+    //List<Compra> findByEstabelecimentoId(String estabelecimentoId);
+    //List<Compra> findByEstabelecimentoComercianteId(String comercianteId);
+    //Page<Compra> findByBeneficiarioNomeContainingIgnoreCase(String nome, Pageable pageable);
 }

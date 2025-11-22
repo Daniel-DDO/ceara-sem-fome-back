@@ -78,16 +78,17 @@ INSERT INTO produto_carrinho (id, carrinho_id, produto_estabelecimento_id, quant
     ('pc-3', 'car-2', 'pe-3', 2)
     ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO compra (id, data_hora_compra, valor_total, beneficiario_id, estabelecimento_id, endereco_id, status)
+INSERT INTO compra (id, data_hora_compra, valor_total, beneficiario_id, status)
 VALUES
-    ('comp-1', '2025-02-01 14:30:00', 34.40, 'ben-1', 'est-1', 'end-2', 'FINALIZADA'),
-    ('comp-2', '2025-02-05 10:20:00', 12.00, 'ben-2', 'est-1', 'end-3', 'FINALIZADA')
+    ('comp-1', '2025-02-01 14:30:00', 34.40, 'ben-1', 'FINALIZADA'),
+    ('comp-2', '2025-02-05 10:20:00', 12.00, 'ben-2', 'FINALIZADA')
     ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO item_compra (id, compra_id, produto_estabelecimento_id, quantidade, preco_unitario) VALUES
-    ('ic-1', 'comp-1', 'pe-1', 1, 25.90),
-    ('ic-2', 'comp-1', 'pe-2', 1, 8.50),
-    ('ic-3', 'comp-2', 'pe-3', 2, 6.00)
+INSERT INTO produto_compra (id, compra_id, produto_estabelecimento_id, quantidade, preco_unitario)
+VALUES
+    ('pc-1', 'comp-1', 'pe-1', 1, 25.90),
+    ('pc-2', 'comp-1', 'pe-2', 1, 8.50),
+    ('pc-3', 'comp-2', 'pe-3', 2, 6.00)
     ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO avaliacao (id, compra_id, estrelas, comentario, data_avaliacao, resposta_comerciante, data_resposta)

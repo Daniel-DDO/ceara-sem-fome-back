@@ -184,6 +184,7 @@ public class ComercianteController {
         return ResponseEntity.ok(estabelecimentos);
     }
 
+    /*
     @GetMapping("/meu-historico-vendas")
     public ResponseEntity<List<HistoricoVendasDTO>> listarHistoricoVendas(
             @AuthenticationPrincipal ComercianteData comercianteData) {
@@ -193,6 +194,8 @@ public class ComercianteController {
         return ResponseEntity.ok(historico);
     }
 
+     */
+
     @GetMapping("/meus-produtos")
     public ResponseEntity<List<ProdutoDTO>> listarProdutos(@AuthenticationPrincipal ComercianteData comercianteData) {
         String comercianteId = comercianteData.getComerciante().getId();
@@ -200,6 +203,7 @@ public class ComercianteController {
         return ResponseEntity.ok(produtos);
     }
 
+    /*
     @GetMapping("/meu-extrato")
     public ResponseEntity<ContaDTO> consultarExtrato(
             @AuthenticationPrincipal ComercianteData comercianteData) {
@@ -208,6 +212,8 @@ public class ComercianteController {
         ContaDTO contaDTO = comercianteService.consultarExtrato(comercianteId);
         return ResponseEntity.ok(contaDTO);
     }
+
+     */
 
     @PostMapping("/adicionar-prod-estab")
     public ResponseEntity<String> adicionarProduto(

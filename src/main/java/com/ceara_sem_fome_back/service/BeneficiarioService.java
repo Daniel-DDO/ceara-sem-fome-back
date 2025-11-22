@@ -201,6 +201,7 @@ public class BeneficiarioService implements UserDetailsService {
         return conta.getSaldo();
     }
 
+    /*
     @Transactional(rollbackFor = {NegocioException.class, CarrinhoVazioException.class, SaldoInsuficienteException.class})
     public Compra realizarCompra(String userEmail) {
         Beneficiario beneficiario = beneficiarioRepository.findByEmail(userEmail)
@@ -252,10 +253,10 @@ public class BeneficiarioService implements UserDetailsService {
         novaCompra.setEndereco(endereco);
         novaCompra.setStatus(StatusCompra.FINALIZADA);
 
-        List<ItemCompra> itensCompra = new ArrayList<>();
+        List<ProdutoCompra> itensCompra = new ArrayList<>();
 
         for (ProdutoCarrinho pc : itensCarrinho) {
-            ItemCompra ic = new ItemCompra();
+            ProdutoCompra ic = new ProdutoCompra();
             ic.setCompra(novaCompra);
             ic.setProdutoEstabelecimento(pc.getProdutoEstabelecimento());
             ic.setQuantidade(pc.getQuantidade());
@@ -273,6 +274,8 @@ public class BeneficiarioService implements UserDetailsService {
 
         return compraSalva;
     }
+
+     */
 
     public List<Compra> verHistoricoCompras(String userEmail) {
         Beneficiario beneficiario = beneficiarioRepository.findByEmail(userEmail)

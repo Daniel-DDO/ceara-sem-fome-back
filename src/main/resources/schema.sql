@@ -164,25 +164,21 @@ CREATE TABLE IF NOT EXISTS verification_token (
 
 CREATE TABLE IF NOT EXISTS compra (
     id VARCHAR(255) PRIMARY KEY,
-    data_hora_compra TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    data_hora_compra TIMESTAMP NOT NULL,
     valor_total NUMERIC(10, 2) NOT NULL,
     beneficiario_id VARCHAR(255) NOT NULL,
-    estabelecimento_id VARCHAR(255) NOT NULL,
-    endereco_id VARCHAR(255),
     status VARCHAR(50) NOT NULL,
-    FOREIGN KEY (beneficiario_id) REFERENCES beneficiario (id),
-    FOREIGN KEY (estabelecimento_id) REFERENCES estabelecimento (id),
-    FOREIGN KEY (endereco_id) REFERENCES endereco (id)
+    FOREIGN KEY (beneficiario_id) REFERENCES beneficiario(id)
     );
 
-CREATE TABLE IF NOT EXISTS item_compra (
+CREATE TABLE IF NOT EXISTS produto_compra (
     id VARCHAR(255) PRIMARY KEY,
     compra_id VARCHAR(255) NOT NULL,
     produto_estabelecimento_id VARCHAR(255) NOT NULL,
     quantidade INTEGER NOT NULL,
     preco_unitario NUMERIC(10, 2) NOT NULL,
-    FOREIGN KEY (compra_id) REFERENCES compra (id) ON DELETE CASCADE,
-    FOREIGN KEY (produto_estabelecimento_id) REFERENCES produto_estabelecimento (id)
+    FOREIGN KEY (compra_id) REFERENCES compra(id) ON DELETE CASCADE,
+    FOREIGN KEY (produto_estabelecimento_id) REFERENCES produto_estabelecimento(id)
     );
 
 CREATE TABLE IF NOT EXISTS notificacao (

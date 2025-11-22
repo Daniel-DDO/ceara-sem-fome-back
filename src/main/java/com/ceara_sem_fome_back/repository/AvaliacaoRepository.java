@@ -18,6 +18,7 @@ public interface AvaliacaoRepository extends JpaRepository<Avaliacao, String> {
     """)
     Double findAverageByProdutoEstabelecimentoId(String produtoEstabelecimentoId);
 
+    /*
     @Query("""
         SELECT AVG(a.estrelas)
         FROM Avaliacao a 
@@ -26,6 +27,7 @@ public interface AvaliacaoRepository extends JpaRepository<Avaliacao, String> {
     """)
     Double findAverageByEstabelecimentoId(String estabelecimentoId);
 
+
     @Query("""
         SELECT AVG(a.estrelas)
         FROM Avaliacao a 
@@ -33,6 +35,8 @@ public interface AvaliacaoRepository extends JpaRepository<Avaliacao, String> {
         WHERE c.estabelecimento.comerciante.id = :comercianteId
     """)
     Double findAverageByComercianteId(String comercianteId);
+
+     */
 
     /*
     @Query("SELECT AVG(a.estrelas) FROM Avaliacao a JOIN a.compra c JOIN c.itens ic WHERE ic.produto.id = :produtoId")

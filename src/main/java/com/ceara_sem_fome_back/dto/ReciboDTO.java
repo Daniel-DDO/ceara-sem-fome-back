@@ -1,6 +1,5 @@
 package com.ceara_sem_fome_back.dto;
 
-import com.ceara_sem_fome_back.model.ItemCompra;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,6 +19,7 @@ public class ReciboDTO {
     private String nomeBeneficiario;
     private String beneficiarioId;
     private String nomeComerciante;
+    private String comercianteId;
     private String nomeEstabelecimento;
     private String enderecoEstabelecimentoCompleto;
     private Double latitude;
@@ -33,6 +33,9 @@ public class ReciboDTO {
     @AllArgsConstructor
     public static class ItemCompraDTO {
         private String nomeProduto;
+        private String produtoEstabelecimentoId;
+        private String produtoId;
+        private String estabelecimentoId;
         private int quantidade;
         private BigDecimal valorUnitario;
         private BigDecimal subtotal;

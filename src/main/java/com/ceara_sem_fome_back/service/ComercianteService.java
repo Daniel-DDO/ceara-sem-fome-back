@@ -122,10 +122,12 @@ public class ComercianteService implements UserDetailsService {
         return comercianteRepository.save(comercianteExistente);
     }
 
+    /*
     @Transactional(readOnly = true)
     public ContaDTO consultarExtrato(String comercianteId) {
         return compraService.calcularSaldoParaComerciante(comercianteId);
     }
+     */
 
     public Comerciante buscarPorId(String id) {
         return comercianteRepository.findById(id)

@@ -49,9 +49,9 @@ public class AvaliacaoService {
             throw new NegocioException(mensagem, HttpStatus.BAD_REQUEST);
         }
 
-        if (compra.getAvaliacao() != null) {
-            throw new NegocioException("Esta compra já foi avaliada.", HttpStatus.BAD_REQUEST);
-        }
+        //if (compra.getAvaliacao() != null) {
+        //    throw new NegocioException("Esta compra já foi avaliada.", HttpStatus.BAD_REQUEST);
+        //}
 
         Avaliacao avaliacao = new Avaliacao();
         avaliacao.setCompra(compra);
@@ -61,10 +61,10 @@ public class AvaliacaoService {
 
         Avaliacao avaliacaoSalva = avaliacaoRepository.save(avaliacao);
 
-        compra.setAvaliacao(avaliacaoSalva);
+        //compra.setAvaliacao(avaliacaoSalva);
         compraRepository.save(compra);
 
-        atualizarMedias(compra, dto.getEstrelas());
+        //atualizarMedias(compra, dto.getEstrelas());
 
         log.info("Avaliação registrada com sucesso | Compra ID: {} | Beneficiário ID: {} | Estrelas: {}",
                 compraId, beneficiarioId, dto.getEstrelas());
@@ -79,9 +79,9 @@ public class AvaliacaoService {
         Compra compra = avaliacao.getCompra();
 
 
-        if (!compra.getEstabelecimento().getComerciante().getId().equals(comercianteId)) {
-            throw new NegocioException("Acesso negado. Este comerciante não pode responder a esta avaliação.", HttpStatus.FORBIDDEN);
-        }
+        //if (!compra.getEstabelecimento().getComerciante().getId().equals(comercianteId)) {
+        //    throw new NegocioException("Acesso negado. Este comerciante não pode responder a esta avaliação.", HttpStatus.FORBIDDEN);
+        //}
 
         if (avaliacao.getRespostaComerciante() != null && !avaliacao.getRespostaComerciante().isBlank()) {
             throw new NegocioException("Esta avaliação já foi respondida.", HttpStatus.BAD_REQUEST);
@@ -133,6 +133,7 @@ public class AvaliacaoService {
         );
     }
 
+    /*
     private void atualizarMedias(Compra compra, Integer novaNota) {
 
 
@@ -159,4 +160,6 @@ public class AvaliacaoService {
         comerciante.setMediaAvaliacoes(novaMediaComerciante);
         comercianteRepository.save(comerciante);
     }
+
+     */
 }

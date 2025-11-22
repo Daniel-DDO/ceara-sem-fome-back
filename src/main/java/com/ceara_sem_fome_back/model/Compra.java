@@ -26,29 +26,16 @@ public class Compra {
     @JoinColumn(name = "beneficiario_id", nullable = false)
     private Beneficiario beneficiario;
 
-    @ManyToOne
-    @JoinColumn(name = "estabelecimento_id", nullable = false)
-    private Estabelecimento estabelecimento;
-
-    @ManyToOne
-    @JoinColumn(name = "endereco_id")
-    private Endereco endereco; 
-
     @OneToMany(mappedBy = "compra", cascade = CascadeType.ALL)
-    private List<ItemCompra> itens;
-
-    @OneToOne(mappedBy = "compra", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Avaliacao avaliacao;
+    private List<ProdutoCompra> itens;
 
     @Enumerated(EnumType.STRING)
     private StatusCompra status;
 
-    public Compra(Beneficiario beneficiario, Estabelecimento estabelecimento, Endereco endereco, Double valorTotal) {
+    public Compra(Beneficiario beneficiario, Double valorTotal) {
         this.id = UUID.randomUUID().toString();
         this.dataHoraCompra = LocalDateTime.now();
         this.beneficiario = beneficiario;
-        this.estabelecimento = estabelecimento;
-        this.endereco = endereco;
         this.valorTotal = valorTotal;
         this.status = StatusCompra.FINALIZADA;
     }
