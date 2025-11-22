@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.controller;
 
+import com.ceara_sem_fome_back.dto.CompraDTO;
 import com.ceara_sem_fome_back.dto.HistoricoVendasDTO;
 import com.ceara_sem_fome_back.dto.ReciboDTO;
 import com.ceara_sem_fome_back.model.Compra;
@@ -28,10 +29,23 @@ public class CompraController {
     }
 
     @GetMapping("/beneficiario/{beneficiarioId}")
-    public ResponseEntity<List<Compra>> listarComprasPorBeneficiario(@PathVariable String beneficiarioId) {
-        List<Compra> compras = compraService.listarComprasBeneficiario(beneficiarioId);
+    public ResponseEntity<List<CompraDTO>> listarComprasPorBeneficiario(@PathVariable String beneficiarioId) {
+        List<CompraDTO> compras = compraService.listarComprasBeneficiario(beneficiarioId);
         return ResponseEntity.ok(compras);
     }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<CompraDTO>> listarTodas() {
+        List<CompraDTO> compras = compraService.listarTodas();
+        return ResponseEntity.ok(compras);
+    }
+
+    @GetMapping("/comerciante/{comercianteId}")
+    public ResponseEntity<List<CompraDTO>> listarComprasDoComerciante(@PathVariable String comercianteId) {
+        List<CompraDTO> compras = compraService.listarComprasDoComerciante(comercianteId);
+        return ResponseEntity.ok(compras);
+    }
+
 
     @GetMapping("/{compraId}")
     public ResponseEntity<Compra> obterCompra(@PathVariable String compraId) {
@@ -79,18 +93,6 @@ public class CompraController {
     public ResponseEntity<List<HistoricoVendasDTO>> listarVendas(@PathVariable String estabelecimentoId) {
         List<HistoricoVendasDTO> vendas = compraService.listarVendasEstabelecimento(estabelecimentoId);
         return ResponseEntity.ok(vendas);
-    }
-
-    @GetMapping("/all")
-    public ResponseEntity<List<Compra>> listarTodas() {
-        List<Compra> compras = compraService.listarTodas();
-        return ResponseEntity.ok(compras);
-    }
-
-    @GetMapping("/comerciante/{comercianteId}")
-    public ResponseEntity<List<Compra>> listarComprasDoComerciante(@PathVariable String comercianteId) {
-        List<Compra> compras = compraService.listarComprasDoComerciante(comercianteId);
-        return ResponseEntity.ok(compras);
     }
 
 }

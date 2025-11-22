@@ -1,9 +1,6 @@
 package com.ceara_sem_fome_back.service;
 
-import com.ceara_sem_fome_back.dto.ContaDTO;
-import com.ceara_sem_fome_back.dto.HistoricoVendasDTO;
-import com.ceara_sem_fome_back.dto.PaginacaoDTO;
-import com.ceara_sem_fome_back.dto.ReciboDTO;
+import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.exception.EstoqueInsuficienteException;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.*;
@@ -130,11 +127,80 @@ public class CompraService {
     }
 
     @Transactional
-    public List<Compra> listarComprasBeneficiario(String beneficiarioId) {
+    public List<CompraDTO> listarComprasBeneficiario(String beneficiarioId) {
         Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
                 .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado"));
 
-        return compraRepository.findByBeneficiarioOrderByDataHoraCompraDesc(beneficiario);
+        List<Compra> compras = compraRepository.findByBeneficiarioOrderByDataHoraCompraDesc(beneficiario);
+
+        return compras.stream().map(this::converterParaDTO).toList();
+    }
+
+    @Transactional
+    public List<CompraDTO> listarComprasDoComerciante(String comercianteId) {
+        List<Estabelecimento> estabelecimentos = estabelecimentoRepository.findByComercianteId(comercianteId);
+        List<CompraDTO> resultado = new ArrayList<>();
+
+        for (Estabelecimento est : estabelecimentos) {
+            List<ProdutoCompra> vendas = produtoCompraRepository.findByProdutoEstabelecimento_Estabelecimento(est);
+            Map<String, List<ProdutoCompra>> comprasAgrupadas = vendas.stream()
+                    .collect(Collectors.groupingBy(pc -> pc.getCompra().getId()));
+
+            for (List<ProdutoCompra> itensCompra : comprasAgrupadas.values()) {
+                Compra compra = itensCompra.get(0).getCompra();
+                CompraDTO dto = converterParaDTO(compra, est.getId());
+                resultado.add(dto);
+            }
+        }
+
+        resultado.sort((c1, c2) -> c2.getDataCompra().compareTo(c1.getDataCompra()));
+
+        return resultado;
+    }
+
+    @Transactional
+    public List<CompraDTO> listarTodas() {
+        List<Compra> compras = compraRepository.findAll();
+
+        return compras.stream()
+                .map(this::converterParaDTO)
+                .toList();
+    }
+
+    public CompraDTO converterParaDTO(Compra compra) {
+        String estabelecimentoId = compra.getItens().get(0).getProdutoEstabelecimento().getEstabelecimento().getId();
+        return converterParaDTO(compra, estabelecimentoId);
+    }
+
+    private CompraDTO converterParaDTO(Compra compra, String estabelecimentoId) {
+        CompraDTO dto = new CompraDTO();
+        dto.setCompraId(compra.getId());
+        dto.setDataCompra(compra.getDataHoraCompra());
+        dto.setBeneficiarioId(compra.getBeneficiario().getId());
+        dto.setBeneficiarioNome(compra.getBeneficiario().getNome());
+        dto.setEstabelecimentoId(estabelecimentoId);
+        dto.setNomeEstabelecimento(
+                compra.getItens().stream()
+                        .filter(pc -> pc.getProdutoEstabelecimento().getEstabelecimento().getId().equals(estabelecimentoId))
+                        .findFirst()
+                        .map(pc -> pc.getProdutoEstabelecimento().getEstabelecimento().getNome())
+                        .orElse("")
+        );
+
+        List<CompraDTO.ProdutoCompraDTO> itensDTO = compra.getItens().stream()
+                .filter(pc -> pc.getProdutoEstabelecimento().getEstabelecimento().getId().equals(estabelecimentoId))
+                .map(pc -> new CompraDTO.ProdutoCompraDTO(
+                        pc.getProdutoEstabelecimento().getProduto().getId(),
+                        pc.getProdutoEstabelecimento().getId(),
+                        pc.getProdutoEstabelecimento().getProduto().getNome(),
+                        pc.getQuantidade(),
+                        pc.getPrecoUnitario(),
+                        pc.getValorTotalItem()
+                ))
+                .toList();
+
+        dto.setItens(itensDTO);
+        return dto;
     }
 
     @Transactional
@@ -267,42 +333,10 @@ public class CompraService {
         return recibos;
     }
 
-    public List<Compra> listarTodas() {
-        return compraRepository.findAll();
-    }
-
-    public List<Compra> listarPorBeneficiario(String beneficiarioId) {
-        Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
-                .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado."));
-        return compraRepository.findByBeneficiario(beneficiario);
-    }
-
     public List<ProdutoCompra> listarItensDaCompra(String compraId) {
         Compra compra = compraRepository.findById(compraId)
                 .orElseThrow(() -> new RuntimeException("Compra não encontrada."));
         return produtoCompraRepository.findByCompra(compra);
     }
-
-    @Transactional
-    public List<Compra> listarComprasDoComerciante(String comercianteId) {
-        List<Estabelecimento> estabelecimentos = estabelecimentoRepository.findByComercianteId(comercianteId);
-
-        List<Compra> comprasDoComerciante = new ArrayList<>();
-
-        for (Estabelecimento est : estabelecimentos) {
-            List<ProdutoCompra> vendas = produtoCompraRepository.findByProdutoEstabelecimento_Estabelecimento(est);
-            for (ProdutoCompra pc : vendas) {
-                Compra compra = pc.getCompra();
-                if (!comprasDoComerciante.contains(compra)) {
-                    comprasDoComerciante.add(compra);
-                }
-            }
-        }
-
-        comprasDoComerciante.sort((c1, c2) -> c2.getDataHoraCompra().compareTo(c1.getDataHoraCompra()));
-
-        return comprasDoComerciante;
-    }
-
 
 }
