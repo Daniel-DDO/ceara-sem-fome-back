@@ -27,6 +27,8 @@ public class BeneficiarioMapper {
                         .bairro(b.getEndereco().getBairro())
                         .municipio(b.getEndereco().getMunicipio())
                         .build() : null)
+                .conta(b.getConta())
+                .status(b.getStatus())
                 .build();
     }
 }

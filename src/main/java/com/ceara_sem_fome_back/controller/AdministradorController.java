@@ -388,6 +388,7 @@ public class AdministradorController {
             dto.setGenero(c.getGenero());
             dto.setLgpdAccepted(c.getLgpdAccepted());
             dto.setStatus(c.getStatus());
+            dto.setConta(c.getConta());
             return dto;
         }).toList();
 
