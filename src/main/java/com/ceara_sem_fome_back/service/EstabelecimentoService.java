@@ -141,7 +141,11 @@ public class EstabelecimentoService {
             dto.setNumero(e.getEndereco().getNumero());
             dto.setBairro(e.getEndereco().getBairro());
             dto.setMunicipio(e.getEndereco().getMunicipio());
+            dto.setLatitude(e.getEndereco().getLatitude());
+            dto.setLongitude(e.getEndereco().getLongitude());
         }
+
+        dto.setMediaAvaliacoes(e.getMediaAvaliacoes());
 
         if (e.getComerciante() != null) {
             dto.setComercianteId(e.getComerciante().getId());
