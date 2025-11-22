@@ -61,6 +61,9 @@ public class BeneficiarioService implements UserDetailsService {
     @Autowired
     private ContaService contaService;
 
+    @Autowired
+    private NotificacaoService notificacaoService;
+
     public Beneficiario logarBeneficiario(String email, String senha) {
         Optional<Beneficiario> optionalBeneficiario = beneficiarioRepository.findByEmail(email);
 

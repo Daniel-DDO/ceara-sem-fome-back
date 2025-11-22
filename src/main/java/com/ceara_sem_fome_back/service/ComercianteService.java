@@ -40,6 +40,9 @@ public class ComercianteService implements UserDetailsService {
     @Autowired
     private ContaService contaService;
 
+    @Autowired
+    private NotificacaoService notificacaoService;
+
     public Comerciante logarComerciante(String email, String senha) {
         Optional<Comerciante> comerciante = comercianteRepository.findByEmail(email);
 

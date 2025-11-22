@@ -57,6 +57,9 @@ public class CompraService {
     @Autowired
     private ProdutoEstabelecimentoRepository produtoEstabelecimentoRepository;
 
+    @Autowired
+    private NotificacaoService notificacaoService;
+
     @Transactional
     public List<Compra> finalizarCompra(String beneficiarioId) {
         Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
@@ -123,6 +126,8 @@ public class CompraService {
 
             comprasCriadas.add(compra);
         }
+
+        notificacaoService.criarEEnviarNotificacao(beneficiarioId, "Compra realizada com sucesso.");
 
         carrinho.esvaziarCarrinho();
         carrinhoRepository.save(carrinho);

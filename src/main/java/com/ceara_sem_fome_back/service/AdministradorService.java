@@ -61,6 +61,9 @@ public class AdministradorService implements UserDetailsService {
     @Autowired
     private CadastroService cadastroService;
 
+    @Autowired
+    private NotificacaoService notificacaoService;
+
     public Administrador logarAdm(String email, String senha) {
         Optional<Administrador> administrador = administradorRepository.findByEmail(email);
 

@@ -36,6 +36,9 @@ public class EntregadorService implements UserDetailsService {
     @Autowired
     private CadastroService cadastroService;
 
+    @Autowired
+    private NotificacaoService notificacaoService;
+
     public Entregador logarEntregador(String email, String senha) {
         Optional<Entregador> entregador = entregadorRepository.findByEmail(email);
 

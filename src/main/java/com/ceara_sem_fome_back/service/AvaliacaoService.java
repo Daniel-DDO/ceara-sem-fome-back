@@ -39,6 +39,9 @@ public class AvaliacaoService {
     @Autowired
     private ComercianteRepository comercianteRepository;
 
+    @Autowired
+    private NotificacaoService notificacaoService;
+
     @Transactional
     public void registrarAvaliacao(String compraId, String beneficiarioId, AvaliacaoRequestDTO dto) {
         Compra compra = compraRepository.findById(compraId)
@@ -82,6 +85,19 @@ public class AvaliacaoService {
 
         atualizarMedias(compra);
 
+        if (!compra.getItens().isEmpty()) {
+
+            Comerciante comerciante = compra.getItens().get(0)
+                    .getProdutoEstabelecimento().getEstabelecimento().getComerciante();
+
+            String compraIdCurto = compra.getId().length() > 8 ? compra.getId().substring(0, 8) : compra.getId();
+
+            String msgComerciante = String.format("Recebeu uma avaliação de %d estrelas no pedido #%s.",
+                    dto.getEstrelas(), compraIdCurto);
+
+            notificacaoService.criarEEnviarNotificacao(comerciante.getId(), msgComerciante);
+        }
+
         log.info("Avaliação registrada com sucesso | Compra ID: {} | Beneficiário ID: {}", compraId, beneficiarioId);
     }
 
@@ -111,6 +127,13 @@ public class AvaliacaoService {
         avaliacao.setDataResposta(LocalDateTime.now());
 
         avaliacaoRepository.save(avaliacao);
+
+        String beneficiarioId = compra.getBeneficiario().getId();
+        String nomeEstabelecimento = estabelecimento.getNome();
+
+        String msgBeneficiario = String.format("O estabelecimento %s respondeu sua avaliação!", nomeEstabelecimento);
+
+        notificacaoService.criarEEnviarNotificacao(beneficiarioId, msgBeneficiario);
 
         log.info("Resposta registrada | Avaliação ID: {} | Comerciante ID: {}", dto.getAvaliacaoId(), comercianteId);
     }

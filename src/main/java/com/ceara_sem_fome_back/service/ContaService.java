@@ -13,6 +13,9 @@ public class ContaService {
     @Autowired
     private ContaRepository contaRepository;
 
+    @Autowired
+    private NotificacaoService notificacaoService;
+
     private final Random random = new Random();
 
     public void gerarNumeroEAgencia(Conta conta) {
