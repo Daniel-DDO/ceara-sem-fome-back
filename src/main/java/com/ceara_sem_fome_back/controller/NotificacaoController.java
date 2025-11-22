@@ -1,43 +1,77 @@
 package com.ceara_sem_fome_back.controller;
 
+import com.ceara_sem_fome_back.data.BeneficiarioData;
+import com.ceara_sem_fome_back.dto.NotificacaoResponseDTO;
 import com.ceara_sem_fome_back.model.Notificacao;
-import com.ceara_sem_fome_back.model.Pessoa;
 import com.ceara_sem_fome_back.service.NotificacaoService;
-import com.ceara_sem_fome_back.service.PessoaService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/notificacoes")
+@RequestMapping("/notificacoes")
+@CrossOrigin(origins = {
+        "https://ceara-raiz-srb9k.ondigitalocean.app",
+        "http://localhost:8080",
+        "http://localhost:5173",
+        "https://*.cloudworkstations.dev"
+})
 public class NotificacaoController {
 
     @Autowired
     private NotificacaoService notificacaoService;
 
-    @Autowired
-    private PessoaService pessoaService; // Para identificar o usuário logado
-
-    /**
-     * Endpoint para buscar as notificações do usuário autenticado.
-     *
-     * @param authentication Objeto que contém os detalhes do usuário logado.
-     * @return Uma lista de notificações para o usuário.
-     */
     @GetMapping
-    public ResponseEntity<List<Notificacao>> getNotificacoes(Authentication authentication) {
-        // 1. Identifica o usuário logado
-        Pessoa usuarioLogado = pessoaService.getUsuarioLogado(authentication);
+    public ResponseEntity<List<NotificacaoResponseDTO>> listarMinhasNotificacoes(
+            @AuthenticationPrincipal BeneficiarioData beneficiarioData) {
 
-        // 2. Busca as notificações usando o ID do usuário
-        List<Notificacao> notificacoes = notificacaoService.buscarNotificacoesPorPessoa(usuarioLogado.getId());
+        if (beneficiarioData == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
-        // 3. Retorna a lista
-        return ResponseEntity.ok(notificacoes);
+        String usuarioId = beneficiarioData.getId();
+        List<Notificacao> notificacoes = notificacaoService.listarPorUsuario(usuarioId);
+
+        List<NotificacaoResponseDTO> dtos = notificacoes.stream()
+                .map(n -> new NotificacaoResponseDTO(
+                        n.getId(),
+                        n.getMensagem(),
+                        n.getDataCriacao(),
+                        n.isLida()
+                ))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(dtos);
+    }
+
+    @PatchMapping("/{id}/lida")
+    public ResponseEntity<Void> marcarComoLida(@PathVariable Long id) {
+        notificacaoService.marcarComoLida(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/nao-lidas/count")
+    public ResponseEntity<Long> contarNaoLidas(@AuthenticationPrincipal BeneficiarioData beneficiarioData) {
+        if (beneficiarioData == null) return ResponseEntity.status(401).build();
+
+        String usuarioId = beneficiarioData.getId();
+        long count = notificacaoService.listarPorUsuario(usuarioId).stream()
+                .filter(n -> !n.isLida())
+                .count();
+
+        return ResponseEntity.ok(count);
+    }
+
+    public record NotificacaoTesteRequest(String destinatarioId, String mensagem) {}
+
+    @PostMapping("/teste-envio")
+    public ResponseEntity<Void> enviarNotificacaoTeste(@RequestBody NotificacaoTesteRequest request) {
+        notificacaoService.criarEEnviarNotificacao(request.destinatarioId(), request.mensagem());
+        return ResponseEntity.ok().build();
     }
 }

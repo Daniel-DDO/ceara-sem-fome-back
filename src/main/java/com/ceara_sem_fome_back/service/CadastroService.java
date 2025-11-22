@@ -40,11 +40,10 @@ public class CadastroService {
     @Autowired
     private ContaService contaService;
 
-    // --- CORREÇÃO DA DEPENDÊNCIA CIRCULAR ---
+    //CORREÇÃO DA DEPENDÊNCIA CIRCULAR
     @Autowired
-    @Lazy // Adiciona esta anotação
+    @Lazy
     private PasswordEncoder passwordEncoder;
-    // --- FIM DA CORREÇÃO ---
 
     @Autowired
     private EmailService emailService;
@@ -262,8 +261,7 @@ public class CadastroService {
                     "Seja bem-vindo(a), %s! Seu cadastro foi confirmado com sucesso.",
                     nomeUsuario
             );
-            
-            notificacaoService.criarNotificacao(novoUsuarioId, mensagemBoasVindas);
+            notificacaoService.criarEEnviarNotificacao(novoUsuarioId, mensagemBoasVindas);
         }
 
         log.info("SUCESSO: {} salvo após validação de e-mail: {}", verificationToken.getTipoPessoa(), verificationToken.getUserEmail());
