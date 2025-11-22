@@ -263,15 +263,25 @@ public class AdministradorController {
 
         List<EstabelecimentoRespostaDTO> resposta = estabelecimentos.stream()
                 .map(est -> new EstabelecimentoRespostaDTO(
-                        est.getId(),
-                        est.getNome(),
-                        est.getCnpj(),
-                        est.getTelefone(),                  // comércio
-                        est.getEndereco().getLogradouro(),
-                        est.getEndereco().getNumero(),
-                        est.getEndereco().getBairro(),
-                        est.getEndereco().getMunicipio()
-                ))
+                est.getId(),
+                est.getNome(),
+                est.getCnpj(),
+                est.getTelefone(),
+                est.getImagem(),
+                est.getTipoImagem(),
+                est.getMediaAvaliacoes(),
+                est.getEndereco() != null ? est.getEndereco().getId() : null,
+                est.getEndereco() != null ? est.getEndereco().getCep() : null,
+                est.getEndereco() != null ? est.getEndereco().getLogradouro() : null,
+                est.getEndereco() != null ? est.getEndereco().getNumero() : null,
+                est.getEndereco() != null ? est.getEndereco().getBairro() : null,
+                est.getEndereco() != null ? est.getEndereco().getMunicipio() : null,
+                        est.getEndereco() != null ? est.getEndereco().getLatitude() : null,
+                        est.getEndereco() != null ? est.getEndereco().getLongitude() : null,
+                est.getComerciante() != null ? est.getComerciante().getId() : null,
+                est.getComerciante() != null ? est.getComerciante().getNome() : null
+        )
+)
                 .toList();
 
         return ResponseEntity.ok(resposta);
