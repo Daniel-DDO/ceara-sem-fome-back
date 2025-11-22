@@ -5,12 +5,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-
 @Repository
 public interface AvaliacaoRepository extends JpaRepository<Avaliacao, String> {
 
+    //Média do Produto (baseado nas compras que contêm este item)
     @Query("""
-        SELECT AVG(a.estrelas)
+        SELECT COALESCE(AVG(a.estrelas), 0.0)
         FROM Avaliacao a
         JOIN a.compra c
         JOIN c.itens ic
@@ -18,35 +18,26 @@ public interface AvaliacaoRepository extends JpaRepository<Avaliacao, String> {
     """)
     Double findAverageByProdutoEstabelecimentoId(String produtoEstabelecimentoId);
 
-    /*
+    //Média do Estabelecimento (navegando pelos itens da compra)
     @Query("""
-        SELECT AVG(a.estrelas)
+        SELECT COALESCE(AVG(a.estrelas), 0.0)
         FROM Avaliacao a 
-        JOIN a.compra c
-        WHERE c.estabelecimento.id = :estabelecimentoId
+        JOIN a.compra c 
+        JOIN c.itens ic 
+        JOIN ic.produtoEstabelecimento pe 
+        WHERE pe.estabelecimento.id = :estabelecimentoId
     """)
     Double findAverageByEstabelecimentoId(String estabelecimentoId);
 
-
+    //Média do Comerciante (navegando itens -> prodEst -> estab -> comerciante)
     @Query("""
-        SELECT AVG(a.estrelas)
+        SELECT COALESCE(AVG(a.estrelas), 0.0)
         FROM Avaliacao a 
-        JOIN a.compra c
-        WHERE c.estabelecimento.comerciante.id = :comercianteId
+        JOIN a.compra c 
+        JOIN c.itens ic 
+        JOIN ic.produtoEstabelecimento pe 
+        JOIN pe.estabelecimento e 
+        WHERE e.comerciante.id = :comercianteId
     """)
     Double findAverageByComercianteId(String comercianteId);
-
-     */
-
-    /*
-    @Query("SELECT AVG(a.estrelas) FROM Avaliacao a JOIN a.compra c JOIN c.itens ic WHERE ic.produto.id = :produtoId")
-    Double findAverageByProdutoEstabelecimentoId(String produtoEstabelecimentoId);
-
-    @Query("SELECT AVG(a.estrelas) FROM Avaliacao a JOIN a.compra c WHERE c.estabelecimento.id = :estabelecimentoId")
-    Double findAverageByEstabelecimentoId(String estabelecimentoId);
-
-    @Query("SELECT AVG(a.estrelas) FROM Avaliacao a JOIN a.compra c WHERE c.estabelecimento.comerciante.id = :comercianteId")
-    Double findAverageByComercianteId(String comercianteId);
-     */
-
 }

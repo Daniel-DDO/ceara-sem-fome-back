@@ -284,20 +284,17 @@ public class BeneficiarioController {
             @Valid @RequestBody AvaliacaoRequestDTO dto,
             @AuthenticationPrincipal BeneficiarioData beneficiarioData) {
 
-        String beneficiarioId = beneficiarioData.getId();
-
-        if (beneficiarioId == null) {
+        if (beneficiarioData == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         try {
+            String beneficiarioId = beneficiarioData.getId();
             avaliacaoService.registrarAvaliacao(dto.getCompraId(), beneficiarioId, dto);
-
             return ResponseEntity.status(HttpStatus.CREATED).build();
 
         } catch (RecursoNaoEncontradoException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-
         } catch (NegocioException e) {
             return ResponseEntity.status(e.getStatus()).build();
         }

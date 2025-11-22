@@ -168,6 +168,7 @@ CREATE TABLE IF NOT EXISTS compra (
     valor_total NUMERIC(10, 2) NOT NULL,
     beneficiario_id VARCHAR(255) NOT NULL,
     status VARCHAR(50) NOT NULL,
+    avaliada BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY (beneficiario_id) REFERENCES beneficiario(id)
     );
 

@@ -78,10 +78,10 @@ INSERT INTO produto_carrinho (id, carrinho_id, produto_estabelecimento_id, quant
     ('pc-3', 'car-2', 'pe-3', 2)
     ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO compra (id, data_hora_compra, valor_total, beneficiario_id, status)
+INSERT INTO compra (id, data_hora_compra, valor_total, beneficiario_id, status, avaliada)
 VALUES
-    ('comp-1', '2025-02-01 14:30:00', 34.40, 'ben-1', 'FINALIZADA'),
-    ('comp-2', '2025-02-05 10:20:00', 12.00, 'ben-2', 'FINALIZADA')
+    ('comp-1', '2025-02-01 14:30:00', 34.40, 'ben-1', 'FINALIZADA', true),
+    ('comp-2', '2025-02-05 10:20:00', 12.00, 'ben-2', 'FINALIZADA', true)
     ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO produto_compra (id, compra_id, produto_estabelecimento_id, quantidade, preco_unitario)

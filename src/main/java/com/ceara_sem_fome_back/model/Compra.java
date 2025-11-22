@@ -32,6 +32,8 @@ public class Compra {
     @Enumerated(EnumType.STRING)
     private StatusCompra status;
 
+    private boolean avaliada;
+
     public Compra(Beneficiario beneficiario, Double valorTotal) {
         this.id = UUID.randomUUID().toString();
         this.dataHoraCompra = LocalDateTime.now();
