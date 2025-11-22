@@ -46,7 +46,6 @@ public class CompraController {
         return ResponseEntity.ok(compras);
     }
 
-
     @GetMapping("/{compraId}")
     public ResponseEntity<Compra> obterCompra(@PathVariable String compraId) {
         Compra compra = compraService.obterCompraPorId(compraId);

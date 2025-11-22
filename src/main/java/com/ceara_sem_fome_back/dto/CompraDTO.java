@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.dto;
 
+import com.ceara_sem_fome_back.model.StatusCompra;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,6 +23,7 @@ public class CompraDTO {
     private String estabelecimentoId;
     private String nomeEstabelecimento;
     private List<ProdutoCompraDTO> itens;
+    private StatusCompra status;
 
     @Getter
     @Setter
