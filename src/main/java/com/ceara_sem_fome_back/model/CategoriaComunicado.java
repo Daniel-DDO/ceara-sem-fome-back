@@ -5,5 +5,17 @@ public enum CategoriaComunicado {
     ALERTA,
     SISTEMA,
     ATUALIZACAO,
-    COMUM
+    COMUM,
+    MANUTENCAO,
+    FINANCEIRO,
+    OPERACIONAL,
+    ERRO,
+    SEGURANCA,
+    EVENTO,
+    IMPORTANTE,
+    SUPORTE,
+    EMERGENCIA,
+    BENEFICIARIO,
+    COMERCIANTE
 }
+
