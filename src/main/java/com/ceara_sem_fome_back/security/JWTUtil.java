@@ -10,7 +10,7 @@ import java.util.Date;
 @Component
 public class JWTUtil {
 
-    public static final long TOKEN_EXPIRACAO = 600_000; //10 minutos
+    public static final long TOKEN_EXPIRACAO = 1_800_000; //30 minutos
 
     @Value("${api.guid.token.senha}")
     private String tokenSenha;
