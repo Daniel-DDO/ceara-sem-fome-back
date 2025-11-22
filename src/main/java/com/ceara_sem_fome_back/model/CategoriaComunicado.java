@@ -4,5 +4,6 @@ public enum CategoriaComunicado {
     AVISO,
     ALERTA,
     SISTEMA,
-    ATUALIZACAO
+    ATUALIZACAO,
+    COMUM
 }

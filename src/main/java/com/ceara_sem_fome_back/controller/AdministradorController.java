@@ -161,16 +161,10 @@ public class AdministradorController {
             @Valid @RequestBody PessoaUpdateDto dto,
             Principal principal) { //Pega o usuário autenticado via token
 
-        //1. Pega o e-mail do usuário logado (armazenado no token)
         String userEmail = principal.getName();
-
-        //2. Chama o novo serviço de atualização
         Administrador adminAtualizado = administradorService.atualizarAdministrador(userEmail, dto);
-
-        //3. A senha não retorna no JSON.
+        //A senha não retorna no JSON.
         adminAtualizado.setSenha(null);
-
-        //4. Retorna o objeto atualizado
         return ResponseEntity.ok(adminAtualizado);
     }
 
@@ -282,38 +276,7 @@ public class AdministradorController {
 
         return ResponseEntity.ok(resposta);
     }
-    /*
-    // endpoints para listagem de compras
-    @GetMapping("/compras")
-    public ResponseEntity<List<CompraRespostaDTO>> listarTodasCompras() {
-        return ResponseEntity.ok(administradorService.listarTodasCompras());
-    }
 
-    @GetMapping("/beneficiario/{id}")
-    public ResponseEntity<List<CompraRespostaDTO>> listarPorBeneficiario(@PathVariable String id) {
-        return ResponseEntity.ok(administradorService.listarComprasPorBeneficiario(id));
-    }
-
-    @GetMapping("/estabelecimento/{id}")
-    public ResponseEntity<List<CompraRespostaDTO>> listarPorEstabelecimento(@PathVariable String id) {
-        return ResponseEntity.ok(administradorService.listarComprasPorEstabelecimento(id));
-    }
-
-    @GetMapping("/periodo")
-    public ResponseEntity<List<CompraRespostaDTO>> listarPorPeriodo(
-            @RequestParam LocalDateTime inicio,
-            @RequestParam LocalDateTime fim
-    ) {
-        return ResponseEntity.ok(administradorService.listarComprasPorPeriodo(inicio, fim));
-    }
-
-    @GetMapping("/estabelecimento/{id}/status/{status}")
-    public ResponseEntity<List<CompraRespostaDTO>> listarPorEstabelecimentoEStatus(
-            @PathVariable String id, @PathVariable StatusCompra status) {
-
-        return ResponseEntity.ok(administradorService.listarComprasPorEstabelecimentoEStatus(id, status));
-    }
-     */
     // enpoints para o administrador obter informações do beneficiário e do comerciante
     @GetMapping("/comerciantes")
     public ResponseEntity<List<ComercianteRespostaDTO>> listarComerciantes() {
@@ -386,7 +349,6 @@ public class AdministradorController {
         Comerciante comercianteInativado = administradorService.inativarComerciante(id);
         return ResponseEntity.ok(comercianteInativado);
     }
-
 
     @PostMapping("/criar-comunicado")
     public ResponseEntity<ComunicadoDTO> criar(@RequestBody ComunicadoDTO dto) {
@@ -484,61 +446,6 @@ public class AdministradorController {
         return ResponseEntity.ok(paginaDTO);
     }
 
-    /*
-    @GetMapping("/compra/all")
-    public ResponseEntity<PaginacaoDTO<CompraRespostaDTO>> listarTodasCompras(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "dataHoraCompra") String sortBy,
-            @RequestParam(defaultValue = "desc") String direction,
-            @RequestParam(required = false) String beneficiarioFiltro
-    ) {
-        PaginacaoDTO<Compra> pagina = compraService
-                .listarComFiltro(beneficiarioFiltro, page, size, sortBy, direction);
-
-        List<CompraRespostaDTO> listaDTO = pagina.getConteudo().stream().map(compra -> {
-
-            List<CompraItemDTO> itensDTO = compra.getItens().stream().map(item ->
-                    new CompraItemDTO(
-                            item.getProdutoEstabelecimento().getProduto().getNome(),
-                            item.getQuantidade(),
-                            item.getPrecoUnitario()
-                    )
-            ).toList();
-
-            CompraRespostaDTO dto = new CompraRespostaDTO(
-                    compra.getId(),
-                    compra.getDataHoraCompra(),
-                    compra.getValorTotal(),
-                    compra.getBeneficiario().getNome(),
-                    compra.getEstabelecimento().getNome(),
-                    compra.getEndereco() != null
-                            ? compra.getEndereco().getLogradouro() + ", " +
-                            compra.getEndereco().getNumero() + " - " +
-                            compra.getEndereco().getBairro()
-                            : null,
-                    itensDTO
-            );
-
-            dto.setAvaliacao(compra.getAvaliacao());
-            return dto;
-
-        }).toList();
-
-        PaginacaoDTO<CompraRespostaDTO> paginaDTO =
-                new PaginacaoDTO<>(
-                        listaDTO,
-                        pagina.getPaginaAtual(),
-                        pagina.getTotalPaginas(),
-                        pagina.getTotalElementos(),
-                        pagina.getTamanhoPagina(),
-                        pagina.isUltimaPagina()
-                );
-
-        return ResponseEntity.ok(paginaDTO);
-    }
-     */
-
     @GetMapping("/me")
     public ResponseEntity<AdministradorRespostaDTO> obterAdministradorLogado(
             @AuthenticationPrincipal AdministradorData administradorData) {
@@ -549,4 +456,36 @@ public class AdministradorController {
         return ResponseEntity.ok(dto);
     }
 
+    @GetMapping("/compras/all")
+    public ResponseEntity<List<Compra>> verTodasAsCompras() {
+        List<Compra> compras = administradorService.verTodasAsCompras();
+        return ResponseEntity.ok(compras);
+    }
+
+    @GetMapping("/compras/beneficiario/{beneficiarioId}")
+    public ResponseEntity<List<Compra>> verComprasPorBeneficiarioId(@PathVariable String beneficiarioId) {
+        List<Compra> compras = administradorService.verComprasPorBeneficiarioId(beneficiarioId);
+        if (compras.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(compras);
+    }
+
+    @GetMapping("/compras/estabelecimento/{estabelecimentoId}")
+    public ResponseEntity<List<Compra>> verComprasPorEstabelecimentoId(@PathVariable String estabelecimentoId) {
+        List<Compra> compras = administradorService.verComprasPorEstabelecimentoId(estabelecimentoId);
+        if (compras.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(compras);
+    }
+
+    @GetMapping("/compras/comerciante/{comercianteId}")
+    public ResponseEntity<List<Compra>> verComprasPorComercianteId(@PathVariable String comercianteId) {
+        List<Compra> compras = administradorService.verComprasPorComercianteId(comercianteId);
+        if (compras.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(compras);
+    }
 }

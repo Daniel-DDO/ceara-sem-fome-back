@@ -21,7 +21,7 @@ public class ComunicadoService {
 
     public ComunicadoDTO criar(ComunicadoDTO dto) {
 
-        Administrador admin = administradorService.buscarAdmPorId(dto.getId());
+        Administrador admin = administradorService.buscarAdmPorId(dto.getAdministradorId());
         if (admin == null) {
             throw new RuntimeException("Administrador não encontrado.");
         }
@@ -36,10 +36,6 @@ public class ComunicadoService {
         Comunicado salvo = comunicadoRepository.save(comunicado);
 
         return new ComunicadoDTO(salvo);
-    }
-
-    public Comunicado salvar(Comunicado comunicado) {
-        return comunicadoRepository.save(comunicado);
     }
 
     public List<Comunicado> listarTodos() {

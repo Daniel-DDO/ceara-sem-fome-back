@@ -269,73 +269,34 @@ public class AdministradorService implements UserDetailsService {
 
         return estabelecimentoRepository.findAll();
     }
-    /*
-    // funções de listagem de compras e histórico
-    public List<CompraRespostaDTO> listarTodasCompras() {
-        return compraRepository.findAll().stream()
-                .map(this::toDTO)
-                .toList();
+
+    public List<Compra> verTodasAsCompras() {
+        return compraRepository.findAll();
     }
 
-    public List<CompraRespostaDTO> listarComprasPorBeneficiario(String beneficiarioId) {
-
-        var beneficiario = beneficiarioRepository.findById(beneficiarioId)
-                .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado"));
-
-        return compraRepository.findByBeneficiario(beneficiario).stream()
-                .map(this::toDTO)
-                .toList();
+    public List<Compra> verComprasPorBeneficiario(Beneficiario beneficiario) {
+        return compraRepository.findByBeneficiario(beneficiario);
     }
 
-    public List<CompraRespostaDTO> listarComprasPorEstabelecimento(String estabelecimentoId) {
-
-        var estabelecimento = estabelecimentoRepository.findById(estabelecimentoId)
-                .orElseThrow(() -> new RuntimeException("Estabelecimento não encontrado"));
-
-        return compraRepository.findByEstabelecimento(estabelecimento).stream()
-                .map(this::toDTO)
-                .toList();
+    public List<Compra> verComprasPorBeneficiarioId(String beneficiarioId) {
+        return compraRepository.findByBeneficiarioId(beneficiarioId);
     }
 
-    public List<CompraRespostaDTO> listarComprasPorPeriodo(LocalDateTime inicio, LocalDateTime fim) {
-        return compraRepository.findByDataHoraCompraBetween(inicio, fim).stream()
-                .map(this::toDTO)
-                .toList();
+    public List<Compra> verComprasPorEstabelecimento(Estabelecimento estabelecimento) {
+        return compraRepository.findDistinctByItensProdutoEstabelecimentoEstabelecimento(estabelecimento);
     }
 
-    public List<CompraRespostaDTO> listarComprasPorEstabelecimentoEStatus(String estabelecimentoId, StatusCompra status) {
-        return compraRepository.findByEstabelecimentoIdAndStatus(estabelecimentoId, status)
-                .stream()
-                .map(this::toDTO)
-                .toList();
+    public List<Compra> verComprasPorEstabelecimentoId(String estabelecimentoId) {
+        return compraRepository.findDistinctByItensProdutoEstabelecimentoEstabelecimentoId(estabelecimentoId);
     }
-    /*
-    private CompraRespostaDTO toDTO(Compra compra) {
 
-        String enderecoStr = compra.getEndereco() != null ?
-                compra.getEndereco().getLogradouro() + ", " +
-                        compra.getEndereco().getNumero() + " - " +
-                        compra.getEndereco().getBairro() :
-                "Endereço não registrado";
-
-        List<CompraItemDTO> itens = compra.getItens().stream()
-                .map(item -> new CompraItemDTO(
-                        item.getProdutoEstabelecimento().getProduto().getNome(),
-                        item.getQuantidade(),
-                        item.getPrecoUnitario()
-                )).toList();
-
-        return new CompraRespostaDTO(
-                compra.getId(),
-                compra.getDataHoraCompra(),
-                compra.getValorTotal(),
-                compra.getBeneficiario().getNome(),
-                compra.getEstabelecimento().getNome(),
-                enderecoStr,
-                itens
-        );
+    public List<Compra> verComprasPorComerciante(Comerciante comerciante) {
+        return compraRepository.findDistinctByItensProdutoEstabelecimentoEstabelecimentoComerciante(comerciante);
     }
-     */
+
+    public List<Compra> verComprasPorComercianteId(String comercianteId) {
+        return compraRepository.findDistinctByItensProdutoEstabelecimentoEstabelecimentoComercianteId(comercianteId);
+    }
 
     // funções para o administrador conseguir informações de Beneficiário e do comerciante
     public List<ComercianteRespostaDTO> listarComerciantes() {

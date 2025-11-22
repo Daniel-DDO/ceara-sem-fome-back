@@ -37,6 +37,6 @@ public class Compra {
         this.dataHoraCompra = LocalDateTime.now();
         this.beneficiario = beneficiario;
         this.valorTotal = valorTotal;
-        this.status = StatusCompra.FINALIZADA;
+        this.status = StatusCompra.ABERTA;
     }
 }
