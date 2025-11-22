@@ -468,8 +468,8 @@ public class AdministradorController {
     }
 
     @GetMapping("/compras/all")
-    public ResponseEntity<List<Compra>> verTodasAsCompras() {
-        List<Compra> compras = administradorService.verTodasAsCompras();
+    public ResponseEntity<List<CompraRespostaDTO>> verTodasAsCompras() {
+        List<CompraRespostaDTO> compras = administradorService.verTodasAsCompras();
         return ResponseEntity.ok(compras);
     }
 

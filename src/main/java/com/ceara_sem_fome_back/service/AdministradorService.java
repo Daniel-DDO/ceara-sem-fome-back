@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -270,8 +271,46 @@ public class AdministradorService implements UserDetailsService {
         return estabelecimentoRepository.findAll();
     }
 
-    public List<Compra> verTodasAsCompras() {
-        return compraRepository.findAll();
+    public List<CompraRespostaDTO> verTodasAsCompras() {
+        List<Compra> compras = compraRepository.findAll();
+        List<CompraRespostaDTO> comprasDto = new ArrayList<>();
+
+        for (Compra compra : compras) {
+
+            CompraRespostaDTO dto = new CompraRespostaDTO();
+            dto.setId(compra.getId());
+            dto.setDataHora(compra.getDataHoraCompra());
+            dto.setValorTotal(compra.getValorTotal());
+
+            dto.setBeneficiarioId(compra.getBeneficiario().getId());
+            dto.setBeneficiarioNome(compra.getBeneficiario().getNome());
+
+            if (compra.getItens() != null && !compra.getItens().isEmpty()) {
+
+                ProdutoCompra firstItem = compra.getItens().get(0);
+                Estabelecimento estabelecimento = firstItem.getProdutoEstabelecimento().getEstabelecimento();
+                Comerciante comerciante = estabelecimento.getComerciante();
+
+                dto.setEstabelecimentoId(estabelecimento.getId());
+                dto.setEstabelecimentoNome(estabelecimento.getNome());
+                dto.setComercianteId(comerciante.getId());
+                dto.setComercianteNome(comerciante.getNome());
+            }
+
+            List<CompraItemDTO> itensDto = new ArrayList<>();
+            for (ProdutoCompra item : compra.getItens()) {
+
+                CompraItemDTO itemDto = new CompraItemDTO(
+                        item.getProdutoEstabelecimento().getProduto().getNome(),
+                        item.getQuantidade(),
+                        item.getPrecoUnitario()
+                );
+                itensDto.add(itemDto);
+            }
+            dto.setItens(itensDto);
+            comprasDto.add(dto);
+        }
+        return comprasDto;
     }
 
     public List<Compra> verComprasPorBeneficiario(Beneficiario beneficiario) {
