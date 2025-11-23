@@ -12,12 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -515,4 +515,20 @@ public class AdministradorController {
         }
         return ResponseEntity.ok(compras);
     }
+
+    @PatchMapping("/alterar-senha")
+    public ResponseEntity<Void> alterarSenha(
+            @RequestBody @Valid AlterarSenhaRequest request,
+            Authentication authentication
+    ) {
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof Administrador administradorLogado) {
+            administradorService.alterarSenha(administradorLogado.getId(), request);
+            return ResponseEntity.noContent().build();
+        } else {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuário logado não é um Administrador");
+        }
+    }
+
 }

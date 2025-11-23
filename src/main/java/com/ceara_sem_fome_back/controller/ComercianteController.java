@@ -2,7 +2,6 @@ package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.dto.*;
-import com.ceara_sem_fome_back.dto.ContaDTO;
 import com.ceara_sem_fome_back.exception.NegocioException;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Comerciante;
@@ -13,8 +12,10 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.util.List;
@@ -279,6 +280,21 @@ public class ComercianteController {
         ComercianteRespostaDTO dto = comercianteService.buscarPorIdDto(comercianteId);
 
         return ResponseEntity.ok(dto);
+    }
+
+    @PatchMapping("/alterar-senha")
+    public ResponseEntity<Void> alterarSenha(
+            @RequestBody @Valid AlterarSenhaRequest request,
+            Authentication authentication
+    ) {
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof Comerciante comercianteLogado) {
+            comercianteService.alterarSenha(comercianteLogado.getId(), request);
+            return ResponseEntity.noContent().build();
+        } else {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuário logado não é um Comerciante");
+        }
     }
 
 }

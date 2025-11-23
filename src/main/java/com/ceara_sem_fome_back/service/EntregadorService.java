@@ -1,6 +1,7 @@
 package com.ceara_sem_fome_back.service;
 
 import com.ceara_sem_fome_back.data.EntregadorData;
+import com.ceara_sem_fome_back.dto.AlterarSenhaRequest;
 import com.ceara_sem_fome_back.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
 import com.ceara_sem_fome_back.dto.EntregadorRequest;
@@ -8,8 +9,10 @@ import com.ceara_sem_fome_back.exception.ContaNaoExisteException;
 import com.ceara_sem_fome_back.exception.CpfInvalidoException;
 import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
 import com.ceara_sem_fome_back.exception.EmailJaCadastradoException;
+import com.ceara_sem_fome_back.model.Administrador;
 import com.ceara_sem_fome_back.model.Entregador;
 import com.ceara_sem_fome_back.repository.EntregadorRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -135,5 +138,25 @@ public class EntregadorService implements UserDetailsService {
 
         return entregadorRepository.findByCpf(cpf)
                 .orElseThrow(() -> new CpfInvalidoException(cpf));
+    }
+
+    @Autowired
+    private RecaptchaService recaptchaService;
+
+    @Transactional
+    public void alterarSenha(String id, AlterarSenhaRequest request) {
+        if (!recaptchaService.validarToken(request.getRecaptchaToken())) {
+            throw new IllegalArgumentException("Erro no reCAPTCHA");
+        }
+
+        Entregador entregador = entregadorRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Entregador não encontrado"));
+
+        if (!passwordEncoder.matches(request.getSenhaAtual(), entregador.getSenha())) {
+            throw new IllegalArgumentException("Senha atual incorreta");
+        }
+
+        entregador.setSenha(passwordEncoder.encode(request.getNovaSenha()));
+        entregadorRepository.save(entregador);
     }
 }

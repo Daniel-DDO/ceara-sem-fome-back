@@ -3,8 +3,10 @@ package com.ceara_sem_fome_back.service;
 import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.exception.*;
+import com.ceara_sem_fome_back.model.Administrador;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.repository.ComercianteRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
@@ -209,4 +211,23 @@ public class ComercianteService implements UserDetailsService {
         return dto;
     }
 
+    @Autowired
+    private RecaptchaService recaptchaService;
+
+    @Transactional
+    public void alterarSenha(String id, AlterarSenhaRequest request) {
+        if (!recaptchaService.validarToken(request.getRecaptchaToken())) {
+            throw new IllegalArgumentException("Erro no reCAPTCHA");
+        }
+
+        Comerciante comerciante = comercianteRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Comerciante não encontrado"));
+
+        if (!passwordEncoder.matches(request.getSenhaAtual(), comerciante.getSenha())) {
+            throw new IllegalArgumentException("Senha atual incorreta");
+        }
+
+        comerciante.setSenha(passwordEncoder.encode(request.getNovaSenha()));
+        comercianteRepository.save(comerciante);
+    }
 }

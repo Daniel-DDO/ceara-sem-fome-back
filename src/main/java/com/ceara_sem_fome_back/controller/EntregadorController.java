@@ -1,20 +1,17 @@
 package com.ceara_sem_fome_back.controller;
 
-//import com.ceara_sem_fome_back.dto.ErrorDTO;
-import com.ceara_sem_fome_back.dto.ErrorDTO;
-import com.ceara_sem_fome_back.dto.LoginDTO;
-import com.ceara_sem_fome_back.dto.PaginacaoDTO;
-import com.ceara_sem_fome_back.dto.PessoaRespostaDTO;
-import com.ceara_sem_fome_back.dto.AlterarStatusRequest;
-import com.ceara_sem_fome_back.dto.EntregadorRequest;
+import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.model.Entregador;
 import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.EntregadorService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping({"/entregador"})
@@ -130,5 +127,20 @@ public class EntregadorController {
         entregador.setSenha(null);
 
         return ResponseEntity.ok(entregador);
+    }
+
+    @PatchMapping("/alterar-senha")
+    public ResponseEntity<Void> alterarSenha(
+            @RequestBody @Valid AlterarSenhaRequest request,
+            Authentication authentication
+    ) {
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof Entregador entregadorLogado) {
+            entregadorService.alterarSenha(entregadorLogado.getId(), request);
+            return ResponseEntity.noContent().build();
+        } else {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuário logado não é um Entregador");
+        }
     }
 }

@@ -122,11 +122,9 @@ public class AdministradorService implements UserDetailsService {
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<Administrador> pagina;
 
-        // 1. Aplica o filtro se for válido
         if (nomeFiltro != null && !nomeFiltro.isBlank()) {
             pagina = administradorRepository.findByNomeContainingIgnoreCase(nomeFiltro, pageable);
         } else {
-            // Sem filtro, apenas paginação
             pagina = administradorRepository.findAll(pageable);
         }
 
@@ -157,36 +155,6 @@ public class AdministradorService implements UserDetailsService {
 
         pessoa.setStatus(novoStatus);
         return repository.save(pessoa);
-    }
-
-    public Pessoa alterarStatusAdministrador(AlterarStatusRequest request) {
-        switch (request.getTipoPessoa()) {
-            case ADMINISTRADOR -> {
-                Administrador administrador = administradorRepository.findById(request.getId())
-                        .orElseThrow(() -> new EntityNotFoundException("Administrador não encontrado"));
-                administrador.setStatus(request.getNovoStatusPessoa());
-                return administradorRepository.save(administrador);
-            }
-            case BENEFICIARIO -> {
-                Beneficiario beneficiario = beneficiarioRepository.findById(request.getId())
-                        .orElseThrow(() -> new EntityNotFoundException("Beneficiário não encontrado"));
-                beneficiario.setStatus(request.getNovoStatusPessoa());
-                return beneficiarioRepository.save(beneficiario);
-            }
-            case COMERCIANTE -> {
-                Comerciante comerciante = comercianteRepository.findById(request.getId())
-                        .orElseThrow(() -> new EntityNotFoundException("Comerciante não encontrado"));
-                comerciante.setStatus(request.getNovoStatusPessoa());
-                return comercianteRepository.save(comerciante);
-            }
-            case ENTREGADOR -> {
-                Entregador entregador = entregadorRepository.findById(request.getId())
-                        .orElseThrow(() -> new EntityNotFoundException("Entregador não encontrado"));
-                entregador.setStatus(request.getNovoStatusPessoa());
-                return entregadorRepository.save(entregador);
-            }
-            default -> throw new IllegalArgumentException("Tipo de pessoa inválido.");
-        }
     }
 
     /**
@@ -453,4 +421,23 @@ public class AdministradorService implements UserDetailsService {
         return dto;
     }
 
+    @Autowired
+    private RecaptchaService recaptchaService;
+
+    @Transactional
+    public void alterarSenha(String id, AlterarSenhaRequest request) {
+        if (!recaptchaService.validarToken(request.getRecaptchaToken())) {
+            throw new IllegalArgumentException("Erro no reCAPTCHA");
+        }
+
+        Administrador admin = administradorRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Admin não encontrado"));
+
+        if (!passwordEncoder.matches(request.getSenhaAtual(), admin.getSenha())) {
+            throw new IllegalArgumentException("Senha atual incorreta");
+        }
+
+        admin.setSenha(passwordEncoder.encode(request.getNovaSenha()));
+        administradorRepository.save(admin);
+    }
 }

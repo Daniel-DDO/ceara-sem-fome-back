@@ -19,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.security.Principal;
@@ -308,6 +309,21 @@ public class BeneficiarioController {
         BeneficiarioRespostaDTO dto = beneficiarioService.buscarPorIdDto(beneficiarioId);
 
         return ResponseEntity.ok(dto);
+    }
+
+    @PatchMapping("/alterar-senha")
+    public ResponseEntity<Void> alterarSenha(
+            @RequestBody @Valid AlterarSenhaRequest request,
+            Authentication authentication
+    ) {
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof Beneficiario beneficiarioLogado) {
+            beneficiarioService.alterarSenha(beneficiarioLogado.getId(), request);
+            return ResponseEntity.noContent().build();
+        } else {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuário logado não é um Beneficiário");
+        }
     }
 
 }

@@ -5,6 +5,7 @@ import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.exception.*;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.*;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -370,5 +371,25 @@ public class BeneficiarioService implements UserDetailsService {
         }
 
         return dto;
+    }
+
+    @Autowired
+    private RecaptchaService recaptchaService;
+
+    @Transactional
+    public void alterarSenha(String id, AlterarSenhaRequest request) {
+        if (!recaptchaService.validarToken(request.getRecaptchaToken())) {
+            throw new IllegalArgumentException("Erro no reCAPTCHA");
+        }
+
+        Beneficiario beneficiario = beneficiarioRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Beneficiário não encontrado"));
+
+        if (!passwordEncoder.matches(request.getSenhaAtual(), beneficiario.getSenha())) {
+            throw new IllegalArgumentException("Senha atual incorreta");
+        }
+
+        beneficiario.setSenha(passwordEncoder.encode(request.getNovaSenha()));
+        beneficiarioRepository.save(beneficiario);
     }
 }
