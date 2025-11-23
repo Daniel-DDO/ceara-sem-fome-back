@@ -24,6 +24,7 @@ public class CompraDTO {
     private String nomeEstabelecimento;
     private List<ProdutoCompraDTO> itens;
     private StatusCompra status;
+    private boolean avaliada;
 
     @Getter
     @Setter

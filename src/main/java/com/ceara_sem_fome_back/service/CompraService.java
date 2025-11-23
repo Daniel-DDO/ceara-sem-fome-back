@@ -191,6 +191,7 @@ public class CompraService {
         dto.setBeneficiarioNome(compra.getBeneficiario().getNome());
         dto.setEstabelecimentoId(estabelecimentoId);
         dto.setStatus(compra.getStatus());
+        dto.setAvaliada(compra.isAvaliada());
         dto.setNomeEstabelecimento(
                 compra.getItens().stream()
                         .filter(pc -> pc.getProdutoEstabelecimento().getEstabelecimento().getId().equals(estabelecimentoId))
