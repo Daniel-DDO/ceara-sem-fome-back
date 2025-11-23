@@ -6,6 +6,7 @@ import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.*;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
@@ -81,34 +83,49 @@ public class AdministradorController {
         }
     }
 
-    // Ativar conta (administrador)
-    @PatchMapping("/{id}/ativar")
-    public ResponseEntity<Pessoa> ativar(@PathVariable AlterarStatusRequest request) {
-        Pessoa pessoa = administradorService.alterarStatusAdministrador(request);
-        return ResponseEntity.ok(pessoa);
-    }
-
-    // Desativar conta (administrador)
-    @PatchMapping("/{id}/desativar")
-    public ResponseEntity<Pessoa> desativarAdm(@PathVariable AlterarStatusRequest request) {
-        Pessoa pessoa = administradorService.alterarStatusAdministrador(request);
-        return ResponseEntity.ok(pessoa);
-    }
-
-    // Desativar conta (qualquer tipo)
+    //DESATIVAR qualquer conta
     @PatchMapping("/desativar/{tipo}/{id}")
-    public ResponseEntity<Pessoa> desativar(@PathVariable AlterarStatusRequest request ) {
-        request.setNovoStatusPessoa(StatusPessoa.INATIVO);
-        Pessoa pessoa = administradorService.alterarStatusAdministrador(request);
-        return ResponseEntity.ok(pessoa);
+    public ResponseEntity<Pessoa> desativar(@PathVariable String tipo, @PathVariable String id) {
+        return processarAlteracaoStatus(tipo, id, StatusPessoa.INATIVO);
     }
 
-    // Bloquear conta (qualquer tipo)
+    //BLOQUEAR qualquer conta
     @PatchMapping("/bloquear/{tipo}/{id}")
-    public ResponseEntity<Pessoa> bloquear(@PathVariable AlterarStatusRequest request) {
-        request.setNovoStatusPessoa(StatusPessoa.BLOQUEADO);
-        Pessoa pessoa = administradorService.alterarStatusAdministrador(request);
-        return ResponseEntity.ok(pessoa);
+    public ResponseEntity<Pessoa> bloquear(@PathVariable String tipo, @PathVariable String id) {
+        return processarAlteracaoStatus(tipo, id, StatusPessoa.BLOQUEADO);
+    }
+
+    //ATIVAR qualquer conta
+    @PatchMapping("/ativar/{tipo}/{id}")
+    public ResponseEntity<Pessoa> ativar(@PathVariable String tipo, @PathVariable String id) {
+        return processarAlteracaoStatus(tipo, id, StatusPessoa.ATIVO);
+    }
+
+    //tornar qualquer conta PENDENTE
+    @PatchMapping("/pendente/{tipo}/{id}")
+    public ResponseEntity<Pessoa> pendente(@PathVariable String tipo, @PathVariable String id) {
+        return processarAlteracaoStatus(tipo, id, StatusPessoa.PENDENTE);
+    }
+
+    //RECUSAR qualquer conta
+    @PatchMapping("/recusar/{tipo}/{id}")
+    public ResponseEntity<Pessoa> recusar(@PathVariable String tipo, @PathVariable String id) {
+        return processarAlteracaoStatus(tipo, id, StatusPessoa.RECUSADO);
+    }
+
+    private ResponseEntity<Pessoa> processarAlteracaoStatus(String tipoStr, String id, StatusPessoa status) {
+        try {
+
+            TipoPessoa tipoPessoa = TipoPessoa.valueOf(tipoStr.toUpperCase());
+            Pessoa pessoaAtualizada = administradorService.alterarStatus(id, tipoPessoa, status);
+
+            return ResponseEntity.ok(pessoaAtualizada);
+
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de pessoa inválido: " + tipoStr);
+        } catch (EntityNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
     }
 
     @PostMapping("/cadastrar")
@@ -126,7 +143,6 @@ public class AdministradorController {
 
     @PostMapping("/iniciar-cadastro")
     public ResponseEntity<Object> iniciarCadastroAdministrador(@RequestBody @Valid AdministradorRequest request) {
-        //metodo de iniciar-cadastro
         try {
             administradorService.iniciarCadastro(request);
             return ResponseEntity.status(202).body("Verifique seu e-mail para continuar o cadastro.");

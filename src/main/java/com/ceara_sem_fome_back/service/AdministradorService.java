@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -67,7 +68,6 @@ public class AdministradorService implements UserDetailsService {
     public Administrador logarAdm(String email, String senha) {
         Optional<Administrador> administrador = administradorRepository.findByEmail(email);
 
-        //1. Usa passwordEncoder.matches() para comparar a senha criptografada
         if (administrador.isPresent() && passwordEncoder.matches(senha, administrador.get().getSenha())) {
             return administrador.get();
         }
@@ -138,6 +138,25 @@ public class AdministradorService implements UserDetailsService {
                 pagina.getSize(),
                 pagina.isLast()
         );
+    }
+
+    @Transactional
+    public Pessoa alterarStatus(String id, TipoPessoa tipoPessoa, StatusPessoa novoStatus) {
+        return switch (tipoPessoa) {
+            case ADMINISTRADOR -> alterarStatusGenerico(administradorRepository, id, novoStatus);
+            case BENEFICIARIO -> alterarStatusGenerico(beneficiarioRepository, id, novoStatus);
+            case COMERCIANTE -> alterarStatusGenerico(comercianteRepository, id, novoStatus);
+            case ENTREGADOR -> alterarStatusGenerico(entregadorRepository, id, novoStatus);
+            default -> throw new IllegalArgumentException("Tipo inválido: " + tipoPessoa);
+        };
+    }
+
+    private <T extends Pessoa> Pessoa alterarStatusGenerico(JpaRepository<T, String> repository, String id, StatusPessoa novoStatus) {
+        T pessoa = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + id));
+
+        pessoa.setStatus(novoStatus);
+        return repository.save(pessoa);
     }
 
     public Pessoa alterarStatusAdministrador(AlterarStatusRequest request) {
