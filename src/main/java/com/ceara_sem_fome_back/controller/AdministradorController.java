@@ -521,14 +521,12 @@ public class AdministradorController {
             @RequestBody @Valid AlterarSenhaRequest request,
             Authentication authentication
     ) {
-        Object principal = authentication.getPrincipal();
+        AdministradorData administradorData = (AdministradorData) authentication.getPrincipal();
 
-        if (principal instanceof Administrador administradorLogado) {
-            administradorService.alterarSenha(administradorLogado.getId(), request);
-            return ResponseEntity.noContent().build();
-        } else {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuário logado não é um Administrador");
-        }
+        Administrador administrador = administradorData.getAdministrador();
+        administradorService.alterarSenha(administrador.getId(), request);
+
+        return ResponseEntity.noContent().build();
     }
 
 }

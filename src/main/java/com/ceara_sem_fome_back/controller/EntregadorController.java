@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.controller;
 
+import com.ceara_sem_fome_back.data.EntregadorData;
 import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.model.Entregador;
 import com.ceara_sem_fome_back.model.StatusPessoa;
@@ -134,13 +135,11 @@ public class EntregadorController {
             @RequestBody @Valid AlterarSenhaRequest request,
             Authentication authentication
     ) {
-        Object principal = authentication.getPrincipal();
+        EntregadorData entregadorData = (EntregadorData) authentication.getPrincipal();
 
-        if (principal instanceof Entregador entregadorLogado) {
-            entregadorService.alterarSenha(entregadorLogado.getId(), request);
-            return ResponseEntity.noContent().build();
-        } else {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuário logado não é um Entregador");
-        }
+        Entregador entregador = entregadorData.getEntregador();
+        entregadorService.alterarSenha(entregador.getId(), request);
+
+        return ResponseEntity.noContent().build();
     }
 }

@@ -316,14 +316,12 @@ public class BeneficiarioController {
             @RequestBody @Valid AlterarSenhaRequest request,
             Authentication authentication
     ) {
-        Object principal = authentication.getPrincipal();
+        BeneficiarioData beneficiarioData = (BeneficiarioData) authentication.getPrincipal();
 
-        if (principal instanceof Beneficiario beneficiarioLogado) {
-            beneficiarioService.alterarSenha(beneficiarioLogado.getId(), request);
-            return ResponseEntity.noContent().build();
-        } else {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuário logado não é um Beneficiário");
-        }
+        Beneficiario beneficiario = beneficiarioData.getBeneficiario();
+        beneficiarioService.alterarSenha(beneficiario.getId(), request);
+
+        return ResponseEntity.noContent().build();
     }
 
 }

@@ -16,6 +16,10 @@ public class EntregadorData implements UserDetails {
 
     private final Optional<Entregador> entregador;
 
+    public Entregador getEntregador() {
+        return this.entregador.get();
+    }
+
     public EntregadorData(Optional<Entregador> entregador) {
         this.entregador = entregador;
     }

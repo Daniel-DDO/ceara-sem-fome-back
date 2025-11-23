@@ -287,14 +287,12 @@ public class ComercianteController {
             @RequestBody @Valid AlterarSenhaRequest request,
             Authentication authentication
     ) {
-        Object principal = authentication.getPrincipal();
+        ComercianteData comercianteData = (ComercianteData) authentication.getPrincipal();
 
-        if (principal instanceof Comerciante comercianteLogado) {
-            comercianteService.alterarSenha(comercianteLogado.getId(), request);
-            return ResponseEntity.noContent().build();
-        } else {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuário logado não é um Comerciante");
-        }
+        Comerciante comerciante = comercianteData.getComerciante();
+        comercianteService.alterarSenha(comerciante.getId(), request);
+
+        return ResponseEntity.noContent().build();
     }
 
 }
