@@ -1,19 +1,17 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.config.NotificacaoEvent;
 import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.exception.EstoqueInsuficienteException;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
+import com.ceara_sem_fome_back.exception.SaldoInsuficienteException;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.ceara_sem_fome_back.exception.SaldoInsuficienteException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -49,16 +47,10 @@ public class CompraService {
     private ContaRepository contaRepository;
 
     @Autowired
-    private ProdutoService produtoService;
-
-    @Autowired
-    private ProdutoRepository produtoRepository;
-
-    @Autowired
     private ProdutoEstabelecimentoRepository produtoEstabelecimentoRepository;
 
     @Autowired
-    private NotificacaoService notificacaoService;
+    private ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public List<Compra> finalizarCompra(String beneficiarioId) {
@@ -127,7 +119,11 @@ public class CompraService {
             comprasCriadas.add(compra);
         }
 
-        notificacaoService.criarEEnviarNotificacao(beneficiarioId, "Compra realizada com sucesso.");
+        try {
+            eventPublisher.publishEvent(new NotificacaoEvent(this, beneficiarioId, "Compra realizada com sucesso."));
+        } catch (Exception e) {
+            log.error("Erro ao publicar evento de notificação", e);
+        }
 
         carrinho.esvaziarCarrinho();
         carrinhoRepository.save(carrinho);
@@ -135,7 +131,6 @@ public class CompraService {
 
         return comprasCriadas;
     }
-
 
     @Transactional
     public List<CompraDTO> listarComprasBeneficiario(String beneficiarioId) {
@@ -351,5 +346,4 @@ public class CompraService {
                 .orElseThrow(() -> new RuntimeException("Compra não encontrada."));
         return produtoCompraRepository.findByCompra(compra);
     }
-
 }

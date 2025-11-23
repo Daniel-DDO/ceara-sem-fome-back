@@ -1,13 +1,14 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.config.NotificacaoEvent;
 import com.ceara_sem_fome_back.model.Beneficiario;
-import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.Conta;
 import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
 import com.ceara_sem_fome_back.repository.ComercianteRepository;
 import com.ceara_sem_fome_back.repository.ContaRepository;
-import lombok.extern.slf4j.Slf4j; // Importante para logs
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,21 +19,16 @@ import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class DepositoMensalService {
 
     private static final BigDecimal VALOR_MENSAL = BigDecimal.valueOf(300.00);
 
-    @Autowired
-    private BeneficiarioRepository beneficiarioRepository;
+    private final BeneficiarioRepository beneficiarioRepository;
+    private final ComercianteRepository comercianteRepository;
+    private final ContaRepository contaRepository;
 
-    @Autowired
-    private ComercianteRepository comercianteRepository;
-
-    @Autowired
-    private ContaRepository contaRepository;
-
-    @Autowired
-    private NotificacaoService notificacaoService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Scheduled(cron = "0 5 0 1 * *")
     public void depositarParaTodosNoDiaPrimeiro() {
@@ -49,10 +45,10 @@ public class DepositoMensalService {
 
         for (Beneficiario b : beneficiarios) {
             try {
-                realizarDepositoIndividual(b);
+                depositarBeneficioMensal(b);
                 sucesso++;
             } catch (Exception e) {
-                log.error("Erro ao depositar para beneficiário ID: " + b.getId(), e);
+                log.error("Erro ao depositar para beneficiário ID: {}", b.getId(), e);
                 erros++;
             }
         }
@@ -60,73 +56,77 @@ public class DepositoMensalService {
         log.info("Resumo: {} depósitos realizados, {} falhas.", sucesso, erros);
     }
 
-    @Transactional
-    public void realizarDepositoIndividual(Beneficiario b) {
+    private void depositarBeneficioMensal(Beneficiario b) {
         Conta c = b.getConta();
 
         if (c != null && c.isAtiva()) {
             c.setSaldo(c.getSaldo().add(VALOR_MENSAL));
             c.setAtualizadoEm(LocalDateTime.now());
-
             contaRepository.save(c);
 
-            String msgDeposito = String.format("O Governo depositou seu benefício mensal de R$ %.2f! Confira seu saldo.", VALOR_MENSAL);
-            notificacaoService.criarEEnviarNotificacao(b.getId(), msgDeposito);
+            String msg = String.format("O Governo depositou seu benefício de R$ %.2f! Confira seu saldo.", VALOR_MENSAL);
+            eventPublisher.publishEvent(new NotificacaoEvent(this, b.getId(), msg));
         }
     }
+
     @Transactional
     public Conta depositarEmConta(String contaId, BigDecimal valor) {
         if (valor == null || valor.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("O valor do depósito deve ser positivo.");
         }
 
-        Conta conta = contaRepository.findById(contaId)
-                .orElseThrow(() -> new RuntimeException("Conta não encontrada: " + contaId));
-
-        if (!conta.isAtiva()) {
-            throw new RuntimeException("Conta está desativada.");
-        }
+        Conta conta = buscarContaAtiva(contaId);
 
         conta.setSaldo(conta.getSaldo().add(valor));
         conta.setAtualizadoEm(LocalDateTime.now());
         Conta contaSalva = contaRepository.save(conta);
 
-        String msgDeposito = String.format("Você recebeu um depósito de R$ %.2f em sua conta!", valor);
-
-        beneficiarioRepository.findByConta(conta).ifPresentOrElse(
-                beneficiario -> {
-                    notificacaoService.criarEEnviarNotificacao(beneficiario.getId(), msgDeposito);
-                },
-                () -> {
-                    comercianteRepository.findByConta(conta).ifPresent(comerciante -> {
-                        notificacaoService.criarEEnviarNotificacao(comerciante.getId(), msgDeposito);
-                    });
-                }
-        );
+        // Notificar dono da conta
+        notificarDonoDaConta(conta, String.format("Você recebeu um depósito de R$ %.2f.", valor));
 
         return contaSalva;
     }
 
     @Transactional
     public Conta removerDeConta(String contaId, BigDecimal valor) {
-        Conta conta = contaRepository.findById(contaId)
-                .orElseThrow(() -> new RuntimeException("Conta não encontrada: " + contaId));
-
-        if (!conta.isAtiva()) {
-            throw new RuntimeException("Conta está desativada.");
-        }
+        Conta conta = buscarContaAtiva(contaId);
 
         if (conta.getSaldo().compareTo(valor) < 0) {
-            throw new RuntimeException("Saldo insuficiente.");
+            throw new RuntimeException("Saldo insuficiente para a operação.");
         }
 
         conta.setSaldo(conta.getSaldo().subtract(valor));
         conta.setAtualizadoEm(LocalDateTime.now());
+        Conta contaSalva = contaRepository.save(conta);
 
-        return contaRepository.save(conta);
+        notificarDonoDaConta(conta, String.format("Um débito de R$ %.2f foi realizado na sua conta.", valor));
+
+        return contaSalva;
+    }
+
+    private Conta buscarContaAtiva(String contaId) {
+        Conta conta = contaRepository.findById(contaId)
+                .orElseThrow(() -> new RuntimeException("Conta não encontrada: " + contaId));
+
+        if (!conta.isAtiva()) {
+            throw new RuntimeException("Conta está desativada e não pode ser movimentada.");
+        }
+        return conta;
+    }
+
+    private void notificarDonoDaConta(Conta conta, String mensagem) {
+        beneficiarioRepository.findByConta(conta).ifPresentOrElse(
+                b -> eventPublisher.publishEvent(new NotificacaoEvent(this, b.getId(), mensagem)),
+                () -> {
+                    comercianteRepository.findByConta(conta).ifPresent(
+                            c -> eventPublisher.publishEvent(new NotificacaoEvent(this, c.getId(), mensagem))
+                    );
+                }
+        );
     }
 
     public void testarDeposito() {
+        log.info("Iniciando teste manual de depósito...");
         processarDepositoMensal();
     }
 }

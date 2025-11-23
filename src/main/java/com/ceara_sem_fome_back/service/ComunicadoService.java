@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.config.NotificacaoEvent;
 import com.ceara_sem_fome_back.dto.ComunicadoDTO;
 import com.ceara_sem_fome_back.model.Administrador;
 import com.ceara_sem_fome_back.model.Beneficiario;
@@ -9,7 +10,7 @@ import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
 import com.ceara_sem_fome_back.repository.ComercianteRepository;
 import com.ceara_sem_fome_back.repository.ComunicadoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,13 +27,13 @@ public class ComunicadoService {
     private AdministradorService administradorService;
 
     @Autowired
-    private BeneficiarioRepository beneficiarioRepository; // Injetar
+    private BeneficiarioRepository beneficiarioRepository;
 
     @Autowired
-    private ComercianteRepository comercianteRepository; // Injetar
+    private ComercianteRepository comercianteRepository;
 
     @Autowired
-    private NotificacaoService notificacaoService;
+    private ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public ComunicadoDTO criar(ComunicadoDTO dto) {
@@ -56,7 +57,7 @@ public class ComunicadoService {
         List<Beneficiario> beneficiarios = beneficiarioRepository.findAll();
         for (Beneficiario b : beneficiarios) {
             try {
-                notificacaoService.criarEEnviarNotificacao(b.getId(), msgNotificacao);
+                eventPublisher.publishEvent(new NotificacaoEvent(this, b.getId(), msgNotificacao));
             } catch (Exception e) {
                 System.err.println("Erro ao notificar beneficiario " + b.getId());
             }
@@ -65,7 +66,7 @@ public class ComunicadoService {
         List<Comerciante> comerciantes = comercianteRepository.findAll();
         for (Comerciante c : comerciantes) {
             try {
-                notificacaoService.criarEEnviarNotificacao(c.getId(), msgNotificacao);
+                eventPublisher.publishEvent(new NotificacaoEvent(this, c.getId(), msgNotificacao));
             } catch (Exception e) {
                 System.err.println("Erro ao notificar comerciante " + c.getId());
             }
@@ -101,4 +102,3 @@ public class ComunicadoService {
         return comunicadoRepository.findByAtivo(true);
     }
 }
-

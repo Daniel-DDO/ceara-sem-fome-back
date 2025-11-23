@@ -30,20 +30,11 @@ public class ComercianteService implements UserDetailsService {
     private ComercianteRepository comercianteRepository;
 
     @Autowired
-    private CompraService compraService;
-
-    @Autowired
     @Lazy
     private PasswordEncoder passwordEncoder;
 
     @Autowired
     private CadastroService cadastroService;
-
-    @Autowired
-    private ContaService contaService;
-
-    @Autowired
-    private NotificacaoService notificacaoService;
 
     public Comerciante logarComerciante(String email, String senha) {
         Optional<Comerciante> comerciante = comercianteRepository.findByEmail(email);

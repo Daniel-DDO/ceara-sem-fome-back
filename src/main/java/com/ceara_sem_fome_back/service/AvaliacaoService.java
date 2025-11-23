@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.config.NotificacaoEvent;
 import com.ceara_sem_fome_back.dto.AvaliacaoRequestDTO;
 import com.ceara_sem_fome_back.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.RespostaAvaliacaoRequestDTO;
@@ -9,6 +10,7 @@ import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,7 +42,7 @@ public class AvaliacaoService {
     private ComercianteRepository comercianteRepository;
 
     @Autowired
-    private NotificacaoService notificacaoService;
+    private ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void registrarAvaliacao(String compraId, String beneficiarioId, AvaliacaoRequestDTO dto) {
@@ -95,7 +97,11 @@ public class AvaliacaoService {
             String msgComerciante = String.format("Recebeu uma avaliação de %d estrelas no pedido #%s.",
                     dto.getEstrelas(), compraIdCurto);
 
-            notificacaoService.criarEEnviarNotificacao(comerciante.getId(), msgComerciante);
+            try {
+                eventPublisher.publishEvent(new NotificacaoEvent(this, comerciante.getId(), msgComerciante));
+            } catch (Exception e) {
+                log.error("Erro ao publicar evento de notificação", e);
+            }
         }
 
         log.info("Avaliação registrada com sucesso | Compra ID: {} | Beneficiário ID: {}", compraId, beneficiarioId);
@@ -133,7 +139,11 @@ public class AvaliacaoService {
 
         String msgBeneficiario = String.format("O estabelecimento %s respondeu sua avaliação!", nomeEstabelecimento);
 
-        notificacaoService.criarEEnviarNotificacao(beneficiarioId, msgBeneficiario);
+        try {
+            eventPublisher.publishEvent(new NotificacaoEvent(this, beneficiarioId, msgBeneficiario));
+        } catch (Exception e) {
+            log.error("Erro ao publicar evento de notificação", e);
+        }
 
         log.info("Resposta registrada | Avaliação ID: {} | Comerciante ID: {}", dto.getAvaliacaoId(), comercianteId);
     }

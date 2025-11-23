@@ -34,11 +34,15 @@ public class NotificacaoService {
         String destino = "/topic/usuario/" + destinatarioId;
         messagingTemplate.convertAndSend(destino, dto);
 
-        log.info("Notificação enviada para usuário {} via WebSocket", destinatarioId);
+        log.info("Notificação enviada para {}: {}", destinatarioId, mensagem);
     }
 
     public List<Notificacao> listarPorUsuario(String usuarioId) {
         return repository.findByDestinatarioIdOrderByDataCriacaoDesc(usuarioId);
+    }
+
+    public long contarNaoLidas(String usuarioId) {
+        return repository.countByDestinatarioIdAndLidaFalse(usuarioId);
     }
 
     @Transactional
@@ -47,5 +51,10 @@ public class NotificacaoService {
             n.setLida(true);
             repository.save(n);
         });
+    }
+
+    @Transactional
+    public void marcarTodasComoLidas(String usuarioId) {
+        repository.marcarTodasComoLidas(usuarioId);
     }
 }
