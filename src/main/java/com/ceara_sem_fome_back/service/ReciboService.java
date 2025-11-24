@@ -80,8 +80,6 @@ public class ReciboService {
             adicionarLinhaInfo(infoTable, "ID da Compra: ", dto.getCompraId());
             adicionarLinhaInfo(infoTable, "Data Emissão: ", dto.getDataCompra().format(DATA_FORMAT));
             adicionarLinhaInfo(infoTable, "Beneficiário: ", dto.getNomeBeneficiario());
-            adicionarLinhaInfo(infoTable, "Estabelecimento: ", dto.getNomeEstabelecimento());
-            adicionarLinhaInfo(infoTable, "Endereço: ", dto.getEnderecoEstabelecimentoCompleto());
 
             if (dto.getNomeEstabelecimento() != null) {
                 adicionarLinhaInfo(infoTable, "Estabelecimento:", dto.getNomeEstabelecimento());
@@ -99,7 +97,7 @@ public class ReciboService {
 
             tabelaItens.addHeaderCell(criarCelulaCabecalho("Produto", TextAlignment.LEFT));
             tabelaItens.addHeaderCell(criarCelulaCabecalho("Qtd", TextAlignment.CENTER));
-            tabelaItens.addHeaderCell(criarCelulaCabecalho("Preço Unit", TextAlignment.RIGHT));
+            tabelaItens.addHeaderCell(criarCelulaCabecalho("Preço unitário", TextAlignment.RIGHT));
             tabelaItens.addHeaderCell(criarCelulaCabecalho("Subtotal", TextAlignment.RIGHT));
 
             boolean linhaPar = false;
