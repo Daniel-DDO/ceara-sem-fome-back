@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -60,10 +62,12 @@ public class AdministradorService implements UserDetailsService {
     @Autowired
     private CadastroService cadastroService;
 
+    @Autowired
+    private NotificacaoService notificacaoService;
+
     public Administrador logarAdm(String email, String senha) {
         Optional<Administrador> administrador = administradorRepository.findByEmail(email);
 
-        //1. Usa passwordEncoder.matches() para comparar a senha criptografada
         if (administrador.isPresent() && passwordEncoder.matches(senha, administrador.get().getSenha())) {
             return administrador.get();
         }
@@ -118,11 +122,9 @@ public class AdministradorService implements UserDetailsService {
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<Administrador> pagina;
 
-        // 1. Aplica o filtro se for válido
         if (nomeFiltro != null && !nomeFiltro.isBlank()) {
             pagina = administradorRepository.findByNomeContainingIgnoreCase(nomeFiltro, pageable);
         } else {
-            // Sem filtro, apenas paginação
             pagina = administradorRepository.findAll(pageable);
         }
 
@@ -136,34 +138,23 @@ public class AdministradorService implements UserDetailsService {
         );
     }
 
-    public Pessoa alterarStatusAdministrador(AlterarStatusRequest request) {
-        switch (request.getTipoPessoa()) {
-            case ADMINISTRADOR -> {
-                Administrador administrador = administradorRepository.findById(request.getId())
-                        .orElseThrow(() -> new EntityNotFoundException("Administrador não encontrado"));
-                administrador.setStatus(request.getNovoStatusPessoa());
-                return administradorRepository.save(administrador);
-            }
-            case BENEFICIARIO -> {
-                Beneficiario beneficiario = beneficiarioRepository.findById(request.getId())
-                        .orElseThrow(() -> new EntityNotFoundException("Beneficiário não encontrado"));
-                beneficiario.setStatus(request.getNovoStatusPessoa());
-                return beneficiarioRepository.save(beneficiario);
-            }
-            case COMERCIANTE -> {
-                Comerciante comerciante = comercianteRepository.findById(request.getId())
-                        .orElseThrow(() -> new EntityNotFoundException("Comerciante não encontrado"));
-                comerciante.setStatus(request.getNovoStatusPessoa());
-                return comercianteRepository.save(comerciante);
-            }
-            case ENTREGADOR -> {
-                Entregador entregador = entregadorRepository.findById(request.getId())
-                        .orElseThrow(() -> new EntityNotFoundException("Entregador não encontrado"));
-                entregador.setStatus(request.getNovoStatusPessoa());
-                return entregadorRepository.save(entregador);
-            }
-            default -> throw new IllegalArgumentException("Tipo de pessoa inválido.");
-        }
+    @Transactional
+    public Pessoa alterarStatus(String id, TipoPessoa tipoPessoa, StatusPessoa novoStatus) {
+        return switch (tipoPessoa) {
+            case ADMINISTRADOR -> alterarStatusGenerico(administradorRepository, id, novoStatus);
+            case BENEFICIARIO -> alterarStatusGenerico(beneficiarioRepository, id, novoStatus);
+            case COMERCIANTE -> alterarStatusGenerico(comercianteRepository, id, novoStatus);
+            case ENTREGADOR -> alterarStatusGenerico(entregadorRepository, id, novoStatus);
+            default -> throw new IllegalArgumentException("Tipo inválido: " + tipoPessoa);
+        };
+    }
+
+    private <T extends Pessoa> Pessoa alterarStatusGenerico(JpaRepository<T, String> repository, String id, StatusPessoa novoStatus) {
+        T pessoa = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com id: " + id));
+
+        pessoa.setStatus(novoStatus);
+        return repository.save(pessoa);
     }
 
     /**
@@ -270,70 +261,70 @@ public class AdministradorService implements UserDetailsService {
         return estabelecimentoRepository.findAll();
     }
 
-    // funções de listagem de compras e histórico
-    public List<CompraRespostaDTO> listarTodasCompras() {
-        return compraRepository.findAll().stream()
-                .map(this::toDTO)
-                .toList();
-    }
+    public List<CompraRespostaDTO> verTodasAsCompras() {
+        List<Compra> compras = compraRepository.findAll();
+        List<CompraRespostaDTO> comprasDto = new ArrayList<>();
 
-    public List<CompraRespostaDTO> listarComprasPorBeneficiario(String beneficiarioId) {
+        for (Compra compra : compras) {
 
-        var beneficiario = beneficiarioRepository.findById(beneficiarioId)
-                .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado"));
+            CompraRespostaDTO dto = new CompraRespostaDTO();
+            dto.setId(compra.getId());
+            dto.setDataHora(compra.getDataHoraCompra());
+            dto.setValorTotal(compra.getValorTotal());
 
-        return compraRepository.findByBeneficiario(beneficiario).stream()
-                .map(this::toDTO)
-                .toList();
-    }
+            dto.setBeneficiarioId(compra.getBeneficiario().getId());
+            dto.setBeneficiarioNome(compra.getBeneficiario().getNome());
 
-    public List<CompraRespostaDTO> listarComprasPorEstabelecimento(String estabelecimentoId) {
+            if (compra.getItens() != null && !compra.getItens().isEmpty()) {
 
-        var estabelecimento = estabelecimentoRepository.findById(estabelecimentoId)
-                .orElseThrow(() -> new RuntimeException("Estabelecimento não encontrado"));
+                ProdutoCompra firstItem = compra.getItens().get(0);
+                Estabelecimento estabelecimento = firstItem.getProdutoEstabelecimento().getEstabelecimento();
+                Comerciante comerciante = estabelecimento.getComerciante();
 
-        return compraRepository.findByEstabelecimento(estabelecimento).stream()
-                .map(this::toDTO)
-                .toList();
-    }
+                dto.setEstabelecimentoId(estabelecimento.getId());
+                dto.setEstabelecimentoNome(estabelecimento.getNome());
+                dto.setComercianteId(comerciante.getId());
+                dto.setComercianteNome(comerciante.getNome());
+            }
 
-    public List<CompraRespostaDTO> listarComprasPorPeriodo(LocalDateTime inicio, LocalDateTime fim) {
-        return compraRepository.findByDataHoraCompraBetween(inicio, fim).stream()
-                .map(this::toDTO)
-                .toList();
-    }
+            List<CompraItemDTO> itensDto = new ArrayList<>();
+            for (ProdutoCompra item : compra.getItens()) {
 
-    public List<CompraRespostaDTO> listarComprasPorEstabelecimentoEStatus(String estabelecimentoId, StatusCompra status) {
-        return compraRepository.findByEstabelecimentoIdAndStatus(estabelecimentoId, status)
-                .stream()
-                .map(this::toDTO)
-                .toList();
-    }
-
-    private CompraRespostaDTO toDTO(Compra compra) {
-
-        String enderecoStr = compra.getEndereco() != null ?
-                compra.getEndereco().getLogradouro() + ", " +
-                        compra.getEndereco().getNumero() + " - " +
-                        compra.getEndereco().getBairro() :
-                "Endereço não registrado";
-
-        List<CompraItemDTO> itens = compra.getItens().stream()
-                .map(item -> new CompraItemDTO(
-                        item.getProduto().getNome(),
+                CompraItemDTO itemDto = new CompraItemDTO(
+                        item.getProdutoEstabelecimento().getProduto().getNome(),
                         item.getQuantidade(),
                         item.getPrecoUnitario()
-                )).toList();
+                );
+                itensDto.add(itemDto);
+            }
+            dto.setItens(itensDto);
+            comprasDto.add(dto);
+        }
+        return comprasDto;
+    }
 
-        return new CompraRespostaDTO(
-                compra.getId(),
-                compra.getDataHoraCompra(),
-                compra.getValorTotal(),
-                compra.getBeneficiario().getNome(),
-                compra.getEstabelecimento().getNome(),
-                enderecoStr,
-                itens
-        );
+    public List<Compra> verComprasPorBeneficiario(Beneficiario beneficiario) {
+        return compraRepository.findByBeneficiario(beneficiario);
+    }
+
+    public List<Compra> verComprasPorBeneficiarioId(String beneficiarioId) {
+        return compraRepository.findByBeneficiarioId(beneficiarioId);
+    }
+
+    public List<Compra> verComprasPorEstabelecimento(Estabelecimento estabelecimento) {
+        return compraRepository.findDistinctByItensProdutoEstabelecimentoEstabelecimento(estabelecimento);
+    }
+
+    public List<Compra> verComprasPorEstabelecimentoId(String estabelecimentoId) {
+        return compraRepository.findDistinctByItensProdutoEstabelecimentoEstabelecimentoId(estabelecimentoId);
+    }
+
+    public List<Compra> verComprasPorComerciante(Comerciante comerciante) {
+        return compraRepository.findDistinctByItensProdutoEstabelecimentoEstabelecimentoComerciante(comerciante);
+    }
+
+    public List<Compra> verComprasPorComercianteId(String comercianteId) {
+        return compraRepository.findDistinctByItensProdutoEstabelecimentoEstabelecimentoComercianteId(comercianteId);
     }
 
     // funções para o administrador conseguir informações de Beneficiário e do comerciante
@@ -430,4 +421,23 @@ public class AdministradorService implements UserDetailsService {
         return dto;
     }
 
+    @Autowired
+    private RecaptchaService recaptchaService;
+
+    @Transactional
+    public void alterarSenha(String id, AlterarSenhaRequest request) {
+        if (!recaptchaService.validarToken(request.getRecaptchaToken())) {
+            throw new IllegalArgumentException("Erro no reCAPTCHA");
+        }
+
+        Administrador admin = administradorRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Admin não encontrado"));
+
+        if (!passwordEncoder.matches(request.getSenhaAtual(), admin.getSenha())) {
+            throw new IllegalArgumentException("Senha atual incorreta");
+        }
+
+        admin.setSenha(passwordEncoder.encode(request.getNovaSenha()));
+        administradorRepository.save(admin);
+    }
 }

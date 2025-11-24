@@ -39,7 +39,7 @@ public class Carrinho {
 
     public void atualizarSubtotal() {
         this.subtotal = produtos.stream()
-                .map(item -> item.getProduto().getPreco()
+                .map(item -> item.getProdutoEstabelecimento().getProduto().getPreco()
                         .multiply(BigDecimal.valueOf(item.getQuantidade())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -58,9 +58,9 @@ public class Carrinho {
         this.modificacao = LocalDateTime.now();
     }
 
-    public void adicionarProduto(Produto produto, int quantidade) {
+    public void adicionarProduto(ProdutoEstabelecimento produtoEstabelecimento, int quantidade) {
         for (ProdutoCarrinho item : produtos) {
-            if (item.getProduto().equals(produto)) {
+            if (item.getProdutoEstabelecimento().getProduto().equals(produtoEstabelecimento)) {
                 item.setQuantidade(item.getQuantidade() + quantidade);
                 atualizarSubtotal();
                 return;
@@ -69,14 +69,14 @@ public class Carrinho {
 
         ProdutoCarrinho novoItem = new ProdutoCarrinho();
         novoItem.setCarrinho(this);
-        novoItem.setProduto(produto);
+        novoItem.setProdutoEstabelecimento(produtoEstabelecimento);
         novoItem.setQuantidade(quantidade);
         produtos.add(novoItem);
         atualizarSubtotal();
     }
 
-    public void removerProduto(Produto produto) {
-        produtos.removeIf(item -> item.getProduto().equals(produto));
+    public void removerProduto(ProdutoEstabelecimento produtoEstabelecimento) {
+        produtos.removeIf(item -> item.getProdutoEstabelecimento().getProduto().equals(produtoEstabelecimento));
         atualizarSubtotal();
     }
 }

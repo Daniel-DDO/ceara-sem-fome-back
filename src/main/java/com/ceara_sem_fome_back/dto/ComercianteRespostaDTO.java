@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.dto;
 
+import com.ceara_sem_fome_back.model.Conta;
 import com.ceara_sem_fome_back.model.StatusPessoa;
 import lombok.Builder;
 import lombok.Data;
@@ -22,6 +23,7 @@ public class ComercianteRespostaDTO {
     private String genero;
     private Boolean lgpdAccepted;
     private StatusPessoa status;
+    private Conta conta;
 
     private List<EstabelecimentoResumoResponse> estabelecimentos;
 }

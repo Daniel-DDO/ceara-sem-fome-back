@@ -2,7 +2,6 @@ package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.dto.*;
-import com.ceara_sem_fome_back.dto.ContaDTO;
 import com.ceara_sem_fome_back.exception.NegocioException;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Comerciante;
@@ -13,8 +12,10 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.util.List;
@@ -184,6 +185,7 @@ public class ComercianteController {
         return ResponseEntity.ok(estabelecimentos);
     }
 
+    /*
     @GetMapping("/meu-historico-vendas")
     public ResponseEntity<List<HistoricoVendasDTO>> listarHistoricoVendas(
             @AuthenticationPrincipal ComercianteData comercianteData) {
@@ -193,6 +195,8 @@ public class ComercianteController {
         return ResponseEntity.ok(historico);
     }
 
+     */
+
     @GetMapping("/meus-produtos")
     public ResponseEntity<List<ProdutoDTO>> listarProdutos(@AuthenticationPrincipal ComercianteData comercianteData) {
         String comercianteId = comercianteData.getComerciante().getId();
@@ -200,6 +204,7 @@ public class ComercianteController {
         return ResponseEntity.ok(produtos);
     }
 
+    /*
     @GetMapping("/meu-extrato")
     public ResponseEntity<ContaDTO> consultarExtrato(
             @AuthenticationPrincipal ComercianteData comercianteData) {
@@ -208,6 +213,8 @@ public class ComercianteController {
         ContaDTO contaDTO = comercianteService.consultarExtrato(comercianteId);
         return ResponseEntity.ok(contaDTO);
     }
+
+     */
 
     @PostMapping("/adicionar-prod-estab")
     public ResponseEntity<String> adicionarProduto(
@@ -273,6 +280,19 @@ public class ComercianteController {
         ComercianteRespostaDTO dto = comercianteService.buscarPorIdDto(comercianteId);
 
         return ResponseEntity.ok(dto);
+    }
+
+    @PatchMapping("/alterar-senha")
+    public ResponseEntity<Void> alterarSenha(
+            @RequestBody @Valid AlterarSenhaRequest request,
+            Authentication authentication
+    ) {
+        ComercianteData comercianteData = (ComercianteData) authentication.getPrincipal();
+
+        Comerciante comerciante = comercianteData.getComerciante();
+        comercianteService.alterarSenha(comerciante.getId(), request);
+
+        return ResponseEntity.noContent().build();
     }
 
 }

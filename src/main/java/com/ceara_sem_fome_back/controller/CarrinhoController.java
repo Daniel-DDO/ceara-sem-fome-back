@@ -1,7 +1,7 @@
 package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.BeneficiarioData;
-import com.ceara_sem_fome_back.dto.ItemCarrinhoRequestDTO;
+import com.ceara_sem_fome_back.dto.ProdutoCarrinhoRequestDTO;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Carrinho;
 import com.ceara_sem_fome_back.service.CarrinhoService;
@@ -46,7 +46,7 @@ public class CarrinhoController {
     @PostMapping("/item")
     public ResponseEntity<?> adicionarItem(
             @AuthenticationPrincipal BeneficiarioData beneficiarioData,
-            @Valid @RequestBody ItemCarrinhoRequestDTO dto) {
+            @Valid @RequestBody ProdutoCarrinhoRequestDTO dto) {
         try {
             String email = beneficiarioData.getUsername();
             Carrinho carrinho = carrinhoService.adicionarItem(email, dto);
@@ -66,7 +66,7 @@ public class CarrinhoController {
     public ResponseEntity<?> atualizarItem(
             @AuthenticationPrincipal BeneficiarioData beneficiarioData,
             @PathVariable String produtoId,
-            @Valid @RequestBody ItemCarrinhoRequestDTO dto) {
+            @Valid @RequestBody ProdutoCarrinhoRequestDTO dto) {
         try {
             String email = beneficiarioData.getUsername();
             Carrinho carrinho = carrinhoService.atualizarItem(email, produtoId, dto);
@@ -82,13 +82,13 @@ public class CarrinhoController {
         }
     }
 
-    @DeleteMapping("/item/{produtoId}")
+    @DeleteMapping("/item/{produtoEstabelecimentoId}")
     public ResponseEntity<?> removerItem(
             @AuthenticationPrincipal BeneficiarioData beneficiarioData,
-            @PathVariable String produtoId) {
+            @PathVariable String produtoEstabelecimentoId) {
         try {
             String email = beneficiarioData.getUsername();
-            Carrinho carrinho = carrinhoService.removerItem(email, produtoId);
+            Carrinho carrinho = carrinhoService.removerItem(email, produtoEstabelecimentoId);
             return ResponseEntity.ok(carrinho);
         } catch (RecursoNaoEncontradoException e) {
             // Produto não encontrado

@@ -19,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.security.Principal;
@@ -205,12 +206,15 @@ public class BeneficiarioController {
         return ResponseEntity.ok(saldo);
     }
 
+    /*
     @PostMapping("/compra")
     public ResponseEntity<Compra> realizarCompra(Principal principal) {
         String userEmail = principal.getName();
         Compra novaCompra = beneficiarioService.realizarCompra(userEmail);
         return ResponseEntity.status(201).body(novaCompra);
     }
+
+     */
 
     @GetMapping("/compras/historico")
     public ResponseEntity<List<Compra>> verHistoricoCompras(Principal principal) {
@@ -281,20 +285,17 @@ public class BeneficiarioController {
             @Valid @RequestBody AvaliacaoRequestDTO dto,
             @AuthenticationPrincipal BeneficiarioData beneficiarioData) {
 
-        String beneficiarioId = beneficiarioData.getId();
-
-        if (beneficiarioId == null) {
+        if (beneficiarioData == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         try {
+            String beneficiarioId = beneficiarioData.getId();
             avaliacaoService.registrarAvaliacao(dto.getCompraId(), beneficiarioId, dto);
-
             return ResponseEntity.status(HttpStatus.CREATED).build();
 
         } catch (RecursoNaoEncontradoException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-
         } catch (NegocioException e) {
             return ResponseEntity.status(e.getStatus()).build();
         }
@@ -308,6 +309,19 @@ public class BeneficiarioController {
         BeneficiarioRespostaDTO dto = beneficiarioService.buscarPorIdDto(beneficiarioId);
 
         return ResponseEntity.ok(dto);
+    }
+
+    @PatchMapping("/alterar-senha")
+    public ResponseEntity<Void> alterarSenha(
+            @RequestBody @Valid AlterarSenhaRequest request,
+            Authentication authentication
+    ) {
+        BeneficiarioData beneficiarioData = (BeneficiarioData) authentication.getPrincipal();
+
+        Beneficiario beneficiario = beneficiarioData.getBeneficiario();
+        beneficiarioService.alterarSenha(beneficiario.getId(), request);
+
+        return ResponseEntity.noContent().build();
     }
 
 }

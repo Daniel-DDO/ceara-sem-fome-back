@@ -244,10 +244,10 @@ public class ProdutoService {
     }
 
     @Transactional
-    public void decrementarEstoque(List<ItemCompra> itens) {
-        for (ItemCompra item : itens) {
-            Produto produto = produtoRepository.findById(item.getProduto().getId())
-                    .orElseThrow(() -> new RecursoNaoEncontradoException("Produto " + item.getProduto().getNome() + " nao encontrado durante a baixa de estoque."));
+    public void decrementarEstoque(List<ProdutoCompra> itens) {
+        for (ProdutoCompra item : itens) {
+            Produto produto = produtoRepository.findById(item.getProdutoEstabelecimento().getProduto().getId())
+                    .orElseThrow(() -> new RecursoNaoEncontradoException("Produto " + item.getProdutoEstabelecimento().getProduto().getNome() + " nao encontrado durante a baixa de estoque."));
 
             int novoEstoque = produto.getQuantidadeEstoque() - item.getQuantidade();
             if (novoEstoque < 0) {

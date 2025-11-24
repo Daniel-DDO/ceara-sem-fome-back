@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.config.NotificacaoEvent;
 import com.ceara_sem_fome_back.dto.AvaliacaoRequestDTO;
 import com.ceara_sem_fome_back.dto.PaginacaoDTO;
 import com.ceara_sem_fome_back.dto.RespostaAvaliacaoRequestDTO;
@@ -7,32 +8,44 @@ import com.ceara_sem_fome_back.exception.NegocioException;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.*;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class AvaliacaoService {
 
-    private final CompraRepository compraRepository;
-    private final AvaliacaoRepository avaliacaoRepository;
-    private final ProdutoRepository produtoRepository;
-    private final ComercianteRepository comercianteRepository;
-    private final EstabelecimentoRepository estabelecimentoRepository;
+    @Autowired
+    private CompraRepository compraRepository;
+
+    @Autowired
+    private AvaliacaoRepository avaliacaoRepository;
+
+    @Autowired
+    private ProdutoRepository produtoRepository;
+
+    @Autowired
+    private EstabelecimentoRepository estabelecimentoRepository;
+
+    @Autowired
+    private ComercianteRepository comercianteRepository;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void registrarAvaliacao(String compraId, String beneficiarioId, AvaliacaoRequestDTO dto) {
-
         Compra compra = compraRepository.findById(compraId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Compra não encontrada com ID: " + compraId));
 
@@ -40,17 +53,25 @@ public class AvaliacaoService {
             throw new NegocioException("Acesso negado. Esta compra não pertence ao seu perfil.", HttpStatus.FORBIDDEN);
         }
 
-        if (!compra.getStatus().equals(StatusCompra.FINALIZADA)) {
-            String mensagem = String.format(
-                    "A compra precisa estar no status '%s' para ser avaliada. Status atual: %s",
-                    StatusCompra.FINALIZADA.name(),
-                    compra.getStatus().name()
+        Set<StatusCompra> statusPermitidos = Set.of(
+                StatusCompra.RETIRADA,
+                StatusCompra.ENTREGUE,
+                StatusCompra.FINALIZADA
+        );
+
+        if (!statusPermitidos.contains(compra.getStatus())) {
+            throw new NegocioException(
+                    String.format("Status da compra inválido para avaliação: %s", compra.getStatus()),
+                    HttpStatus.BAD_REQUEST
             );
-            throw new NegocioException(mensagem, HttpStatus.BAD_REQUEST);
         }
 
-        if (compra.getAvaliacao() != null) {
+        if (compra.isAvaliada()) {
             throw new NegocioException("Esta compra já foi avaliada.", HttpStatus.BAD_REQUEST);
+        }
+
+        if (dto.getEstrelas() < 1 || dto.getEstrelas() > 5) {
+            throw new NegocioException("A nota deve ser entre 1 e 5 estrelas.", HttpStatus.BAD_REQUEST);
         }
 
         Avaliacao avaliacao = new Avaliacao();
@@ -59,27 +80,48 @@ public class AvaliacaoService {
         avaliacao.setComentario(dto.getComentario());
         avaliacao.setDataAvaliacao(LocalDateTime.now());
 
-        Avaliacao avaliacaoSalva = avaliacaoRepository.save(avaliacao);
+        avaliacaoRepository.save(avaliacao);
 
-        compra.setAvaliacao(avaliacaoSalva);
+        compra.setAvaliada(true);
         compraRepository.save(compra);
 
-        atualizarMedias(compra, dto.getEstrelas());
+        atualizarMedias(compra);
 
-        log.info("Avaliação registrada com sucesso | Compra ID: {} | Beneficiário ID: {} | Estrelas: {}",
-                compraId, beneficiarioId, dto.getEstrelas());
+        if (!compra.getItens().isEmpty()) {
+
+            Comerciante comerciante = compra.getItens().get(0)
+                    .getProdutoEstabelecimento().getEstabelecimento().getComerciante();
+
+            String compraIdCurto = compra.getId().length() > 8 ? compra.getId().substring(0, 8) : compra.getId();
+
+            String msgComerciante = String.format("Recebeu uma avaliação de %d estrelas no pedido #%s.",
+                    dto.getEstrelas(), compraIdCurto);
+
+            try {
+                eventPublisher.publishEvent(new NotificacaoEvent(this, comerciante.getId(), msgComerciante));
+            } catch (Exception e) {
+                log.error("Erro ao publicar evento de notificação", e);
+            }
+        }
+
+        log.info("Avaliação registrada com sucesso | Compra ID: {} | Beneficiário ID: {}", compraId, beneficiarioId);
     }
 
     @Transactional
     public void registrarRespostaComerciante(String comercianteId, RespostaAvaliacaoRequestDTO dto) {
-
         Avaliacao avaliacao = avaliacaoRepository.findById(dto.getAvaliacaoId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Avaliação não encontrada com ID: " + dto.getAvaliacaoId()));
 
         Compra compra = avaliacao.getCompra();
 
+        if (compra.getItens().isEmpty()) {
+            throw new NegocioException("Inconsistência de dados: Compra sem itens.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
 
-        if (!compra.getEstabelecimento().getComerciante().getId().equals(comercianteId)) {
+        Estabelecimento estabelecimento = compra.getItens().get(0).getProdutoEstabelecimento().getEstabelecimento();
+        Comerciante comerciante = estabelecimento.getComerciante();
+
+        if (!comerciante.getId().equals(comercianteId)) {
             throw new NegocioException("Acesso negado. Este comerciante não pode responder a esta avaliação.", HttpStatus.FORBIDDEN);
         }
 
@@ -92,35 +134,34 @@ public class AvaliacaoService {
 
         avaliacaoRepository.save(avaliacao);
 
-        log.info("Resposta do comerciante registrada | Avaliação ID: {} | Comerciante ID: {}",
-                dto.getAvaliacaoId(), comercianteId);
+        String beneficiarioId = compra.getBeneficiario().getId();
+        String nomeEstabelecimento = estabelecimento.getNome();
+
+        String msgBeneficiario = String.format("O estabelecimento %s respondeu sua avaliação!", nomeEstabelecimento);
+
+        try {
+            eventPublisher.publishEvent(new NotificacaoEvent(this, beneficiarioId, msgBeneficiario));
+        } catch (Exception e) {
+            log.error("Erro ao publicar evento de notificação", e);
+        }
+
+        log.info("Resposta registrada | Avaliação ID: {} | Comerciante ID: {}", dto.getAvaliacaoId(), comercianteId);
     }
 
     @Transactional(readOnly = true)
-    public PaginacaoDTO<Avaliacao> listarAvaliacoes(
-            int page,
-            int size,
-            String sortBy,
-            String direction) {
+    public PaginacaoDTO<Avaliacao> listarAvaliacoes(int page, int size, String sortBy, String direction) {
+        Sort.Direction sortDirection = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        String campoOrdenacao = "dataAvaliacao";
 
-        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
-
-        String campoOrdenacao;
-        if (sortBy.equalsIgnoreCase("recentes")) {
-            campoOrdenacao = "dataAvaliacao";
-            sortDirection = Sort.Direction.DESC;
-        } else if (sortBy.equalsIgnoreCase("melhores")) {
+        if ("melhores".equalsIgnoreCase(sortBy)) {
             campoOrdenacao = "estrelas";
             sortDirection = Sort.Direction.DESC;
-        } else {
-            campoOrdenacao = "dataAvaliacao";
-            sortDirection = Sort.Direction.DESC;
+        } else if ("piores".equalsIgnoreCase(sortBy)) {
+            campoOrdenacao = "estrelas";
+            sortDirection = Sort.Direction.ASC;
         }
 
-        Sort sort = Sort.by(sortDirection, campoOrdenacao);
-
-        Pageable pageable = PageRequest.of(page, size, sort);
-
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, campoOrdenacao));
         Page<Avaliacao> pagina = avaliacaoRepository.findAll(pageable);
 
         return new PaginacaoDTO<>(
@@ -133,30 +174,37 @@ public class AvaliacaoService {
         );
     }
 
-    private void atualizarMedias(Compra compra, Integer novaNota) {
-
+    private void atualizarMedias(Compra compra) {
+        if (compra.getItens() == null || compra.getItens().isEmpty()) {
+            return;
+        }
 
         compra.getItens().forEach(item -> {
-            Produto produto = item.getProduto();
+            ProdutoEstabelecimento produtoEstabelecimento = item.getProdutoEstabelecimento();
+            Produto produto = produtoEstabelecimento.getProduto();
 
-            Double novaMediaProduto = avaliacaoRepository.findAverageByProdutoId(produto.getId());
+            Double novaMediaProduto = avaliacaoRepository.findAverageByProdutoEstabelecimentoId(produtoEstabelecimento.getId());
 
-            produto.setMediaAvaliacoes(novaMediaProduto);
-            produtoRepository.save(produto);
+            if (novaMediaProduto != null) {
+                produto.setMediaAvaliacoes(novaMediaProduto);
+                produtoRepository.save(produto);
+            }
         });
 
-        Estabelecimento estabelecimento = compra.getEstabelecimento();
-
+        Estabelecimento estabelecimento = compra.getItens().get(0).getProdutoEstabelecimento().getEstabelecimento();
         Double novaMediaEstabelecimento = avaliacaoRepository.findAverageByEstabelecimentoId(estabelecimento.getId());
 
-        estabelecimento.setMediaAvaliacoes(novaMediaEstabelecimento);
-        estabelecimentoRepository.save(estabelecimento);
+        if (novaMediaEstabelecimento != null) {
+            estabelecimento.setMediaAvaliacoes(novaMediaEstabelecimento);
+            estabelecimentoRepository.save(estabelecimento);
+        }
 
         Comerciante comerciante = estabelecimento.getComerciante();
-
         Double novaMediaComerciante = avaliacaoRepository.findAverageByComercianteId(comerciante.getId());
 
-        comerciante.setMediaAvaliacoes(novaMediaComerciante);
-        comercianteRepository.save(comerciante);
+        if (novaMediaComerciante != null) {
+            comerciante.setMediaAvaliacoes(novaMediaComerciante);
+            comercianteRepository.save(comerciante);
+        }
     }
 }

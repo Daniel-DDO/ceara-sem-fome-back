@@ -12,6 +12,16 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalException {
 
+    @ExceptionHandler({
+            SaldoInsuficienteException.class,
+            EstoqueInsuficienteException.class,
+            IllegalArgumentException.class
+    })
+    public ResponseEntity<ErrorDTO> handleBusinessException(RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorDTO(e.getMessage(), HttpStatus.BAD_REQUEST.value()));
+    }
+
     @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationException(
             org.springframework.web.bind.MethodArgumentNotValidException ex) {

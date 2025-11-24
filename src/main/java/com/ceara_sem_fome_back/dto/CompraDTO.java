@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.dto;
 
+import com.ceara_sem_fome_back.model.StatusCompra;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,30 +14,27 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ReciboDTO {
+public class CompraDTO {
+
     private String compraId;
     private LocalDateTime dataCompra;
-    private String nomeBeneficiario;
     private String beneficiarioId;
-    private String nomeComerciante;
-    private String comercianteId;
+    private String beneficiarioNome;
+    private String estabelecimentoId;
     private String nomeEstabelecimento;
-    private String enderecoEstabelecimentoCompleto;
-    private Double latitude;
-    private Double longitude;
-    private List<ItemCompraDTO> itens;
-    private BigDecimal valorTotal;
+    private List<ProdutoCompraDTO> itens;
+    private StatusCompra status;
+    private boolean avaliada;
 
     @Getter
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class ItemCompraDTO {
-        private String nomeProduto;
-        private String produtoEstabelecimentoId;
+    public static class ProdutoCompraDTO {
         private String produtoId;
-        private String estabelecimentoId;
-        private int quantidade;
+        private String produtoEstabelecimentoId;
+        private String produtoNome;
+        private Integer quantidade;
         private BigDecimal valorUnitario;
         private BigDecimal subtotal;
     }

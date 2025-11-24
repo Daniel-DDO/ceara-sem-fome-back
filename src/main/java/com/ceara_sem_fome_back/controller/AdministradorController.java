@@ -6,16 +6,18 @@ import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.*;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -81,34 +83,49 @@ public class AdministradorController {
         }
     }
 
-    // Ativar conta (administrador)
-    @PatchMapping("/{id}/ativar")
-    public ResponseEntity<Pessoa> ativar(@PathVariable AlterarStatusRequest request) {
-        Pessoa pessoa = administradorService.alterarStatusAdministrador(request);
-        return ResponseEntity.ok(pessoa);
-    }
-
-    // Desativar conta (administrador)
-    @PatchMapping("/{id}/desativar")
-    public ResponseEntity<Pessoa> desativarAdm(@PathVariable AlterarStatusRequest request) {
-        Pessoa pessoa = administradorService.alterarStatusAdministrador(request);
-        return ResponseEntity.ok(pessoa);
-    }
-
-    // Desativar conta (qualquer tipo)
+    //DESATIVAR qualquer conta
     @PatchMapping("/desativar/{tipo}/{id}")
-    public ResponseEntity<Pessoa> desativar(@PathVariable AlterarStatusRequest request ) {
-        request.setNovoStatusPessoa(StatusPessoa.INATIVO);
-        Pessoa pessoa = administradorService.alterarStatusAdministrador(request);
-        return ResponseEntity.ok(pessoa);
+    public ResponseEntity<Pessoa> desativar(@PathVariable String tipo, @PathVariable String id) {
+        return processarAlteracaoStatus(tipo, id, StatusPessoa.INATIVO);
     }
 
-    // Bloquear conta (qualquer tipo)
+    //BLOQUEAR qualquer conta
     @PatchMapping("/bloquear/{tipo}/{id}")
-    public ResponseEntity<Pessoa> bloquear(@PathVariable AlterarStatusRequest request) {
-        request.setNovoStatusPessoa(StatusPessoa.BLOQUEADO);
-        Pessoa pessoa = administradorService.alterarStatusAdministrador(request);
-        return ResponseEntity.ok(pessoa);
+    public ResponseEntity<Pessoa> bloquear(@PathVariable String tipo, @PathVariable String id) {
+        return processarAlteracaoStatus(tipo, id, StatusPessoa.BLOQUEADO);
+    }
+
+    //ATIVAR qualquer conta
+    @PatchMapping("/ativar/{tipo}/{id}")
+    public ResponseEntity<Pessoa> ativar(@PathVariable String tipo, @PathVariable String id) {
+        return processarAlteracaoStatus(tipo, id, StatusPessoa.ATIVO);
+    }
+
+    //tornar qualquer conta PENDENTE
+    @PatchMapping("/pendente/{tipo}/{id}")
+    public ResponseEntity<Pessoa> pendente(@PathVariable String tipo, @PathVariable String id) {
+        return processarAlteracaoStatus(tipo, id, StatusPessoa.PENDENTE);
+    }
+
+    //RECUSAR qualquer conta
+    @PatchMapping("/recusar/{tipo}/{id}")
+    public ResponseEntity<Pessoa> recusar(@PathVariable String tipo, @PathVariable String id) {
+        return processarAlteracaoStatus(tipo, id, StatusPessoa.RECUSADO);
+    }
+
+    private ResponseEntity<Pessoa> processarAlteracaoStatus(String tipoStr, String id, StatusPessoa status) {
+        try {
+
+            TipoPessoa tipoPessoa = TipoPessoa.valueOf(tipoStr.toUpperCase());
+            Pessoa pessoaAtualizada = administradorService.alterarStatus(id, tipoPessoa, status);
+
+            return ResponseEntity.ok(pessoaAtualizada);
+
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de pessoa inválido: " + tipoStr);
+        } catch (EntityNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
     }
 
     @PostMapping("/cadastrar")
@@ -126,7 +143,6 @@ public class AdministradorController {
 
     @PostMapping("/iniciar-cadastro")
     public ResponseEntity<Object> iniciarCadastroAdministrador(@RequestBody @Valid AdministradorRequest request) {
-        //metodo de iniciar-cadastro
         try {
             administradorService.iniciarCadastro(request);
             return ResponseEntity.status(202).body("Verifique seu e-mail para continuar o cadastro.");
@@ -161,16 +177,10 @@ public class AdministradorController {
             @Valid @RequestBody PessoaUpdateDto dto,
             Principal principal) { //Pega o usuário autenticado via token
 
-        //1. Pega o e-mail do usuário logado (armazenado no token)
         String userEmail = principal.getName();
-
-        //2. Chama o novo serviço de atualização
         Administrador adminAtualizado = administradorService.atualizarAdministrador(userEmail, dto);
-
-        //3. A senha não retorna no JSON.
+        //A senha não retorna no JSON.
         adminAtualizado.setSenha(null);
-
-        //4. Retorna o objeto atualizado
         return ResponseEntity.ok(adminAtualizado);
     }
 
@@ -269,49 +279,28 @@ public class AdministradorController {
 
         List<EstabelecimentoRespostaDTO> resposta = estabelecimentos.stream()
                 .map(est -> new EstabelecimentoRespostaDTO(
-                        est.getId(),
-                        est.getNome(),
-                        est.getCnpj(),
-                        est.getTelefone(),                  // comércio
-                        est.getEndereco().getLogradouro(),
-                        est.getEndereco().getNumero(),
-                        est.getEndereco().getBairro(),
-                        est.getEndereco().getMunicipio()
-                ))
+                est.getId(),
+                est.getNome(),
+                est.getCnpj(),
+                est.getTelefone(),
+                est.getImagem(),
+                est.getTipoImagem(),
+                est.getMediaAvaliacoes(),
+                est.getEndereco() != null ? est.getEndereco().getId() : null,
+                est.getEndereco() != null ? est.getEndereco().getCep() : null,
+                est.getEndereco() != null ? est.getEndereco().getLogradouro() : null,
+                est.getEndereco() != null ? est.getEndereco().getNumero() : null,
+                est.getEndereco() != null ? est.getEndereco().getBairro() : null,
+                est.getEndereco() != null ? est.getEndereco().getMunicipio() : null,
+                        est.getEndereco() != null ? est.getEndereco().getLatitude() : null,
+                        est.getEndereco() != null ? est.getEndereco().getLongitude() : null,
+                est.getComerciante() != null ? est.getComerciante().getId() : null,
+                est.getComerciante() != null ? est.getComerciante().getNome() : null
+        )
+)
                 .toList();
 
         return ResponseEntity.ok(resposta);
-    }
-
-    // endpoints para listagem de compras
-    @GetMapping("/compras")
-    public ResponseEntity<List<CompraRespostaDTO>> listarTodasCompras() {
-        return ResponseEntity.ok(administradorService.listarTodasCompras());
-    }
-
-    @GetMapping("/beneficiario/{id}")
-    public ResponseEntity<List<CompraRespostaDTO>> listarPorBeneficiario(@PathVariable String id) {
-        return ResponseEntity.ok(administradorService.listarComprasPorBeneficiario(id));
-    }
-
-    @GetMapping("/estabelecimento/{id}")
-    public ResponseEntity<List<CompraRespostaDTO>> listarPorEstabelecimento(@PathVariable String id) {
-        return ResponseEntity.ok(administradorService.listarComprasPorEstabelecimento(id));
-    }
-
-    @GetMapping("/periodo")
-    public ResponseEntity<List<CompraRespostaDTO>> listarPorPeriodo(
-            @RequestParam LocalDateTime inicio,
-            @RequestParam LocalDateTime fim
-    ) {
-        return ResponseEntity.ok(administradorService.listarComprasPorPeriodo(inicio, fim));
-    }
-
-    @GetMapping("/estabelecimento/{id}/status/{status}")
-    public ResponseEntity<List<CompraRespostaDTO>> listarPorEstabelecimentoEStatus(
-            @PathVariable String id, @PathVariable StatusCompra status) {
-
-        return ResponseEntity.ok(administradorService.listarComprasPorEstabelecimentoEStatus(id, status));
     }
 
     // enpoints para o administrador obter informações do beneficiário e do comerciante
@@ -387,7 +376,6 @@ public class AdministradorController {
         return ResponseEntity.ok(comercianteInativado);
     }
 
-
     @PostMapping("/criar-comunicado")
     public ResponseEntity<ComunicadoDTO> criar(@RequestBody ComunicadoDTO dto) {
         ComunicadoDTO criado = comunicadoService.criar(dto);
@@ -416,6 +404,7 @@ public class AdministradorController {
             dto.setGenero(c.getGenero());
             dto.setLgpdAccepted(c.getLgpdAccepted());
             dto.setStatus(c.getStatus());
+            dto.setConta(c.getConta());
             return dto;
         }).toList();
 
@@ -484,59 +473,6 @@ public class AdministradorController {
         return ResponseEntity.ok(paginaDTO);
     }
 
-    @GetMapping("/compra/all")
-    public ResponseEntity<PaginacaoDTO<CompraRespostaDTO>> listarTodasCompras(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "dataHoraCompra") String sortBy,
-            @RequestParam(defaultValue = "desc") String direction,
-            @RequestParam(required = false) String beneficiarioFiltro
-    ) {
-        PaginacaoDTO<Compra> pagina = compraService
-                .listarComFiltro(beneficiarioFiltro, page, size, sortBy, direction);
-
-        List<CompraRespostaDTO> listaDTO = pagina.getConteudo().stream().map(compra -> {
-
-            List<CompraItemDTO> itensDTO = compra.getItens().stream().map(item ->
-                    new CompraItemDTO(
-                            item.getProduto().getNome(),
-                            item.getQuantidade(),
-                            item.getPrecoUnitario()
-                    )
-            ).toList();
-
-            CompraRespostaDTO dto = new CompraRespostaDTO(
-                    compra.getId(),
-                    compra.getDataHoraCompra(),
-                    compra.getValorTotal(),
-                    compra.getBeneficiario().getNome(),
-                    compra.getEstabelecimento().getNome(),
-                    compra.getEndereco() != null
-                            ? compra.getEndereco().getLogradouro() + ", " +
-                            compra.getEndereco().getNumero() + " - " +
-                            compra.getEndereco().getBairro()
-                            : null,
-                    itensDTO
-            );
-
-            dto.setAvaliacao(compra.getAvaliacao());
-            return dto;
-
-        }).toList();
-
-        PaginacaoDTO<CompraRespostaDTO> paginaDTO =
-                new PaginacaoDTO<>(
-                        listaDTO,
-                        pagina.getPaginaAtual(),
-                        pagina.getTotalPaginas(),
-                        pagina.getTotalElementos(),
-                        pagina.getTamanhoPagina(),
-                        pagina.isUltimaPagina()
-                );
-
-        return ResponseEntity.ok(paginaDTO);
-    }
-
     @GetMapping("/me")
     public ResponseEntity<AdministradorRespostaDTO> obterAdministradorLogado(
             @AuthenticationPrincipal AdministradorData administradorData) {
@@ -545,6 +481,52 @@ public class AdministradorController {
         AdministradorRespostaDTO dto = administradorService.buscarPorIdDto(adminId);
 
         return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/compras/all")
+    public ResponseEntity<List<CompraRespostaDTO>> verTodasAsCompras() {
+        List<CompraRespostaDTO> compras = administradorService.verTodasAsCompras();
+        return ResponseEntity.ok(compras);
+    }
+
+    @GetMapping("/compras/beneficiario/{beneficiarioId}")
+    public ResponseEntity<List<Compra>> verComprasPorBeneficiarioId(@PathVariable String beneficiarioId) {
+        List<Compra> compras = administradorService.verComprasPorBeneficiarioId(beneficiarioId);
+        if (compras.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(compras);
+    }
+
+    @GetMapping("/compras/estabelecimento/{estabelecimentoId}")
+    public ResponseEntity<List<Compra>> verComprasPorEstabelecimentoId(@PathVariable String estabelecimentoId) {
+        List<Compra> compras = administradorService.verComprasPorEstabelecimentoId(estabelecimentoId);
+        if (compras.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(compras);
+    }
+
+    @GetMapping("/compras/comerciante/{comercianteId}")
+    public ResponseEntity<List<Compra>> verComprasPorComercianteId(@PathVariable String comercianteId) {
+        List<Compra> compras = administradorService.verComprasPorComercianteId(comercianteId);
+        if (compras.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(compras);
+    }
+
+    @PatchMapping("/alterar-senha")
+    public ResponseEntity<Void> alterarSenha(
+            @RequestBody @Valid AlterarSenhaRequest request,
+            Authentication authentication
+    ) {
+        AdministradorData administradorData = (AdministradorData) authentication.getPrincipal();
+
+        Administrador administrador = administradorData.getAdministrador();
+        administradorService.alterarSenha(administrador.getId(), request);
+
+        return ResponseEntity.noContent().build();
     }
 
 }
