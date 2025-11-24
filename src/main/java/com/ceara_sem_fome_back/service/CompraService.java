@@ -50,6 +50,9 @@ public class CompraService {
     private ProdutoEstabelecimentoRepository produtoEstabelecimentoRepository;
 
     @Autowired
+    private ReciboService reciboService;
+
+    @Autowired
     private ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -358,5 +361,9 @@ public class CompraService {
         Compra compra = compraRepository.findById(compraId)
                 .orElseThrow(() -> new RuntimeException("Compra não encontrada."));
         return produtoCompraRepository.findByCompra(compra);
+    }
+
+    public byte[] gerarReciboPDF(String compraId) {
+        return reciboService.gerarReciboPDF(compraId);
     }
 }

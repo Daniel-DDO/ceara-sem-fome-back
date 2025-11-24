@@ -94,4 +94,13 @@ public class CompraController {
         return ResponseEntity.ok(vendas);
     }
 
+    @GetMapping("/{compraId}/recibo")
+    public ResponseEntity<byte[]> gerarRecibo(@PathVariable String compraId) {
+        byte[] pdfBytes = compraService.gerarReciboPDF(compraId);
+
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, org.springframework.http.MediaType.APPLICATION_PDF_VALUE)
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "inline; filename=recibo-" + compraId + ".pdf")
+                .body(pdfBytes);
+    }
 }
