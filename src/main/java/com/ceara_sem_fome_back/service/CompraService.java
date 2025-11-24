@@ -78,7 +78,7 @@ public class CompraService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         if (totalSelecionado.compareTo(beneficiario.getConta().getSaldo()) > 0) {
-            throw new RuntimeException("Saldo insuficiente");
+            throw new SaldoInsuficienteException("Saldo insuficiente. Seu saldo é menor que o total da compra.");
         }
 
         Map<String, List<ProdutoCarrinho>> produtosPorEstabelecimento = produtosSelecionados.stream()
