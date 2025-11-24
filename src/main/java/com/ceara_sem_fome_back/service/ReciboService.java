@@ -3,12 +3,28 @@ package com.ceara_sem_fome_back.service;
 import com.ceara_sem_fome_back.dto.ReciboDTO;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.CompraRepository;
+import com.itextpdf.kernel.colors.Color;
+import com.itextpdf.kernel.colors.ColorConstants;
+import com.itextpdf.kernel.colors.DeviceRgb;
+import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.borders.Border;
+import com.itextpdf.layout.borders.SolidBorder;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
+import com.itextpdf.layout.properties.VerticalAlignment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
@@ -23,6 +39,9 @@ public class ReciboService {
     private static final NumberFormat MOEDA_FORMAT = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
     private static final DateTimeFormatter DATA_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
+    private static final Color COR_PRIMARIA = new DeviceRgb(40, 167, 69);
+    private static final Color COR_CINZA_CLARO = new DeviceRgb(240, 240, 240);
+
     @Transactional(readOnly = true)
     public byte[] gerarReciboPDF(String compraId) {
         Compra compra = compraRepository.findById(compraId)
@@ -35,28 +54,34 @@ public class ReciboService {
 
     private byte[] criarDocumentoPdf(ReciboDTO dto) {
         try (java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
-            com.itextpdf.kernel.pdf.PdfWriter writer = new com.itextpdf.kernel.pdf.PdfWriter(baos);
-            com.itextpdf.kernel.pdf.PdfDocument pdf = new com.itextpdf.kernel.pdf.PdfDocument(writer);
-            com.itextpdf.layout.Document document = new com.itextpdf.layout.Document(pdf);
+            PdfWriter writer = new PdfWriter(baos);
+            PdfDocument pdf = new PdfDocument(writer);
+            pdf.setDefaultPageSize(PageSize.A4);
+            Document document = new Document(pdf);
+            document.setMargins(20, 20, 20, 20);
 
-            document.add(new com.itextpdf.layout.element.Paragraph("RECIBO DE COMPRA")
-                    .setBold()
-                    .setFontSize(18)
-                    .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER));
+            Table headerTable = new Table(UnitValue.createPercentArray(1)).useAllAvailableWidth();
+            Cell headerCell = new Cell()
+                    .add(new Paragraph("CEARÁ RAIZ").setFontSize(24).setBold())
+                    .add(new Paragraph("Comprovante de Compra").setFontSize(12))
+                    .setBackgroundColor(COR_PRIMARIA)
+                    .setFontColor(ColorConstants.WHITE)
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                    .setBorder(Border.NO_BORDER)
+                    .setPadding(20);
+            headerTable.addCell(headerCell);
+            document.add(headerTable);
 
-            document.add(new com.itextpdf.layout.element.Paragraph("Ceará Sem Fome")
-                    .setFontSize(12)
-                    .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER)
-                    .setFontColor(com.itextpdf.kernel.colors.ColorConstants.GRAY));
+            document.add(new Paragraph("\n"));
 
-            document.add(new com.itextpdf.layout.element.Paragraph("\n"));
+            Table infoTable = new Table(UnitValue.createPercentArray(new float[]{2, 5})).useAllAvailableWidth();
 
-            com.itextpdf.layout.element.Table infoTable = new com.itextpdf.layout.element.Table(com.itextpdf.layout.properties.UnitValue.createPercentArray(new float[]{1, 3}));
-            infoTable.setWidth(com.itextpdf.layout.properties.UnitValue.createPercentValue(100));
-
-            adicionarLinhaInfo(infoTable, "ID da Compra:", dto.getCompraId());
-            adicionarLinhaInfo(infoTable, "Data:", dto.getDataCompra().format(DATA_FORMAT));
-            adicionarLinhaInfo(infoTable, "Beneficiário:", dto.getNomeBeneficiario());
+            adicionarLinhaInfo(infoTable, "ID da Compra: ", dto.getCompraId());
+            adicionarLinhaInfo(infoTable, "Data Emissão: ", dto.getDataCompra().format(DATA_FORMAT));
+            adicionarLinhaInfo(infoTable, "Beneficiário: ", dto.getNomeBeneficiario());
+            adicionarLinhaInfo(infoTable, "Estabelecimento: ", dto.getNomeEstabelecimento());
+            adicionarLinhaInfo(infoTable, "Endereço: ", dto.getEnderecoEstabelecimentoCompleto());
 
             if (dto.getNomeEstabelecimento() != null) {
                 adicionarLinhaInfo(infoTable, "Estabelecimento:", dto.getNomeEstabelecimento());
@@ -66,31 +91,56 @@ public class ReciboService {
             }
 
             document.add(infoTable);
-            document.add(new com.itextpdf.layout.element.Paragraph("\n"));
+            document.add(new Paragraph("\n"));
 
-            com.itextpdf.layout.element.Table tabelaItens = new com.itextpdf.layout.element.Table(com.itextpdf.layout.properties.UnitValue.createPercentArray(new float[]{4, 1.5f, 2, 2.5f}));
-            tabelaItens.setWidth(com.itextpdf.layout.properties.UnitValue.createPercentValue(100));
+            document.add(new Paragraph("ITENS DA COMPRA").setBold().setFontColor(COR_PRIMARIA).setFontSize(14));
 
-            tabelaItens.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new com.itextpdf.layout.element.Paragraph("Produto").setBold()).setBackgroundColor(com.itextpdf.kernel.colors.ColorConstants.LIGHT_GRAY));
-            tabelaItens.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new com.itextpdf.layout.element.Paragraph("Qtd").setBold()).setBackgroundColor(com.itextpdf.kernel.colors.ColorConstants.LIGHT_GRAY).setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER));
-            tabelaItens.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new com.itextpdf.layout.element.Paragraph("Vl. Unit").setBold()).setBackgroundColor(com.itextpdf.kernel.colors.ColorConstants.LIGHT_GRAY).setTextAlignment(com.itextpdf.layout.properties.TextAlignment.RIGHT));
-            tabelaItens.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new com.itextpdf.layout.element.Paragraph("Subtotal").setBold()).setBackgroundColor(com.itextpdf.kernel.colors.ColorConstants.LIGHT_GRAY).setTextAlignment(com.itextpdf.layout.properties.TextAlignment.RIGHT));
+            Table tabelaItens = new Table(UnitValue.createPercentArray(new float[]{4, 1.5f, 2, 2.5f})).useAllAvailableWidth();
 
+            tabelaItens.addHeaderCell(criarCelulaCabecalho("Produto", TextAlignment.LEFT));
+            tabelaItens.addHeaderCell(criarCelulaCabecalho("Qtd", TextAlignment.CENTER));
+            tabelaItens.addHeaderCell(criarCelulaCabecalho("Preço Unit", TextAlignment.RIGHT));
+            tabelaItens.addHeaderCell(criarCelulaCabecalho("Subtotal", TextAlignment.RIGHT));
+
+            boolean linhaPar = false;
             for (ReciboDTO.ItemCompraDTO item : dto.getItens()) {
-                tabelaItens.addCell(new com.itextpdf.layout.element.Paragraph(item.getNomeProduto()));
-                tabelaItens.addCell(new com.itextpdf.layout.element.Paragraph(String.valueOf(item.getQuantidade())).setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER));
-                tabelaItens.addCell(new com.itextpdf.layout.element.Paragraph(formatarMoeda(item.getValorUnitario())).setTextAlignment(com.itextpdf.layout.properties.TextAlignment.RIGHT));
-                tabelaItens.addCell(new com.itextpdf.layout.element.Paragraph(formatarMoeda(item.getSubtotal())).setTextAlignment(com.itextpdf.layout.properties.TextAlignment.RIGHT));
+                Color bg = linhaPar ? COR_CINZA_CLARO : ColorConstants.WHITE;
+
+                tabelaItens.addCell(criarCelulaItem(item.getNomeProduto(), TextAlignment.LEFT, bg));
+                tabelaItens.addCell(criarCelulaItem(String.valueOf(item.getQuantidade()), TextAlignment.CENTER, bg));
+                tabelaItens.addCell(criarCelulaItem(formatarMoeda(item.getValorUnitario()), TextAlignment.RIGHT, bg));
+                tabelaItens.addCell(criarCelulaItem(formatarMoeda(item.getSubtotal()), TextAlignment.RIGHT, bg));
+
+                linhaPar = !linhaPar;
             }
 
             document.add(tabelaItens);
 
-            document.add(new com.itextpdf.layout.element.Paragraph("\n"));
-            com.itextpdf.layout.element.Paragraph totalParagraph = new com.itextpdf.layout.element.Paragraph("VALOR TOTAL: " + formatarMoeda(dto.getValorTotal()))
+            Table totalTable = new Table(UnitValue.createPercentArray(new float[]{1})).useAllAvailableWidth();
+            totalTable.setMarginTop(10);
+
+            Cell totalCell = new Cell()
+                    .add(new Paragraph("VALOR TOTAL: " + formatarMoeda(dto.getValorTotal())))
+                    .setTextAlignment(TextAlignment.RIGHT)
+                    .setBackgroundColor(COR_PRIMARIA)
+                    .setFontColor(ColorConstants.WHITE)
+                    .setFontSize(16)
                     .setBold()
-                    .setFontSize(14)
-                    .setTextAlignment(com.itextpdf.layout.properties.TextAlignment.RIGHT);
-            document.add(totalParagraph);
+                    .setPadding(10)
+                    .setBorder(Border.NO_BORDER);
+
+            totalTable.addCell(totalCell);
+            document.add(totalTable);
+
+            document.add(new Paragraph("\n\n"));
+            Paragraph footer = new Paragraph("Obrigado pela preferência!\nDocumento gerado em " +
+                    LocalDateTime.now().format(DATA_FORMAT))
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setFontSize(9)
+                    .setFontColor(ColorConstants.GRAY)
+                    .setItalic();
+
+            document.add(footer);
 
             document.close();
             return baos.toByteArray();
@@ -99,9 +149,34 @@ public class ReciboService {
         }
     }
 
-    private void adicionarLinhaInfo(com.itextpdf.layout.element.Table table, String label, String value) {
-        table.addCell(new com.itextpdf.layout.element.Cell().add(new com.itextpdf.layout.element.Paragraph(label).setBold()).setBorder(com.itextpdf.layout.borders.Border.NO_BORDER));
-        table.addCell(new com.itextpdf.layout.element.Cell().add(new com.itextpdf.layout.element.Paragraph(value != null ? value : "-")).setBorder(com.itextpdf.layout.borders.Border.NO_BORDER));
+    private void adicionarLinhaInfo(Table table, String label, String value) {
+        table.addCell(new Cell().add(new Paragraph(label).setBold().setFontSize(10))
+                .setBorder(Border.NO_BORDER)
+                .setPaddingBottom(5));
+
+        table.addCell(new Cell().add(new Paragraph(value != null ? value : "-").setFontSize(10))
+                .setBorder(Border.NO_BORDER)
+                .setPaddingBottom(5));
+    }
+
+    private Cell criarCelulaCabecalho(String texto, TextAlignment alinhamento) {
+        return new Cell()
+                .add(new Paragraph(texto).setBold())
+                .setBackgroundColor(COR_PRIMARIA)
+                .setFontColor(ColorConstants.WHITE)
+                .setTextAlignment(alinhamento)
+                .setPadding(5)
+                .setBorder(new SolidBorder(ColorConstants.WHITE, 1));
+    }
+
+    private Cell criarCelulaItem(String texto, TextAlignment alinhamento, Color background) {
+        return new Cell()
+                .add(new Paragraph(texto).setFontSize(10))
+                .setBackgroundColor(background)
+                .setTextAlignment(alinhamento)
+                .setPadding(5)
+                .setBorder(Border.NO_BORDER)
+                .setBorderBottom(new SolidBorder(ColorConstants.LIGHT_GRAY, 0.5f));
     }
 
     private String formatarMoeda(BigDecimal valor) {
