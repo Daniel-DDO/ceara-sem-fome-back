@@ -1,11 +1,18 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.config.NotificacaoEvent;
 import com.ceara_sem_fome_back.dto.ComunicadoDTO;
 import com.ceara_sem_fome_back.model.Administrador;
+import com.ceara_sem_fome_back.model.Beneficiario;
+import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.Comunicado;
+import com.ceara_sem_fome_back.repository.BeneficiarioRepository;
+import com.ceara_sem_fome_back.repository.ComercianteRepository;
 import com.ceara_sem_fome_back.repository.ComunicadoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,9 +26,19 @@ public class ComunicadoService {
     @Autowired
     private AdministradorService administradorService;
 
+    @Autowired
+    private BeneficiarioRepository beneficiarioRepository;
+
+    @Autowired
+    private ComercianteRepository comercianteRepository;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+
+    @Transactional
     public ComunicadoDTO criar(ComunicadoDTO dto) {
 
-        Administrador admin = administradorService.buscarAdmPorId(dto.getId());
+        Administrador admin = administradorService.buscarAdmPorId(dto.getAdministradorId());
         if (admin == null) {
             throw new RuntimeException("Administrador não encontrado.");
         }
@@ -35,11 +52,27 @@ public class ComunicadoService {
 
         Comunicado salvo = comunicadoRepository.save(comunicado);
 
-        return new ComunicadoDTO(salvo);
-    }
+        String msgNotificacao = "Novo Comunicado Oficial: " + salvo.getTitulo();
 
-    public Comunicado salvar(Comunicado comunicado) {
-        return comunicadoRepository.save(comunicado);
+        List<Beneficiario> beneficiarios = beneficiarioRepository.findAll();
+        for (Beneficiario b : beneficiarios) {
+            try {
+                eventPublisher.publishEvent(new NotificacaoEvent(this, b.getId(), msgNotificacao));
+            } catch (Exception e) {
+                System.err.println("Erro ao notificar beneficiario " + b.getId());
+            }
+        }
+
+        List<Comerciante> comerciantes = comercianteRepository.findAll();
+        for (Comerciante c : comerciantes) {
+            try {
+                eventPublisher.publishEvent(new NotificacaoEvent(this, c.getId(), msgNotificacao));
+            } catch (Exception e) {
+                System.err.println("Erro ao notificar comerciante " + c.getId());
+            }
+        }
+
+        return new ComunicadoDTO(salvo);
     }
 
     public List<Comunicado> listarTodos() {
@@ -54,8 +87,18 @@ public class ComunicadoService {
         comunicadoRepository.deleteById(id);
     }
 
+    public Comunicado desativarPorId(String id) {
+        Comunicado comunicado = comunicadoRepository.findById(id).orElseThrow();
+        comunicado.setAtivo(false);
+        comunicadoRepository.save(comunicado);
+        return comunicado;
+    }
+
     public Comunicado atualizar(Comunicado comunicado) {
         return comunicadoRepository.save(comunicado);
     }
-}
 
+    public List<Comunicado> listarAtivos() {
+        return comunicadoRepository.findByAtivo(true);
+    }
+}

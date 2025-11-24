@@ -29,6 +29,8 @@ public class Comerciante extends Pessoa {
     @JoinColumn(name = "conta_id", unique = true)
     private Conta conta;
 
+    private Double mediaAvaliacoes = 0.0;
+
     public Comerciante(String nome, String cpf, String email, String senha, LocalDate dataNascimento, String telefone, String genero, Boolean lgpdAccepted) {
         super(nome, cpf, email, senha, dataNascimento, telefone, genero, lgpdAccepted);
         this.conta = new Conta();

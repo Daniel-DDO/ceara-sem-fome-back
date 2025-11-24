@@ -10,10 +10,10 @@ import lombok.Data;
  * um item no carrinho.
  */
 @Data
-public class ItemCarrinhoRequestDTO {
+public class ProdutoCarrinhoRequestDTO {
 
-    @NotBlank(message = "O ID do produto é obrigatório.")
-    private String produtoId;
+    @NotBlank(message = "O ID do produto_estabelecimento é obrigatório.")
+    private String produtoEstabelecimentoId;
 
     @NotNull(message = "A quantidade é obrigatória.")
     @Min(value = 1, message = "A quantidade deve ser pelo menos 1.")

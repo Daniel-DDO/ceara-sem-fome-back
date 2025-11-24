@@ -1,12 +1,12 @@
 
 package com.ceara_sem_fome_back.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -15,14 +15,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class HistoricoVendasDTO {
 
-    private String id;
+    private String compraId;
+    private String produtoEstabelecimentoId;
+    private Integer quantidade;
+    private BigDecimal precoUnitario;
+    private LocalDateTime dataCompra;
+    private String beneficiarioId;
 
-    @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
-    private LocalDateTime dataHoraCompra;
-
-    private Double valorTotal;
-
-    private String nomeBeneficiario;
-
-    private String nomeEstabelecimento;
 }

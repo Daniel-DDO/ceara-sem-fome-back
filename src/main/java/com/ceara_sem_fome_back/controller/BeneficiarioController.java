@@ -2,10 +2,13 @@ package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.BeneficiarioData;
 import com.ceara_sem_fome_back.dto.*;
+import com.ceara_sem_fome_back.exception.NegocioException;
+import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Beneficiario;
 import com.ceara_sem_fome_back.model.Carrinho;
 import com.ceara_sem_fome_back.model.Compra;
 import com.ceara_sem_fome_back.security.JWTUtil;
+import com.ceara_sem_fome_back.service.AvaliacaoService;
 import com.ceara_sem_fome_back.service.BeneficiarioService;
 import com.ceara_sem_fome_back.service.EnderecoService;
 import jakarta.validation.Valid;
@@ -16,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.security.Principal;
@@ -33,6 +37,9 @@ public class BeneficiarioController {
 
     @Autowired
     private EnderecoService enderecoService;
+
+    @Autowired
+    private AvaliacaoService avaliacaoService;
 
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarBeneficiario(@Valid @RequestBody LoginDTO loginDTO) {
@@ -199,12 +206,15 @@ public class BeneficiarioController {
         return ResponseEntity.ok(saldo);
     }
 
+    /*
     @PostMapping("/compra")
     public ResponseEntity<Compra> realizarCompra(Principal principal) {
         String userEmail = principal.getName();
         Compra novaCompra = beneficiarioService.realizarCompra(userEmail);
         return ResponseEntity.status(201).body(novaCompra);
     }
+
+     */
 
     @GetMapping("/compras/historico")
     public ResponseEntity<List<Compra>> verHistoricoCompras(Principal principal) {
@@ -236,7 +246,7 @@ public class BeneficiarioController {
 
     @GetMapping("/{id}")
     public ResponseEntity<BeneficiarioRespostaDTO> retornaBeneficiario(
-            @PathVariable String id){
+            @PathVariable String id) {
         Beneficiario beneficiario = beneficiarioService.buscarPorId(id);
 
         if (beneficiario == null) {
@@ -268,6 +278,50 @@ public class BeneficiarioController {
         beneficiarioRespostaDTO.setEndereco(end);
 
         return ResponseEntity.ok(beneficiarioRespostaDTO);
+    }
+
+    @PostMapping("/compra/avaliar")
+    public ResponseEntity<Void> avaliarCompra(
+            @Valid @RequestBody AvaliacaoRequestDTO dto,
+            @AuthenticationPrincipal BeneficiarioData beneficiarioData) {
+
+        if (beneficiarioData == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            String beneficiarioId = beneficiarioData.getId();
+            avaliacaoService.registrarAvaliacao(dto.getCompraId(), beneficiarioId, dto);
+            return ResponseEntity.status(HttpStatus.CREATED).build();
+
+        } catch (RecursoNaoEncontradoException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (NegocioException e) {
+            return ResponseEntity.status(e.getStatus()).build();
+        }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<BeneficiarioRespostaDTO> obterBeneficiarioLogado(
+            @AuthenticationPrincipal BeneficiarioData beneficiarioData) {
+
+        String beneficiarioId = beneficiarioData.getBeneficiario().getId();
+        BeneficiarioRespostaDTO dto = beneficiarioService.buscarPorIdDto(beneficiarioId);
+
+        return ResponseEntity.ok(dto);
+    }
+
+    @PatchMapping("/alterar-senha")
+    public ResponseEntity<Void> alterarSenha(
+            @RequestBody @Valid AlterarSenhaRequest request,
+            Authentication authentication
+    ) {
+        BeneficiarioData beneficiarioData = (BeneficiarioData) authentication.getPrincipal();
+
+        Beneficiario beneficiario = beneficiarioData.getBeneficiario();
+        beneficiarioService.alterarSenha(beneficiario.getId(), request);
+
+        return ResponseEntity.noContent().build();
     }
 
 }

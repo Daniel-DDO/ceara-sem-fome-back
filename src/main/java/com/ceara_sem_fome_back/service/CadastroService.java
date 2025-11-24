@@ -1,5 +1,6 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.config.NotificacaoEvent;
 import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.exception.CpfJaCadastradoException;
 import com.ceara_sem_fome_back.exception.EmailJaCadastradoException;
@@ -9,6 +10,7 @@ import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy; // <<< IMPORTAR
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,17 +39,19 @@ public class CadastroService {
     @Autowired
     private EntregadorRepository entregadorRepository;
 
-    // --- CORREÇÃO DA DEPENDÊNCIA CIRCULAR ---
     @Autowired
-    @Lazy // Adiciona esta anotação
+    private ContaService contaService;
+
+    //CORREÇÃO DA DEPENDÊNCIA CIRCULAR
+    @Autowired
+    @Lazy
     private PasswordEncoder passwordEncoder;
-    // --- FIM DA CORREÇÃO ---
 
     @Autowired
     private EmailService emailService;
 
     @Autowired
-    private NotificacaoService notificacaoService;
+    private ApplicationEventPublisher eventPublisher;
 
     //MÉTODOS DE VALIDAÇÃO
 
@@ -205,6 +209,9 @@ public class CadastroService {
                         verificationToken.getGenero(),
                         verificationToken.getLgpdAccepted()
                 );
+                if (novoBeneficiario.getConta() != null) {
+                    contaService.gerarNumeroEAgencia(novoBeneficiario.getConta());
+                }
                 Beneficiario salvo = beneficiarioRepository.save(novoBeneficiario);
                 novoUsuarioId = salvo.getId();
             }
@@ -219,6 +226,9 @@ public class CadastroService {
                         verificationToken.getGenero(),
                         verificationToken.getLgpdAccepted()
                 );
+                if (novoComerciante.getConta() != null) {
+                    contaService.gerarNumeroEAgencia(novoComerciante.getConta());
+                }
                 Comerciante salvo = comercianteRepository.save(novoComerciante);
                 novoUsuarioId = salvo.getId();
             }
@@ -233,6 +243,7 @@ public class CadastroService {
                         verificationToken.getGenero(),
                         verificationToken.getLgpdAccepted()
                 );
+                //contaService.gerarNumeroEAgencia(novoEntregador.getConta());
                 Entregador salvo = entregadorRepository.save(novoEntregador);
                 novoUsuarioId = salvo.getId();
             }
@@ -252,8 +263,11 @@ public class CadastroService {
                     "Seja bem-vindo(a), %s! Seu cadastro foi confirmado com sucesso.",
                     nomeUsuario
             );
-            
-            notificacaoService.criarNotificacao(novoUsuarioId, mensagemBoasVindas);
+            try {
+                eventPublisher.publishEvent(new NotificacaoEvent(this, novoUsuarioId, mensagemBoasVindas));
+            } catch (Exception e) {
+                log.error("Erro ao publicar evento de notificação", e);
+            }
         }
 
         log.info("SUCESSO: {} salvo após validação de e-mail: {}", verificationToken.getTipoPessoa(), verificationToken.getUserEmail());

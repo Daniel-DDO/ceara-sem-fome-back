@@ -1,6 +1,7 @@
 package com.ceara_sem_fome_back.dto;
 
 import com.ceara_sem_fome_back.model.Conta;
+import com.ceara_sem_fome_back.model.StatusPessoa;
 import jdk.jshell.Snippet;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,5 +32,7 @@ public class BeneficiarioRespostaDTO {
     private EnderecoRespostaDTO endereco;  // DTO do endereço
 
     private Conta conta;
+
+    private StatusPessoa status;
 
 }

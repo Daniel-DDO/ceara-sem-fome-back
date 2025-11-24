@@ -135,6 +135,12 @@
             <version>7.2.5</version>
         </dependency>
 
+        <!-- WEB SOCKET -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>

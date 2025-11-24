@@ -1,39 +1,60 @@
 package com.ceara_sem_fome_back.service;
 
+import com.ceara_sem_fome_back.dto.NotificacaoResponseDTO;
 import com.ceara_sem_fome_back.model.Notificacao;
-import com.ceara_sem_fome_back.model.Pessoa;
 import com.ceara_sem_fome_back.repository.NotificacaoRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class NotificacaoService {
 
-    @Autowired
-    private NotificacaoRepository notificacaoRepository;
+    private final NotificacaoRepository repository;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    /**
-     * Cria uma nova notificação para um destinatário específico.
-     *
-     * @param destinatarioId O ID do usuário (Pessoa) que receberá a notificação.
-     * @param mensagem O conteúdo da notificação.
-     * @return A notificação criada e salva.
-     */
-    public Notificacao criarNotificacao(String destinatarioId, String mensagem) {
-        // A validação se o destinatarioId existe pode ser feita aqui ou no serviço que chama este método.
-        Notificacao novaNotificacao = new Notificacao(destinatarioId, mensagem);
-        return notificacaoRepository.save(novaNotificacao);
+    @Transactional
+    public void criarEEnviarNotificacao(String destinatarioId, String mensagem) {
+        Notificacao notificacao = new Notificacao(destinatarioId, mensagem);
+        notificacao = repository.save(notificacao);
+
+        NotificacaoResponseDTO dto = new NotificacaoResponseDTO(
+                notificacao.getId(),
+                notificacao.getMensagem(),
+                notificacao.getDataCriacao(),
+                notificacao.isLida()
+        );
+
+        String destino = "/topic/usuario/" + destinatarioId;
+        messagingTemplate.convertAndSend(destino, dto);
+
+        log.info("Notificação enviada para {}: {}", destinatarioId, mensagem);
     }
 
-    /**
-     * Busca todas as notificações para um usuário específico.
-     *
-     * @param destinatarioId O ID do usuário (Pessoa) cujas notificações serão buscadas.
-     * @return Uma lista de notificações.
-     */
-    public List<Notificacao> buscarNotificacoesPorPessoa(String destinatarioId) {
-        return notificacaoRepository.findByDestinatarioIdOrderByDataCriacaoDesc(destinatarioId);
+    public List<Notificacao> listarPorUsuario(String usuarioId) {
+        return repository.findByDestinatarioIdOrderByDataCriacaoDesc(usuarioId);
+    }
+
+    public long contarNaoLidas(String usuarioId) {
+        return repository.countByDestinatarioIdAndLidaFalse(usuarioId);
+    }
+
+    @Transactional
+    public void marcarComoLida(Long notificacaoId) {
+        repository.findById(notificacaoId).ifPresent(n -> {
+            n.setLida(true);
+            repository.save(n);
+        });
+    }
+
+    @Transactional
+    public void marcarTodasComoLidas(String usuarioId) {
+        repository.marcarTodasComoLidas(usuarioId);
     }
 }

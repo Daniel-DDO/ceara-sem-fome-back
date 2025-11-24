@@ -2,16 +2,20 @@ package com.ceara_sem_fome_back.controller;
 
 import com.ceara_sem_fome_back.data.ComercianteData;
 import com.ceara_sem_fome_back.dto.*;
-import com.ceara_sem_fome_back.dto.ContaDTO;
+import com.ceara_sem_fome_back.exception.NegocioException;
+import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
 import com.ceara_sem_fome_back.model.Comerciante;
 import com.ceara_sem_fome_back.model.StatusPessoa;
 import com.ceara_sem_fome_back.security.JWTUtil;
 import com.ceara_sem_fome_back.service.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.util.List;
@@ -38,9 +42,11 @@ public class ComercianteController {
     @Autowired
     private ProdutoEstabelecimentoService produtoEstabelecimentoService;
 
+    @Autowired
+    private AvaliacaoService avaliacaoService;
+
     @PostMapping("/login")
     public ResponseEntity<PessoaRespostaDTO> logarComerciante(@Valid @RequestBody LoginDTO loginDTO) {
-        //metodo de login
         try {
             if (loginDTO.getEmail() == null || loginDTO.getEmail().isBlank() ||
                     loginDTO.getSenha() == null || loginDTO.getSenha().isBlank()) {
@@ -78,7 +84,6 @@ public class ComercianteController {
 
     @PostMapping("/iniciar-cadastro")
     public ResponseEntity<Object> iniciarCadastroComerciante(@RequestBody @Valid ComercianteRequest request) {
-        //metodo de iniciar-cadastro
         try {
             comercianteService.iniciarCadastro(request);
             return ResponseEntity.status(202).body("Verifique seu e-mail para continuar o cadastro.");
@@ -94,22 +99,21 @@ public class ComercianteController {
     @PostMapping("/cadastrar")
     public ResponseEntity<Object> cadastrarComerciante(@RequestBody @Valid ComercianteRequest request) {
         //metodo de cadastro existente
-            Comerciante novoComerciante = new Comerciante(
-                    request.getNome(),
-                    request.getCpf(),
-                    request.getEmail(),
-                    request.getSenha(),
-                    request.getDataNascimento(),
-                    request.getTelefone(),
-                    request.getGenero(),
-                    request.getLgpdAccepted()
-            );
+        Comerciante novoComerciante = new Comerciante(
+                request.getNome(),
+                request.getCpf(),
+                request.getEmail(),
+                request.getSenha(),
+                request.getDataNascimento(),
+                request.getTelefone(),
+                request.getGenero(),
+                request.getLgpdAccepted()
+        );
 
-            Comerciante comercianteSalvo = comercianteService.salvarComerciante(novoComerciante);
+        Comerciante comercianteSalvo = comercianteService.salvarComerciante(novoComerciante);
 
-            return ResponseEntity.status(201).body(comercianteSalvo);
+        return ResponseEntity.status(201).body(comercianteSalvo);
     }
-
 
     // Endpoint para alterar o status ativo/inativo do comerciante
     @PatchMapping("/{id}/alterar-status")
@@ -134,7 +138,6 @@ public class ComercianteController {
             @RequestParam(defaultValue = "asc") String direction,
             @RequestParam(required = false) String nomeFiltro
     ) {
-        //metodo de listagem
         PaginacaoDTO<Comerciante> pagina = comercianteService.listarComFiltro(nomeFiltro, page, size, sortBy, direction);
         return ResponseEntity.ok(pagina);
     }
@@ -149,13 +152,13 @@ public class ComercianteController {
             Principal principal) { //Pega o usuário autenticado via token
 
         //1. Pega o e-mail do usuário logado (armazenado no token)
-        String userEmail = principal.getName(); 
-        
+        String userEmail = principal.getName();
+
         //2. Chama o novo serviço de atualização
         Comerciante comercianteAtualizado = comercianteService.atualizarComerciante(userEmail, dto);
-        
+
         //3. A senha não retorna no JSON.
-        comercianteAtualizado.setSenha(null); 
+        comercianteAtualizado.setSenha(null);
 
         // 4. Retorna o objeto atualizado
         return ResponseEntity.ok(comercianteAtualizado);
@@ -182,6 +185,7 @@ public class ComercianteController {
         return ResponseEntity.ok(estabelecimentos);
     }
 
+    /*
     @GetMapping("/meu-historico-vendas")
     public ResponseEntity<List<HistoricoVendasDTO>> listarHistoricoVendas(
             @AuthenticationPrincipal ComercianteData comercianteData) {
@@ -191,6 +195,8 @@ public class ComercianteController {
         return ResponseEntity.ok(historico);
     }
 
+     */
+
     @GetMapping("/meus-produtos")
     public ResponseEntity<List<ProdutoDTO>> listarProdutos(@AuthenticationPrincipal ComercianteData comercianteData) {
         String comercianteId = comercianteData.getComerciante().getId();
@@ -198,6 +204,7 @@ public class ComercianteController {
         return ResponseEntity.ok(produtos);
     }
 
+    /*
     @GetMapping("/meu-extrato")
     public ResponseEntity<ContaDTO> consultarExtrato(
             @AuthenticationPrincipal ComercianteData comercianteData) {
@@ -206,6 +213,8 @@ public class ComercianteController {
         ContaDTO contaDTO = comercianteService.consultarExtrato(comercianteId);
         return ResponseEntity.ok(contaDTO);
     }
+
+     */
 
     @PostMapping("/adicionar-prod-estab")
     public ResponseEntity<String> adicionarProduto(
@@ -242,4 +251,48 @@ public class ComercianteController {
         produtoEstabelecimentoService.deletarProdEstab(idProdEstab);
         return ResponseEntity.ok("Produto desvinculado do estabelecimento definitivamente.");
     }
+
+    @PostMapping("/avaliacao/responder")
+    public ResponseEntity<Void> responderAvaliacao(
+            @Valid @RequestBody RespostaAvaliacaoRequestDTO dto,
+            @AuthenticationPrincipal ComercianteData comercianteData) {
+
+        String comercianteId = comercianteData.getComerciante().getId();
+
+        try {
+            avaliacaoService.registrarRespostaComerciante(comercianteId, dto);
+
+            return ResponseEntity.status(HttpStatus.OK).build();
+
+        } catch (RecursoNaoEncontradoException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+        } catch (NegocioException e) {
+            return ResponseEntity.status(e.getStatus()).build();
+        }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ComercianteRespostaDTO> obterComercianteLogado(
+            @AuthenticationPrincipal ComercianteData comercianteData) {
+
+        String comercianteId = comercianteData.getComerciante().getId();
+        ComercianteRespostaDTO dto = comercianteService.buscarPorIdDto(comercianteId);
+
+        return ResponseEntity.ok(dto);
+    }
+
+    @PatchMapping("/alterar-senha")
+    public ResponseEntity<Void> alterarSenha(
+            @RequestBody @Valid AlterarSenhaRequest request,
+            Authentication authentication
+    ) {
+        ComercianteData comercianteData = (ComercianteData) authentication.getPrincipal();
+
+        Comerciante comerciante = comercianteData.getComerciante();
+        comercianteService.alterarSenha(comerciante.getId(), request);
+
+        return ResponseEntity.noContent().build();
+    }
+
 }

@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS comerciante (
     genero VARCHAR(50),
     status VARCHAR(50),
     conta_id VARCHAR(255),
+    media_avaliacoes NUMERIC(10, 2),
     lgpd_accepted BOOLEAN NOT NULL DEFAULT FALSE,
     FOREIGN KEY (conta_id) REFERENCES conta (id)
     );
@@ -102,6 +103,7 @@ CREATE TABLE IF NOT EXISTS estabelecimento (
     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     endereco_id VARCHAR(255),
     comerciante_id VARCHAR(255),
+    media_avaliacoes NUMERIC(10, 2),
     FOREIGN KEY (endereco_id) REFERENCES endereco (id),
     FOREIGN KEY (comerciante_id) REFERENCES comerciante (id) ON DELETE CASCADE
     );
@@ -122,18 +124,9 @@ CREATE TABLE IF NOT EXISTS produto (
     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     avaliado_por_id VARCHAR(255),
     data_avaliacao TIMESTAMP,
+    media_avaliacoes NUMERIC(10, 2),
     FOREIGN KEY (avaliado_por_id) REFERENCES administrador (id),
     FOREIGN KEY (comerciante_id) REFERENCES comerciante (id) ON DELETE CASCADE
-    );
-
-CREATE TABLE IF NOT EXISTS produto_carrinho (
-    id VARCHAR(255) PRIMARY KEY,
-    carrinho_id VARCHAR(255) NOT NULL,
-    produto_id VARCHAR(255) NOT NULL,
-    quantidade INTEGER NOT NULL DEFAULT 1,
-    FOREIGN KEY (carrinho_id) REFERENCES carrinho (id) ON DELETE CASCADE,
-    FOREIGN KEY (produto_id) REFERENCES produto (id) ON DELETE CASCADE,
-    CONSTRAINT unique_produto_por_carrinho UNIQUE (carrinho_id, produto_id)
     );
 
 CREATE TABLE IF NOT EXISTS produto_estabelecimento (
@@ -143,6 +136,16 @@ CREATE TABLE IF NOT EXISTS produto_estabelecimento (
     FOREIGN KEY (produto_id) REFERENCES produto (id) ON DELETE CASCADE,
     FOREIGN KEY (estabelecimento_id) REFERENCES estabelecimento (id) ON DELETE CASCADE,
     CONSTRAINT unique_produto_por_estabelecimento UNIQUE (produto_id, estabelecimento_id)
+    );
+
+CREATE TABLE IF NOT EXISTS produto_carrinho (
+    id VARCHAR(255) PRIMARY KEY,
+    carrinho_id VARCHAR(255) NOT NULL,
+    produto_estabelecimento_id VARCHAR(255) NOT NULL,
+    quantidade INTEGER NOT NULL DEFAULT 1,
+    FOREIGN KEY (carrinho_id) REFERENCES carrinho (id) ON DELETE CASCADE,
+    FOREIGN KEY (produto_estabelecimento_id) REFERENCES produto_estabelecimento (id) ON DELETE CASCADE,
+    CONSTRAINT unique_produto_por_carrinho UNIQUE (carrinho_id, produto_estabelecimento_id)
     );
 
 CREATE TABLE IF NOT EXISTS verification_token (
@@ -161,25 +164,22 @@ CREATE TABLE IF NOT EXISTS verification_token (
 
 CREATE TABLE IF NOT EXISTS compra (
     id VARCHAR(255) PRIMARY KEY,
-    data_hora_compra TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    data_hora_compra TIMESTAMP NOT NULL,
     valor_total NUMERIC(10, 2) NOT NULL,
-    status VARCHAR(50) NOT NULL,
     beneficiario_id VARCHAR(255) NOT NULL,
-    estabelecimento_id VARCHAR(255) NOT NULL,
-    endereco_id VARCHAR(255),
-    FOREIGN KEY (beneficiario_id) REFERENCES beneficiario (id),
-    FOREIGN KEY (estabelecimento_id) REFERENCES estabelecimento (id),
-    FOREIGN KEY (endereco_id) REFERENCES endereco (id)
+    status VARCHAR(50) NOT NULL,
+    avaliada BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (beneficiario_id) REFERENCES beneficiario(id)
     );
 
-CREATE TABLE IF NOT EXISTS item_compra (
+CREATE TABLE IF NOT EXISTS produto_compra (
     id VARCHAR(255) PRIMARY KEY,
     compra_id VARCHAR(255) NOT NULL,
-    produto_id VARCHAR(255) NOT NULL,
+    produto_estabelecimento_id VARCHAR(255) NOT NULL,
     quantidade INTEGER NOT NULL,
     preco_unitario NUMERIC(10, 2) NOT NULL,
-    FOREIGN KEY (compra_id) REFERENCES compra (id) ON DELETE CASCADE,
-    FOREIGN KEY (produto_id) REFERENCES produto (id)
+    FOREIGN KEY (compra_id) REFERENCES compra(id) ON DELETE CASCADE,
+    FOREIGN KEY (produto_estabelecimento_id) REFERENCES produto_estabelecimento(id)
     );
 
 CREATE TABLE IF NOT EXISTS notificacao (
@@ -199,5 +199,16 @@ CREATE TABLE IF NOT EXISTS comunicado (
     categoria VARCHAR(100),
     ativo BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (administrador_id) REFERENCES administrador (id)
+    );
+
+CREATE TABLE IF NOT EXISTS avaliacao (
+    id VARCHAR(255) PRIMARY KEY,
+    compra_id VARCHAR(255) UNIQUE NOT NULL,
+    estrelas INTEGER NOT NULL,
+    comentario TEXT,
+    data_avaliacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    resposta_comerciante TEXT,
+    data_resposta TIMESTAMP,
+    FOREIGN KEY (compra_id) REFERENCES compra (id)
     );
 

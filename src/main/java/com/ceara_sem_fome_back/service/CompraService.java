@@ -1,22 +1,23 @@
 package com.ceara_sem_fome_back.service;
 
-import com.ceara_sem_fome_back.dto.ContaDTO;
-import com.ceara_sem_fome_back.dto.HistoricoVendasDTO;
-import com.ceara_sem_fome_back.dto.ReciboDTO;
+import com.ceara_sem_fome_back.config.NotificacaoEvent;
+import com.ceara_sem_fome_back.dto.*;
 import com.ceara_sem_fome_back.exception.EstoqueInsuficienteException;
 import com.ceara_sem_fome_back.exception.RecursoNaoEncontradoException;
+import com.ceara_sem_fome_back.exception.SaldoInsuficienteException;
 import com.ceara_sem_fome_back.model.*;
 import com.ceara_sem_fome_back.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.ceara_sem_fome_back.exception.SaldoInsuficienteException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -40,256 +41,329 @@ public class CompraService {
     private CompraRepository compraRepository;
 
     @Autowired
-    private ItemCompraRepository itemCompraRepository;
+    private ProdutoCompraRepository produtoCompraRepository;
 
     @Autowired
     private ContaRepository contaRepository;
 
     @Autowired
-    private ProdutoService produtoService;
+    private ProdutoEstabelecimentoRepository produtoEstabelecimentoRepository;
 
     @Autowired
-    private ProdutoRepository produtoRepository;
+    private ReciboService reciboService;
+
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     @Transactional
-    public Compra finalizarCompra(String beneficiarioId, String estabelecimentoId) {
+    public List<Compra> finalizarCompra(String beneficiarioId, List<String> idsSelecionados) {
         Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Beneficiario nao encontrado."));
-
-        Estabelecimento estabelecimento = estabelecimentoRepository.findById(estabelecimentoId)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Estabelecimento nao encontrado."));
+                .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado"));
 
         Carrinho carrinho = beneficiario.getCarrinho();
-        if (carrinho == null) {
-            throw new RecursoNaoEncontradoException("Carrinho nao encontrado para este beneficiario.");
+        if (carrinho == null || carrinho.getProdutos().isEmpty()) {
+            throw new RuntimeException("Carrinho vazio");
         }
 
-        List<ProdutoCarrinho> todosProdutosCarrinho = produtoCarrinhoRepository.findByCarrinho(carrinho);
-        if (todosProdutosCarrinho.isEmpty()) {
-            throw new RecursoNaoEncontradoException("O carrinho esta vazio.");
-        }
-
-        String comercianteId = estabelecimento.getComerciante().getId();
-        List<ProdutoCarrinho> produtosParaComprar = todosProdutosCarrinho.stream()
-                .filter(pc -> pc.getProduto().getComerciante().getId().equals(comercianteId))
+        List<ProdutoCarrinho> produtosSelecionados = carrinho.getProdutos().stream()
+                .filter(pc -> idsSelecionados.contains(pc.getId()))
                 .collect(Collectors.toList());
 
-        if (produtosParaComprar.isEmpty()) {
-            throw new RecursoNaoEncontradoException("Nenhum item no carrinho corresponde a este estabelecimento.");
+        if (produtosSelecionados.isEmpty()) {
+            throw new RuntimeException("Nenhum item selecionado para compra");
         }
 
-        BigDecimal valorTotal = BigDecimal.ZERO;
-        List<ItemCompra> itensDaCompra = new ArrayList<>();
+        BigDecimal totalSelecionado = produtosSelecionados.stream()
+                .map(pc -> pc.getProdutoEstabelecimento().getProduto().getPreco().multiply(BigDecimal.valueOf(pc.getQuantidade())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        for (ProdutoCarrinho pc : produtosParaComprar) {
-            Produto produto = produtoRepository.findById(pc.getProduto().getId())
-                    .orElseThrow(() -> new RecursoNaoEncontradoException("Produto " + pc.getProduto().getNome() + " nao encontrado."));
+        if (totalSelecionado.compareTo(beneficiario.getConta().getSaldo()) > 0) {
+            throw new SaldoInsuficienteException("Saldo insuficiente. Seu saldo é menor que o total da compra.");
+        }
 
-            if (produto.getQuantidadeEstoque() < pc.getQuantidade()) {
-                throw new EstoqueInsuficienteException(
-                        String.format("Estoque insuficiente para %s. Pedido: %d, Disponivel: %d",
-                                produto.getNome(), pc.getQuantidade(), produto.getQuantidadeEstoque())
-                );
+        Map<String, List<ProdutoCarrinho>> produtosPorEstabelecimento = produtosSelecionados.stream()
+                .collect(Collectors.groupingBy(pc -> pc.getProdutoEstabelecimento().getEstabelecimento().getId()));
+
+        List<Compra> comprasCriadas = new ArrayList<>();
+
+        for (List<ProdutoCarrinho> itensEstab : produtosPorEstabelecimento.values()) {
+            BigDecimal valorTotalCompra = BigDecimal.ZERO;
+
+            Compra compra = new Compra();
+            compra.setId(UUID.randomUUID().toString());
+            compra.setBeneficiario(beneficiario);
+            compra.setDataHoraCompra(LocalDateTime.now());
+            compra.setStatus(StatusCompra.ABERTA);
+
+            List<ProdutoCompra> produtoCompras = new ArrayList<>();
+            Estabelecimento estabelecimento = itensEstab.get(0).getProdutoEstabelecimento().getEstabelecimento();
+
+            for (ProdutoCarrinho pcCarrinho : itensEstab) {
+                ProdutoEstabelecimento pe = pcCarrinho.getProdutoEstabelecimento();
+
+                if (pe.getProduto().getQuantidadeEstoque() < pcCarrinho.getQuantidade()) {
+                    throw new RuntimeException("Estoque insuficiente para o produto: " + pe.getProduto().getNome());
+                }
+
+                ProdutoCompra pc = new ProdutoCompra();
+                pc.setId(UUID.randomUUID().toString());
+                pc.setCompra(compra);
+                pc.setProdutoEstabelecimento(pe);
+                pc.setQuantidade(pcCarrinho.getQuantidade());
+                pc.setPrecoUnitario(pe.getProduto().getPreco());
+
+                pe.getProduto().setQuantidadeEstoque(pe.getProduto().getQuantidadeEstoque() - pcCarrinho.getQuantidade());
+                produtoEstabelecimentoRepository.save(pe);
+
+                valorTotalCompra = valorTotalCompra.add(pc.getValorTotalItem());
+                produtoCompras.add(pc);
             }
 
-            BigDecimal subtotalItem = produto.getPreco()
-                    .multiply(BigDecimal.valueOf(pc.getQuantidade()));
-            valorTotal = valorTotal.add(subtotalItem);
+            beneficiario.getConta().setSaldo(beneficiario.getConta().getSaldo().subtract(valorTotalCompra));
 
-            ItemCompra item = new ItemCompra();
-            item.setId(UUID.randomUUID().toString());
-            item.setProduto(produto);
-            item.setQuantidade(pc.getQuantidade());
-            item.setPrecoUnitario(produto.getPreco());
-            itensDaCompra.add(item);
+            Conta contaComerciante = estabelecimento.getComerciante().getConta();
+            contaComerciante.setSaldo(contaComerciante.getSaldo().add(valorTotalCompra));
+            contaRepository.save(contaComerciante);
+
+            compra.setItens(produtoCompras);
+            compra.setValorTotal(valorTotalCompra.doubleValue());
+
+            compraRepository.save(compra);
+            produtoCompraRepository.saveAll(produtoCompras);
+
+            comprasCriadas.add(compra);
         }
 
-        Conta contaBeneficiario = beneficiario.getConta();
-        Conta contaComerciante = getConta(contaBeneficiario, valorTotal, estabelecimento);
-
-        contaBeneficiario.setSaldo(contaBeneficiario.getSaldo().subtract(valorTotal));
-        contaComerciante.setSaldo(contaComerciante.getSaldo().add(valorTotal));
-
-        contaRepository.save(contaBeneficiario);
-        contaRepository.save(contaComerciante);
-
-        produtoService.decrementarEstoque(itensDaCompra);
-
-        Compra compra = new Compra();
-        compra.setId(UUID.randomUUID().toString());
-        compra.setDataHoraCompra(LocalDateTime.now());
-        compra.setStatus(StatusCompra.FINALIZADA);
-        compra.setBeneficiario(beneficiario);
-        compra.setEstabelecimento(estabelecimento);
-
-        compra.setEndereco(estabelecimento.getEndereco()); // Salva o endereco DO ESTABELECIMENTO
-
-        compra.setValorTotal(valorTotal.doubleValue());
-        compraRepository.save(compra);
-
-        for (ItemCompra item : itensDaCompra) {
-            item.setCompra(compra);
-            itemCompraRepository.save(item);
+        try {
+            eventPublisher.publishEvent(new NotificacaoEvent(this, beneficiarioId, "Compra realizada com sucesso."));
+        } catch (Exception e) {
+            log.error("Erro ao publicar evento de notificação", e);
         }
 
-        // Limpa APENAS os itens que foram comprados
-        produtoCarrinhoRepository.deleteAll(produtosParaComprar);
+        produtoCarrinhoRepository.deleteAll(produtosSelecionados);
+        carrinho.getProdutos().removeAll(produtosSelecionados);
+        carrinhoRepository.save(carrinho);
+        beneficiarioRepository.save(beneficiario);
 
-        // Precisamos limpar a colecao na entidade Carrinho que esta na sessao
-        // para que o proximo 'getProdutos()' nao retorne o cache antigo.
-        carrinho.getProdutos().removeAll(produtosParaComprar);
-        carrinhoRepository.save(carrinho); // Salva o carrinho com a colecao atualizada
-
-        return compra;
+        return comprasCriadas;
     }
 
-    private static Conta getConta(Conta contaBeneficiario, BigDecimal valorTotal, Estabelecimento estabelecimento) {
-        if (contaBeneficiario == null) {
-            throw new RecursoNaoEncontradoException("Conta do beneficiário não encontrada.");
-        }
-
-        if (contaBeneficiario.getSaldo().compareTo(valorTotal) < 0) {
-            throw new SaldoInsuficienteException(
-                    String.format("Saldo atual: R$ %.2f, Valor da compra: R$ %.2f",
-                            contaBeneficiario.getSaldo(), valorTotal)
-            );
-        }
-
-        Comerciante comerciante = estabelecimento.getComerciante();
-        Conta contaComerciante = comerciante.getConta();
-        if (contaComerciante == null) {
-            throw new RecursoNaoEncontradoException("Conta do beneficiário não encontrada.");
-        }
-        return contaComerciante;
-    }
-
-    public List<Compra> listarTodas() {
-        return compraRepository.findAll();
-    }
-
-    public List<Compra> listarPorBeneficiario(String beneficiarioId) {
+    @Transactional
+    public List<CompraDTO> listarComprasBeneficiario(String beneficiarioId) {
         Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
-                .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado."));
-        return compraRepository.findByBeneficiario(beneficiario);
+                .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado"));
+
+        List<Compra> compras = compraRepository.findByBeneficiarioOrderByDataHoraCompraDesc(beneficiario);
+
+        return compras.stream().map(this::converterParaDTO).toList();
     }
 
-    @Transactional(readOnly = true)
-    public List<HistoricoVendasDTO> getHistoricoVendasPorComerciante(String comercianteId) {
+    @Transactional
+    public List<CompraDTO> listarComprasDoComerciante(String comercianteId) {
         List<Estabelecimento> estabelecimentos = estabelecimentoRepository.findByComercianteId(comercianteId);
-        List<Compra> comprasDoComerciante = new ArrayList<>();
+        List<CompraDTO> resultado = new ArrayList<>();
+
         for (Estabelecimento est : estabelecimentos) {
-            comprasDoComerciante.addAll(compraRepository.findByEstabelecimentoId(est.getId()));
+            List<ProdutoCompra> vendas = produtoCompraRepository.findByProdutoEstabelecimento_Estabelecimento(est);
+            Map<String, List<ProdutoCompra>> comprasAgrupadas = vendas.stream()
+                    .collect(Collectors.groupingBy(pc -> pc.getCompra().getId()));
+
+            for (List<ProdutoCompra> itensCompra : comprasAgrupadas.values()) {
+                Compra compra = itensCompra.get(0).getCompra();
+                CompraDTO dto = converterParaDTO(compra, est.getId());
+                resultado.add(dto);
+            }
         }
 
-        return comprasDoComerciante.stream().map(compra -> new HistoricoVendasDTO(
-                compra.getId(),
-                compra.getDataHoraCompra(),
-                compra.getValorTotal(),
-                compra.getBeneficiario().getNome(),
-                compra.getEstabelecimento().getNome()
-        )).collect(Collectors.toList());
+        resultado.sort((c1, c2) -> c2.getDataCompra().compareTo(c1.getDataCompra()));
+
+        return resultado;
     }
 
-    @Transactional(readOnly = true)
-    public ContaDTO calcularSaldoParaComerciante(String comercianteId) {
-        List<Estabelecimento> estabelecimentos = estabelecimentoRepository.findByComercianteId(comercianteId);
-        if (estabelecimentos.isEmpty()) {
-            return new ContaDTO(BigDecimal.ZERO);
-        }
+    @Transactional
+    public List<CompraDTO> listarTodas() {
+        List<Compra> compras = compraRepository.findAll();
 
-        List<Compra> comprasDoComerciante = new ArrayList<>();
-        for (Estabelecimento est : estabelecimentos) {
-            comprasDoComerciante.addAll(compraRepository.findByEstabelecimentoId(est.getId()));
-        }
-
-        BigDecimal saldo = BigDecimal.ZERO;
-        for (Compra compra : comprasDoComerciante) {
-            saldo = saldo.add(BigDecimal.valueOf(compra.getValorTotal()));
-        }
-
-        return new ContaDTO(saldo);
+        return compras.stream()
+                .map(this::converterParaDTO)
+                .toList();
     }
 
-    public List<ItemCompra> listarItensDaCompra(String compraId) {
-        Compra compra = compraRepository.findById(compraId)
-                .orElseThrow(() -> new RuntimeException("Compra não encontrada."));
-        return itemCompraRepository.findByCompra(compra);
+    public CompraDTO converterParaDTO(Compra compra) {
+        String estabelecimentoId = compra.getItens().get(0).getProdutoEstabelecimento().getEstabelecimento().getId();
+        return converterParaDTO(compra, estabelecimentoId);
     }
 
-    public String gerarComprovante(String compraId) {
-        Compra compra = compraRepository.findById(compraId)
-                .orElseThrow(() -> new RuntimeException("Compra não encontrada."));
-
-        List<ItemCompra> itens = itemCompraRepository.findByCompra(compra);
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("=== COMPROVANTE DE COMPRA ===\n");
-        sb.append("Beneficiário: ").append(compra.getBeneficiario().getNome()).append("\n");
-        sb.append("Estabelecimento: ").append(compra.getEstabelecimento().getNome()).append("\n");
-        sb.append("Data: ").append(compra.getDataHoraCompra()).append("\n\n");
-
-        sb.append("Itens:\n");
-        for (ItemCompra item : itens) {
-            sb.append("- ").append(item.getProduto().getNome())
-                    .append(" | Qtd: ").append(item.getQuantidade())
-                    .append(" | Preço: R$ ").append(item.getPrecoUnitario()).append("\n");
-        }
-
-        sb.append("\nTotal: R$ ").append(compra.getValorTotal()).append("\n");
-        sb.append("===============================");
-
-        return sb.toString();
-    }
-
-    @Transactional(readOnly = true)
-    public ReciboDTO obterReciboDTO(String compraId) {
-        Compra compra = compraRepository.findById(compraId)
-                .orElseThrow(() -> new RuntimeException("Compra não encontrada: " + compraId));
-
-        List<ReciboDTO.ItemCompraDTO> itensDTO = compra.getItens().stream()
-                .map(item -> new ReciboDTO.ItemCompraDTO(
-                        item.getProduto().getNome(),
-                        item.getQuantidade(),
-                        item.getPrecoUnitario(),
-                        item.getValorTotalItem()
-                )).collect(Collectors.toList());
-
-        String enderecoCompleto = "Endereco nao cadastrado";
-        Double lat = null;
-        Double lon = null;
-
-        if (compra.getEndereco() != null) {
-            Endereco end = compra.getEndereco();
-            enderecoCompleto = String.format("%s, %s - %s, %s",
-                    end.getLogradouro(),
-                    end.getNumero(),
-                    end.getBairro(),
-                    end.getMunicipio()
-            );
-            lat = end.getLatitude();
-            lon = end.getLongitude();
-        }
-
-        return new ReciboDTO(
-                compra.getId(),
-                compra.getDataHoraCompra(),
-                compra.getBeneficiario().getNome(),
-                compra.getBeneficiario().getId(),
-                compra.getEstabelecimento().getComerciante().getNome(),
-                compra.getEstabelecimento().getNome(),
-                enderecoCompleto,
-                lat,
-                lon,
-                itensDTO,
-                BigDecimal.valueOf(compra.getValorTotal())
+    private CompraDTO converterParaDTO(Compra compra, String estabelecimentoId) {
+        CompraDTO dto = new CompraDTO();
+        dto.setCompraId(compra.getId());
+        dto.setDataCompra(compra.getDataHoraCompra());
+        dto.setBeneficiarioId(compra.getBeneficiario().getId());
+        dto.setBeneficiarioNome(compra.getBeneficiario().getNome());
+        dto.setEstabelecimentoId(estabelecimentoId);
+        dto.setStatus(compra.getStatus());
+        dto.setAvaliada(compra.isAvaliada());
+        dto.setNomeEstabelecimento(
+                compra.getItens().stream()
+                        .filter(pc -> pc.getProdutoEstabelecimento().getEstabelecimento().getId().equals(estabelecimentoId))
+                        .findFirst()
+                        .map(pc -> pc.getProdutoEstabelecimento().getEstabelecimento().getNome())
+                        .orElse("")
         );
+
+        List<CompraDTO.ProdutoCompraDTO> itensDTO = compra.getItens().stream()
+                .filter(pc -> pc.getProdutoEstabelecimento().getEstabelecimento().getId().equals(estabelecimentoId))
+                .map(pc -> new CompraDTO.ProdutoCompraDTO(
+                        pc.getProdutoEstabelecimento().getProduto().getId(),
+                        pc.getProdutoEstabelecimento().getId(),
+                        pc.getProdutoEstabelecimento().getProduto().getNome(),
+                        pc.getQuantidade(),
+                        pc.getPrecoUnitario(),
+                        pc.getValorTotalItem()
+                ))
+                .toList();
+
+        dto.setItens(itensDTO);
+        return dto;
     }
 
-    public List<Compra> listarPorEstabelecimentoEStatus(String estabelecimentoId, String status) {
-        log.info("[SERVIÇO] Buscando compras para Estabelecimento ID: {} com Status: {}", estabelecimentoId, status);
+    @Transactional
+    public Compra marcarComoRetirada(String compraId) {
+        Compra compra = compraRepository.findById(compraId)
+                .orElseThrow(() -> new RuntimeException("Compra não encontrada"));
 
-        StatusCompra statusEnum = StatusCompra.valueOf(status.toUpperCase());
+        if (compra.getStatus() != StatusCompra.ABERTA) {
+            throw new RuntimeException("Só é possível marcar como retirada compras com status ABERTA");
+        }
 
-        return compraRepository.findByEstabelecimentoIdAndStatus(estabelecimentoId, statusEnum);
+        compra.setStatus(StatusCompra.RETIRADA);
+        return compraRepository.save(compra);
+    }
+
+    @Transactional
+    public Compra marcarComoEntregue(String compraId) {
+        Compra compra = compraRepository.findById(compraId)
+                .orElseThrow(() -> new RuntimeException("Compra não encontrada"));
+
+        if (compra.getStatus() != StatusCompra.ABERTA) {
+            throw new RuntimeException("Só é possível marcar como entregue compras com status ABERTA");
+        }
+
+        compra.setStatus(StatusCompra.ENTREGUE);
+        return compraRepository.save(compra);
+    }
+
+    @Transactional
+    public Compra reembolsarCompra(String compraId) {
+        Compra compra = compraRepository.findById(compraId)
+                .orElseThrow(() -> new RuntimeException("Compra não encontrada"));
+
+        if (compra.getStatus() != StatusCompra.ABERTA && compra.getStatus() != StatusCompra.RETIRADA) {
+            throw new RuntimeException("Só é possível reembolsar compras com status ABERTA ou RETIRADA");
+        }
+
+        Beneficiario beneficiario = compra.getBeneficiario();
+        BigDecimal valorTotal = BigDecimal.valueOf(compra.getValorTotal());
+        beneficiario.getConta().setSaldo(beneficiario.getConta().getSaldo().add(valorTotal));
+
+        compra.setStatus(StatusCompra.REEMBOLSADA);
+
+        beneficiarioRepository.save(beneficiario);
+        return compraRepository.save(compra);
+    }
+
+    @Transactional
+    public List<HistoricoVendasDTO> listarVendasEstabelecimento(String estabelecimentoId) {
+        Estabelecimento estabelecimento = estabelecimentoRepository.findById(estabelecimentoId)
+                .orElseThrow(() -> new RuntimeException("Estabelecimento não encontrado"));
+
+        List<ProdutoCompra> vendas = produtoCompraRepository.findByProdutoEstabelecimento_Estabelecimento(estabelecimento);
+
+        return vendas.stream().map(pc -> {
+            HistoricoVendasDTO dto = new HistoricoVendasDTO();
+            dto.setCompraId(pc.getCompra().getId());
+            dto.setProdutoEstabelecimentoId(pc.getProdutoEstabelecimento().getId());
+            dto.setQuantidade(pc.getQuantidade());
+            dto.setPrecoUnitario(pc.getPrecoUnitario());
+            dto.setDataCompra(pc.getCompra().getDataHoraCompra());
+            dto.setBeneficiarioId(pc.getCompra().getBeneficiario().getId());
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public Compra obterCompraPorId(String compraId) {
+        return compraRepository.findById(compraId)
+                .orElseThrow(() -> new RuntimeException("Compra não encontrada"));
+    }
+
+    @Transactional
+    public Compra atualizarStatusCompra(String compraId, StatusCompra novoStatus) {
+        Compra compra = compraRepository.findById(compraId)
+                .orElseThrow(() -> new RuntimeException("Compra não encontrada"));
+
+        compra.setStatus(novoStatus);
+        return compraRepository.save(compra);
+    }
+
+    @Transactional
+    public List<ReciboDTO> gerarRecibosPorComprao(String beneficiarioId) {
+        Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
+                .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado"));
+
+        List<Compra> compras = compraRepository.findByBeneficiarioOrderByDataHoraCompraDesc(beneficiario);
+
+        List<ReciboDTO> recibos = new ArrayList<>();
+
+        for (Compra compra : compras) {
+            ReciboDTO recibo = new ReciboDTO();
+            recibo.setCompraId(compra.getId());
+            recibo.setDataCompra(compra.getDataHoraCompra());
+            recibo.setNomeBeneficiario(compra.getBeneficiario().getNome());
+            recibo.setBeneficiarioId(compra.getBeneficiario().getId());
+
+            ProdutoEstabelecimento primeiroProduto = compra.getItens().get(0).getProdutoEstabelecimento();
+            Estabelecimento estabelecimento = primeiroProduto.getEstabelecimento();
+
+            recibo.setNomeComerciante(estabelecimento.getComerciante().getNome());
+            recibo.setComercianteId(estabelecimento.getComerciante().getId());
+            recibo.setNomeEstabelecimento(estabelecimento.getNome());
+            recibo.setEnderecoEstabelecimentoCompleto(
+                    estabelecimento.getEndereco().getLogradouro() + ", " +
+                            estabelecimento.getEndereco().getNumero() + " - " +
+                            estabelecimento.getEndereco().getBairro() + ", " +
+                            estabelecimento.getEndereco().getMunicipio()
+            );
+            recibo.setLatitude(estabelecimento.getEndereco().getLatitude());
+            recibo.setLongitude(estabelecimento.getEndereco().getLongitude());
+            recibo.setValorTotal(BigDecimal.valueOf(compra.getValorTotal()));
+
+            List<ReciboDTO.ItemCompraDTO> itensDTO = compra.getItens().stream().map(pc -> {
+                ReciboDTO.ItemCompraDTO itemDTO = new ReciboDTO.ItemCompraDTO();
+                itemDTO.setNomeProduto(pc.getProdutoEstabelecimento().getProduto().getNome());
+                itemDTO.setProdutoEstabelecimentoId(pc.getProdutoEstabelecimento().getId());
+                itemDTO.setProdutoId(pc.getProdutoEstabelecimento().getProduto().getId());
+                itemDTO.setEstabelecimentoId(pc.getProdutoEstabelecimento().getEstabelecimento().getId());
+                itemDTO.setQuantidade(pc.getQuantidade());
+                itemDTO.setValorUnitario(pc.getPrecoUnitario());
+                itemDTO.setSubtotal(pc.getValorTotalItem());
+                return itemDTO;
+            }).toList();
+
+            recibo.setItens(itensDTO);
+            recibos.add(recibo);
+        }
+
+        return recibos;
+    }
+
+    public List<ProdutoCompra> listarItensDaCompra(String compraId) {
+        Compra compra = compraRepository.findById(compraId)
+                .orElseThrow(() -> new RuntimeException("Compra não encontrada."));
+        return produtoCompraRepository.findByCompra(compra);
+    }
+
+    public byte[] gerarReciboPDF(String compraId) {
+        return reciboService.gerarReciboPDF(compraId);
     }
 }

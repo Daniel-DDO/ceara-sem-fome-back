@@ -1,6 +1,7 @@
 package com.ceara_sem_fome_back.repository;
 
 import com.ceara_sem_fome_back.model.Beneficiario;
+import com.ceara_sem_fome_back.model.Conta;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -28,4 +29,6 @@ public interface BeneficiarioRepository extends JpaRepository<Beneficiario, Stri
     // Metodo para buscar um usuário por ID ignorando o filtro @Where
     @Query("SELECT p FROM #{#entityName} p WHERE p.id = :id")
     Optional<Beneficiario> findByIdIgnoringStatus(@Param("id") String id);
+
+    Optional<Beneficiario> findByConta(Conta conta);
 }

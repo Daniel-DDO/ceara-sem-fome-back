@@ -20,6 +20,8 @@ public class ComercianteMapper {
         dto.setTelefone(comerciante.getTelefone());
         dto.setGenero(comerciante.getGenero());
         dto.setLgpdAccepted(comerciante.getLgpdAccepted());
+        dto.setConta(comerciante.getConta());
+        dto.setStatus(comerciante.getStatus());
 
         if (comerciante.getEstabelecimentos() != null) {
             dto.setEstabelecimentos(

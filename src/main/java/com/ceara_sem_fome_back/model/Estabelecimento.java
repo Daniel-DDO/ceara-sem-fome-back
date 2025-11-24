@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Getter
 @Setter
@@ -42,4 +43,6 @@ public class Estabelecimento {
     @JoinColumn(name = "comerciante_id", nullable = false)
     @JsonBackReference
     private Comerciante comerciante;
+
+    private Double mediaAvaliacoes = 0.0;
 }
