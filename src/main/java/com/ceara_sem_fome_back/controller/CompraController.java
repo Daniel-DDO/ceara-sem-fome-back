@@ -23,8 +23,8 @@ public class CompraController {
     private CompraService compraService;
 
     @PostMapping("/finalizar/{beneficiarioId}")
-    public ResponseEntity<List<Compra>> finalizarCompra(@PathVariable String beneficiarioId) {
-        List<Compra> compras = compraService.finalizarCompra(beneficiarioId);
+    public ResponseEntity<List<Compra>> finalizarCompra(@PathVariable String beneficiarioId, @RequestBody List<String> idsSelecionados) {
+        List<Compra> compras = compraService.finalizarCompra(beneficiarioId, idsSelecionados);
         return ResponseEntity.ok(compras);
     }
 

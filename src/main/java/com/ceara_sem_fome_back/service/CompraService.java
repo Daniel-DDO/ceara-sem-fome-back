@@ -53,7 +53,7 @@ public class CompraService {
     private ApplicationEventPublisher eventPublisher;
 
     @Transactional
-    public List<Compra> finalizarCompra(String beneficiarioId) {
+    public List<Compra> finalizarCompra(String beneficiarioId, List<String> idsSelecionados) {
         Beneficiario beneficiario = beneficiarioRepository.findById(beneficiarioId)
                 .orElseThrow(() -> new RuntimeException("Beneficiário não encontrado"));
 
@@ -62,11 +62,23 @@ public class CompraService {
             throw new RuntimeException("Carrinho vazio");
         }
 
-        if (carrinho.getSubtotal().compareTo(beneficiario.getConta().getSaldo()) > 0) {
+        List<ProdutoCarrinho> produtosSelecionados = carrinho.getProdutos().stream()
+                .filter(pc -> idsSelecionados.contains(pc.getId()))
+                .collect(Collectors.toList());
+
+        if (produtosSelecionados.isEmpty()) {
+            throw new RuntimeException("Nenhum item selecionado para compra");
+        }
+
+        BigDecimal totalSelecionado = produtosSelecionados.stream()
+                .map(pc -> pc.getProdutoEstabelecimento().getProduto().getPreco().multiply(BigDecimal.valueOf(pc.getQuantidade())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (totalSelecionado.compareTo(beneficiario.getConta().getSaldo()) > 0) {
             throw new RuntimeException("Saldo insuficiente");
         }
 
-        Map<String, List<ProdutoCarrinho>> produtosPorEstabelecimento = carrinho.getProdutos().stream()
+        Map<String, List<ProdutoCarrinho>> produtosPorEstabelecimento = produtosSelecionados.stream()
                 .collect(Collectors.groupingBy(pc -> pc.getProdutoEstabelecimento().getEstabelecimento().getId()));
 
         List<Compra> comprasCriadas = new ArrayList<>();
@@ -125,7 +137,8 @@ public class CompraService {
             log.error("Erro ao publicar evento de notificação", e);
         }
 
-        carrinho.esvaziarCarrinho();
+        produtoCarrinhoRepository.deleteAll(produtosSelecionados);
+        carrinho.getProdutos().removeAll(produtosSelecionados);
         carrinhoRepository.save(carrinho);
         beneficiarioRepository.save(beneficiario);
 
