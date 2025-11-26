@@ -88,22 +88,41 @@ class CearaSemFomeBackApplicationTests {
     // --- TESTE ORIGINAL DE PRODUTO ---
     @Test
     void testProdutoSoftDelete() {
-        String produtoId = "prod-1";
+        // Cria um produto especifico para o teste (sem dependencias)
+        Produto produtoTeste = new Produto();
+        produtoTeste.setId("prod-test-softdelete");
+        produtoTeste.setNome("Produto Teste SoftDelete");
+        produtoTeste.setLote("TEST-001");
+        produtoTeste.setDescricao("Produto criado apenas para testar soft delete");
+        produtoTeste.setPreco(BigDecimal.valueOf(10.00));
+        produtoTeste.setQuantidadeEstoque(100);
+        produtoTeste.setStatus(StatusProduto.AUTORIZADO);
+        produtoTeste.setCategoria(CategoriaProduto.OUTROS);
+        produtoTeste.setUnidade(UnidadeProduto.UNIDADE);
+        produtoTeste.setDataCadastro(LocalDateTime.now());
+        
+        // Busca um comerciante existente para associar
+        Comerciante comerciante = new Comerciante();
+        comerciante.setId("com-1");
+        produtoTeste.setComerciante(comerciante);
+        
+        produtoRepository.save(produtoTeste);
+        String produtoId = produtoTeste.getId();
 
         //VERIFICACAO INICIAL
         Optional<Produto> produtoAntes = produtoRepository.findById(produtoId);
-        assertTrue(produtoAntes.isPresent(), "Produto 'prod-1' deveria ser encontrado antes do delete");
+        assertTrue(produtoAntes.isPresent(), "Produto de teste deveria ser encontrado antes do delete");
         assertEquals(StatusProduto.AUTORIZADO, produtoAntes.get().getStatus());
 
         //Executar o soft delete (removerProduto)
         produtoService.removerProduto(produtoId);
 
-        //O findById nao deve mais encontrar o produto
+        //O findById nao deve mais encontrar o produto (devido ao @Where clause)
         Optional<Produto> produtoDepois = produtoRepository.findById(produtoId);
         assertFalse(produtoDepois.isPresent(), "Produto NAO deveria ser encontrado pelo findById padrao apos o soft delete");
 
-        //findByIdIgnoringStatus deve encontrar o produto
-        Optional<Produto> produtoIgnorandoStatus = produtoRepository.findById(produtoId);
+        //findByIdIgnoringStatus deve encontrar o produto mesmo com status DESATIVADO
+        Optional<Produto> produtoIgnorandoStatus = produtoRepository.findByIdIgnoringStatus(produtoId);
         assertTrue(produtoIgnorandoStatus.isPresent(), "Produto DEVE ser encontrado pelo findByIdIgnoringStatus");
 
         //O status do produto no banco deve ser DESATIVADO

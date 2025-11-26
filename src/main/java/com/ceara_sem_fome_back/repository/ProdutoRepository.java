@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -14,6 +15,15 @@ import java.util.Optional;
 @Repository
 public interface ProdutoRepository extends JpaRepository<Produto, String> {
     boolean existsProdutoById(String id);
+
+    // Override do findById para respeitar o filtro @Where (apenas AUTORIZADO e PENDENTE)
+    @Query("SELECT p FROM Produto p WHERE p.id = :id AND p.status IN ('AUTORIZADO', 'PENDENTE')")
+    @NonNull
+    Optional<Produto> findById(@NonNull @Param("id") String id);
+
+    // Metodo para buscar um produto por ID ignorando o filtro @Where
+    @Query(value = "SELECT * FROM produto WHERE id = :id", nativeQuery = true)
+    Optional<Produto> findByIdIgnoringStatus(@Param("id") String id);
 
     Page<Produto> findByNomeContainingIgnoreCase(String nome, Pageable pageable);
 
