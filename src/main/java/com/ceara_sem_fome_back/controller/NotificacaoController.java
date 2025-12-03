@@ -40,10 +40,14 @@ public class NotificacaoController {
 
             return ResponseEntity.ok(dtos);
 
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Erro ao listar notificações: " + e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Erro interno ao listar notificações.");
         }
+
     }
 
     @GetMapping("/nao-lidas/count")

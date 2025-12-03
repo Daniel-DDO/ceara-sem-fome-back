@@ -21,7 +21,9 @@ public class AdministradorData implements UserDetails {
     }
 
     public Administrador getAdministrador() {
-        return administrador.get();
+        return administrador.orElseThrow(
+                () -> new IllegalStateException("Usuário autenticado inválido.")
+        );
     }
 
     @Override

@@ -21,7 +21,9 @@ public class ComercianteData implements UserDetails {
     }
 
     public Comerciante getComerciante() {
-        return comerciante.get();
+        return comerciante.orElseThrow(
+                () -> new IllegalStateException("Usuário autenticado inválido.")
+        );
     }
 
     @Override

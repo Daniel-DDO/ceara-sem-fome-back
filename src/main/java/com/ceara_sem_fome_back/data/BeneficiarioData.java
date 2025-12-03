@@ -21,7 +21,9 @@ public class BeneficiarioData implements UserDetails {
     }
 
     public Beneficiario getBeneficiario() {
-        return beneficiario.get();
+        return beneficiario.orElseThrow(
+                () -> new IllegalStateException("Usuário autenticado inválido.")
+        );
     }
 
     @Override

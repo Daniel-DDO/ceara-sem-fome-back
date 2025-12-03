@@ -17,7 +17,9 @@ public class EntregadorData implements UserDetails {
     private final Optional<Entregador> entregador;
 
     public Entregador getEntregador() {
-        return this.entregador.get();
+        return entregador.orElseThrow(
+                () -> new IllegalStateException("Usuário autenticado inválido.")
+        );
     }
 
     public EntregadorData(Optional<Entregador> entregador) {
