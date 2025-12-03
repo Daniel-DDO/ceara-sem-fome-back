@@ -25,29 +25,19 @@ public class NotificacaoController {
 
     @GetMapping
     public ResponseEntity<List<NotificacaoResponseDTO>> listarMinhasNotificacoes(Authentication authentication) {
-        try {
-            String usuarioId = extrairIdUsuario(authentication);
-            List<Notificacao> notificacoes = notificacaoService.listarPorUsuario(usuarioId);
+        String usuarioId = extrairIdUsuario(authentication);
+        List<Notificacao> notificacoes = notificacaoService.listarPorUsuario(usuarioId);
 
-            List<NotificacaoResponseDTO> dtos = notificacoes.stream()
-                    .map(n -> new NotificacaoResponseDTO(
-                            n.getId(),
-                            n.getMensagem(),
-                            n.getDataCriacao(),
-                            n.isLida()
-                    ))
-                    .collect(Collectors.toList());
+        List<NotificacaoResponseDTO> dtos = notificacoes.stream()
+                .map(n -> new NotificacaoResponseDTO(
+                        n.getId(),
+                        n.getMensagem(),
+                        n.getDataCriacao(),
+                        n.isLida()
+                ))
+                .collect(Collectors.toList());
 
-            return ResponseEntity.ok(dtos);
-
-        } catch (ResponseStatusException e) {
-            throw e;
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Erro interno ao listar notificações.");
-        }
-
+        return ResponseEntity.ok(dtos);
     }
 
     @GetMapping("/nao-lidas/count")
