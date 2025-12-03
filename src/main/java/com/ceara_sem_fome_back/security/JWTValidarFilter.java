@@ -60,8 +60,7 @@ public class JWTValidarFilter extends BasicAuthenticationFilter {
             "/produtos/unidades",
 
             "/health",
-            "/version",
-            "/*"
+            "/version"
     );
 
     public JWTValidarFilter(AuthenticationManager authenticationManager,
